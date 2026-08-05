@@ -1,0 +1,139 @@
+{
+  "captureWidth": 640,
+  "captureHeight": 480,
+  "downscaleRatio": 0.5,
+  "verticalCropOffset": 240,
+  "verticalCropHeight": 240,
+  "minBlobArea": 15,
+  "maxBlobArea": 20000,
+  "useCenterRoi": false,
+  "roiUnity": 1.0,
+  "avoidCenterRadius": 60,
+  "tag": {
+    "enabled": true,
+    "minSampleIntervalMs": 2000,
+    "scoutWidth": 320,
+    "bandLeftMax": 0.33,
+    "bandRightMin": 0.67,
+    "scoutMinWidthPx": 8,
+    "decodeMinTagWidthPx": 28,
+    "poseGateDeg": 30,
+    "tagSizeIn": 4,
+    "desiredTagId": -1,
+    "decimationMin": 2,
+    "decimationMax": 3,
+    "expectedBearingDeg": null,
+    "cameraBearingDeg": 0
+  },
+  "geometry": {
+    "ballDiameterIn": 5.0,
+    "maxRangeMismatchRatio": 0.28,
+    "minBallConfidence": 0.35,
+    "pickupStopIn": 14,
+    "seekMaxRangeIn": 72,
+    "activeCameraIndex": 0,
+    "cameras": [
+      {
+        "name": "front",
+        "bearingDeg": 0,
+        "horizonRowPx": 12,
+        "focalLengthPx": 340,
+        "floorLut": [
+          { "cy": 95, "distIn": 12 },
+          { "cy": 75, "distIn": 24 },
+          { "cy": 55, "distIn": 36 },
+          { "cy": 40, "distIn": 48 }
+        ]
+      },
+      {
+        "name": "right",
+        "bearingDeg": 90,
+        "horizonRowPx": 12,
+        "focalLengthPx": 340,
+        "floorLut": [
+          { "cy": 95, "distIn": 12 },
+          { "cy": 75, "distIn": 24 },
+          { "cy": 55, "distIn": 36 },
+          { "cy": 40, "distIn": 48 }
+        ]
+      },
+      {
+        "name": "back",
+        "bearingDeg": 180,
+        "horizonRowPx": 12,
+        "focalLengthPx": 340,
+        "floorLut": [
+          { "cy": 95, "distIn": 12 },
+          { "cy": 75, "distIn": 24 },
+          { "cy": 55, "distIn": 36 },
+          { "cy": 40, "distIn": 48 }
+        ]
+      },
+      {
+        "name": "left",
+        "bearingDeg": 270,
+        "horizonRowPx": 12,
+        "focalLengthPx": 340,
+        "floorLut": [
+          { "cy": 95, "distIn": 12 },
+          { "cy": 75, "distIn": 24 },
+          { "cy": 55, "distIn": 36 },
+          { "cy": 40, "distIn": 48 }
+        ]
+      }
+    ]
+  },
+  "elements": [
+    {
+      "name": "ball",
+      "label": "Ball",
+      "color": "#e8e8f0",
+      "shape": "circle",
+      "detector": "color_blob",
+      "minArea": 12,
+      "houghMinArea": 45,
+      "houghMinRadius": 8,
+      "houghMaxRadius": 36,
+      "houghAccumulator": 11,
+      "houghEdgeThresh": 38,
+      "houghMinDist": 24,
+      "houghMinVotesScale": 0.45,
+      "houghMinInterior": 0.14,
+      "houghMaxResults": 4,
+      "houghInteriorBright": 90,
+      "houghInteriorSpread": 60,
+      "requireCircularity": false,
+      "minCircularity": 0.1,
+      "maxAspectRatio": 2.5,
+      "morphClosePasses": 8,
+      "hsvLow": [0, 0, 55],
+      "hsvHigh": [179, 85, 255],
+      "brightnessMin": 58,
+      "brightnessSpread": 65,
+      "maxSaturation": 85,
+      "rejectGreen": true
+    }
+  ],
+  "robots": [
+    {
+      "name": "plate_red",
+      "label": "Red plate",
+      "color": "#ff4466",
+      "shape": "plate",
+      "minArea": 40,
+      "hsvLow": [0, 120, 60],
+      "hsvHigh": [10, 255, 255],
+      "hsvLowWrap": [170, 120, 60],
+      "hsvHighWrap": [180, 255, 255]
+    },
+    {
+      "name": "plate_blue",
+      "label": "Blue plate",
+      "color": "#4488ff",
+      "shape": "plate",
+      "minArea": 40,
+      "hsvLow": [100, 120, 60],
+      "hsvHigh": [130, 255, 255]
+    }
+  ]
+}

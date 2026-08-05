@@ -1,0 +1,89 @@
+# ViDAR default configuration
+# Simulates an FTC companion vision computer (e.g. Pi / Orange Pi on the robot)
+
+camera:
+  mode: mock          # mock | usb | stream
+  count: 1            # scale to 4 when hardware is ready
+  device_ids: [0]     # usb indices; one per camera
+  stream_ports: [5555] # ZMQ ports when mode=stream (host bridge -> container)
+  capture_width: 640
+  capture_height: 480
+  process_width: 160   # low-res for speed
+  process_height: 120
+  fps_target: 30
+
+detection:
+  hough:
+    dp: 1.2
+    min_dist: 24
+    param1: 80
+    param2: 11
+    min_radius: 8
+    max_radius: 36
+    min_interior: 0.14
+    interior_bright: 90
+    interior_spread: 60
+    min_area: 45
+  geometry:
+    ball_diameter_in: 5.0
+    max_range_mismatch_ratio: 0.28
+    min_ball_confidence: 0.35
+    pickup_stop_in: 14
+    seek_max_range_in: 72
+    active_camera_index: 0
+    cameras:
+      - name: front
+        bearing_deg: 0
+        horizon_row_px: 12
+        focal_length_px: 340
+        floor_lut:
+          - { cy: 95, dist_in: 12 }
+          - { cy: 75, dist_in: 24 }
+          - { cy: 55, dist_in: 36 }
+          - { cy: 40, dist_in: 48 }
+      - name: right
+        bearing_deg: 90
+        horizon_row_px: 12
+        focal_length_px: 340
+        floor_lut:
+          - { cy: 95, dist_in: 12 }
+          - { cy: 75, dist_in: 24 }
+          - { cy: 55, dist_in: 36 }
+          - { cy: 40, dist_in: 48 }
+      - name: back
+        bearing_deg: 180
+        horizon_row_px: 12
+        focal_length_px: 340
+        floor_lut:
+          - { cy: 95, dist_in: 12 }
+          - { cy: 75, dist_in: 24 }
+          - { cy: 55, dist_in: 36 }
+          - { cy: 40, dist_in: 48 }
+      - name: left
+        bearing_deg: 270
+        horizon_row_px: 12
+        focal_length_px: 340
+        floor_lut:
+          - { cy: 95, dist_in: 12 }
+          - { cy: 75, dist_in: 24 }
+          - { cy: 55, dist_in: 36 }
+          - { cy: 40, dist_in: 48 }
+  elements:
+    - name: ball
+      hsv_low: [20, 100, 100]
+      hsv_high: [35, 255, 255]
+      min_area: 80
+  robots:
+    - name: plate_red
+      hsv_low: [0, 120, 80]
+      hsv_high: [10, 255, 255]
+      min_area: 200
+  blur_kernel: 3
+
+output:
+  telemetry_port: 5800
+  print_fps_every: 30
+
+runtime:
+  show_debug: false
+  max_workers: 4

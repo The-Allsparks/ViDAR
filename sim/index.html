@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ViDAR Simulator</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="header">
+    <div>
+      <h1>ViDAR Simulator</h1>
+      <p class="subtitle">Browser vision preview with detection overlays — matches on-robot Java tuning</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat"><span class="stat-label">FPS</span><span id="fps" class="stat-value">—</span></div>
+      <div class="stat"><span class="stat-label">Mode</span><span id="mode-label" class="stat-value">—</span></div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="viewport-panel">
+      <div class="canvas-wrap">
+        <canvas id="display" width="640" height="480"></canvas>
+        <div class="legend">
+          <span class="chip element">Ball</span>
+          <span class="chip robot">Alliance plate</span>
+          <span class="chip crop">Crop band</span>
+          <span class="chip roi">Avoid zone</span>
+        </div>
+      </div>
+      <div class="controls">
+        <label class="control">
+          <span>Source</span>
+          <select id="source-select">
+            <option value="mock">Mock scene</option>
+            <option value="webcam">Webcam</option>
+          </select>
+        </label>
+        <label class="control">
+          <span>Main display</span>
+          <select id="display-view">
+            <option value="camera">Full camera</option>
+            <option value="detection">Detection (downscaled)</option>
+          </select>
+        </label>
+        <label class="control">
+          <span>Overlays</span>
+          <select id="overlay-select">
+            <option value="all">All</option>
+            <option value="boxes">Boxes only</option>
+            <option value="roi">ROI only</option>
+            <option value="none">None</option>
+          </select>
+        </label>
+        <label class="control checkbox">
+          <input type="checkbox" id="show-process-pip">
+          <span>PiP process view (camera mode)</span>
+        </label>
+        <label class="control checkbox">
+          <input type="checkbox" id="show-mask">
+          <span id="show-mask-label">Show ball debug overlay</span>
+        </label>
+        <button id="start-btn" type="button">Start</button>
+        <button id="stop-btn" type="button" disabled>Stop</button>
+        <button id="capture-btn" type="button" disabled>Capture still</button>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="card">
+        <h2>Detection logic</h2>
+        <p class="muted-line">Toggle each pipeline live — no JSON edits needed.</p>
+        <fieldset class="toggle-fieldset">
+          <legend>Ball algorithm</legend>
+          <div class="toggle-group" id="ball-detector-group" role="radiogroup" aria-label="Ball detector">
+            <label class="toggle-btn"><input type="radio" name="ball-detector" value="hsv"><span>HSV blob</span></label>
+            <label class="toggle-btn"><input type="radio" name="ball-detector" value="hough" checked><span>Hough circle</span></label>
+            <label class="toggle-btn"><input type="radio" name="ball-detector" value="both"><span>Both</span></label>
+          </div>
+        </fieldset>
+        <div class="detect-toggles">
+          <label class="control checkbox detect-toggle">
+            <input type="checkbox" id="detect-ball" checked>
+            <span>Detect ball</span>
+          </label>
+          <label class="control checkbox detect-toggle">
+            <input type="checkbox" id="detect-red" checked>
+            <span>Detect red plate</span>
+          </label>
+          <label class="control checkbox detect-toggle">
+            <input type="checkbox" id="detect-blue" checked>
+            <span>Detect blue plate</span>
+          </label>
+          <label class="control checkbox detect-toggle">
+            <input type="checkbox" id="temporal-filter" checked>
+            <span>Temporal filter (3 of 5 frames)</span>
+          </label>
+        </div>
+        <p class="muted-line">Dashed <strong>?</strong> = potential (needs 3/5 frames). Robot logic uses confirmed only.</p>
+        <p id="detector-active-label" class="process-size-label">Active: —</p>
+      </section>
+      <section class="card">
+        <h2>Ball metrics</h2>
+        <p class="muted-line">Live tuning — updates each frame while running.</p>
+        <details class="metric-group" open>
+          <summary>HSV blob</summary>
+          <div class="metric-grid">
+            <label class="proc-field">
+              <span>Brightness min</span>
+              <input id="hsv-brightness-min" type="number" min="0" max="255" step="1" value="58">
+            </label>
+            <label class="proc-field">
+              <span>Brightness spread</span>
+              <input id="hsv-brightness-spread" type="number" min="5" max="120" step="1" value="65">
+            </label>
+            <label class="proc-field">
+              <span>Max saturation</span>
+              <input id="hsv-max-saturation" type="number" min="0" max="255" step="1" value="85">
+            </label>
+            <label class="proc-field">
+              <span>HSV min value (V)</span>
+              <input id="hsv-min-value" type="number" min="0" max="255" step="1" value="55">
+            </label>
+            <label class="proc-field">
+              <span>Min blob area (px)</span>
+              <input id="hsv-min-area" type="number" min="4" max="500" step="1" value="12">
+            </label>
+            <label class="proc-field">
+              <span>Morph close passes</span>
+              <input id="hsv-morph-passes" type="number" min="0" max="16" step="1" value="8">
+            </label>
+          </div>
+        </details>
+        <details class="metric-group" open>
+          <summary>Hough circle</summary>
+          <div class="metric-grid">
+            <label class="proc-field">
+              <span>Edge threshold</span>
+              <input id="hough-edge-thresh" type="number" min="8" max="200" step="1" value="38">
+            </label>
+            <label class="proc-field">
+              <span>Accumulator min</span>
+              <input id="hough-accumulator" type="number" min="4" max="80" step="1" value="11">
+            </label>
+            <label class="proc-field">
+              <span>Min radius (px)</span>
+              <input id="hough-min-radius" type="number" min="3" max="80" step="1" value="8">
+            </label>
+            <label class="proc-field">
+              <span>Max radius (px)</span>
+              <input id="hough-max-radius" type="number" min="4" max="120" step="1" value="36">
+            </label>
+            <label class="proc-field">
+              <span>Min interior fill (%)</span>
+              <input id="hough-min-interior" type="number" min="0" max="100" step="1" value="14">
+            </label>
+            <label class="proc-field">
+              <span>Interior brightness</span>
+              <input id="hough-interior-bright" type="number" min="0" max="255" step="1" value="90">
+            </label>
+            <label class="proc-field">
+              <span>Min center distance</span>
+              <input id="hough-min-dist" type="number" min="8" max="120" step="1" value="24">
+            </label>
+            <label class="proc-field">
+              <span>Max circles</span>
+              <input id="hough-max-results" type="number" min="1" max="12" step="1" value="4">
+            </label>
+          </div>
+        </details>
+      </section>
+      <section class="card">
+        <h2>Processing</h2>
+        <p class="muted-line">Crop vertically on full camera frame, then downscale for detection.</p>
+        <div class="proc-grid">
+          <label class="proc-field">
+            <span>Downscale ratio</span>
+            <input id="downscale-ratio" type="number" min="0.1" max="1" step="0.05" value="0.5">
+          </label>
+          <label class="proc-field">
+            <span>Vertical crop height (px)</span>
+            <input id="crop-height" type="number" min="8" step="1" value="240">
+          </label>
+          <label class="proc-field">
+            <span>Vertical crop offset (px)</span>
+            <input id="crop-offset" type="number" min="0" step="1" value="240">
+          </label>
+        </div>
+        <p id="process-size-label" class="process-size-label">Process size: —</p>
+        <label class="control checkbox detect-toggle">
+          <input type="checkbox" id="grayscale-process">
+          <span>Grayscale process frame (ball only; plates use color)</span>
+        </label>
+      </section>
+      <section class="card">
+        <h2>Detections</h2>
+        <ul id="detection-list" class="detection-list">
+          <li class="empty">Press Start to run ViDAR</li>
+        </ul>
+      </section>
+      <section class="card">
+        <h2>Robot logic preview</h2>
+        <p class="muted-line">Range fuses known ball diameter (Hough radius) with floor-row LUT. Cross-check lowers confidence when they disagree.</p>
+        <p id="logic-state" class="logic-state">—</p>
+        <dl class="metrics">
+          <div><dt>Element X err</dt><dd id="element-error">—</dd></div>
+          <div><dt>Fused range</dt><dd id="ball-range">—</dd></div>
+          <div><dt>Size range</dt><dd id="ball-size-range">—</dd></div>
+          <div><dt>Floor range</dt><dd id="ball-floor-range">—</dd></div>
+          <div><dt>Confidence</dt><dd id="ball-confidence">—</dd></div>
+          <div><dt>Robot XY</dt><dd id="ball-robot-xy">—</dd></div>
+          <div><dt>Robot dist (px)</dt><dd id="robot-dist">—</dd></div>
+        </dl>
+      </section>
+      <section class="card">
+        <h2>AprilTag (adaptive)</h2>
+        <p class="muted-line">Scout top half every frame; official decode on cropped ROI only (≤1 / 2s). Purple box = decode band (~25% of frame).</p>
+        <button id="tag-sample-btn" type="button">Request tag sample</button>
+        <dl class="metrics">
+          <div><dt>Tag scout</dt><dd id="tag-scout">—</dd></div>
+          <div><dt>Tag fix</dt><dd id="tag-fix">—</dd></div>
+          <div><dt>Field pose @now</dt><dd id="tag-pose-now">—</dd></div>
+        </dl>
+      </section>
+      <section class="card">
+        <h2>Capture</h2>
+        <p class="muted-line">With the ball in view, click <strong>Capture still</strong>. Saves to <code>captures/</code> for tuning review.</p>
+        <p id="capture-status" class="capture-status"></p>
+      </section>
+      <section class="card muted">
+        <h2>Setup</h2>
+        <p>Run a local server from the repo root:</p>
+        <code class="cmd">.\scripts\serve_sim.ps1</code>
+        <p class="alt-cmd">or <code>python scripts/serve_sim.py</code> if Python is installed</p>
+        <p>Then open <strong>http://localhost:8765</strong>. Webcam requires localhost or HTTPS.</p>
+      </section>
+    </aside>
+  </main>
+
+  <video id="webcam" autoplay playsinline hidden></video>
+  <canvas id="process" width="320" height="240" hidden></canvas>
+  <canvas id="capture" width="640" height="480" hidden></canvas>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

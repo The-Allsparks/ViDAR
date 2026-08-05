@@ -1,0 +1,37 @@
+services:
+  vidar:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: vidar-dev
+    environment:
+      VIDAR_CONFIG: /app/config/default.yaml
+      VIDAR_CAMERA_MODE: ${VIDAR_CAMERA_MODE:-mock}
+    volumes:
+      - ./config:/app/config:ro
+      - ./src:/app/src:ro
+    ports:
+      - "5800:5800/tcp"
+      - "5555-5558:5555-5558/tcp"
+    restart: unless-stopped
+
+  # Linux-only profile: direct USB passthrough (works on robot / WSL2 with usbipd)
+  vidar-usb:
+    extends:
+      service: vidar
+    container_name: vidar-usb
+    profiles: [usb]
+    environment:
+      VIDAR_CAMERA_MODE: usb
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: false
+
+  # Set VIDAR_CAMERA_MODE=stream and run scripts/host_camera_bridge.py on the host
+  vidar-stream:
+    extends:
+      service: vidar
+    container_name: vidar-stream
+    profiles: [stream]
+    environment:
+      VIDAR_CAMERA_MODE: stream
