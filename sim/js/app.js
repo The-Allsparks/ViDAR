@@ -44,6 +44,7 @@ const sourceSelect = /** @type {HTMLSelectElement} */ (document.getElementById("
 const displayViewSelect = /** @type {HTMLSelectElement} */ (document.getElementById("display-view"));
 const overlaySelect = /** @type {HTMLSelectElement} */ (document.getElementById("overlay-select"));
 const showProcessPipCheck = /** @type {HTMLInputElement} */ (document.getElementById("show-process-pip"));
+const showCalibrationCheck = /** @type {HTMLInputElement} */ (document.getElementById("show-calibration"));
 const showMaskCheck = /** @type {HTMLInputElement} */ (document.getElementById("show-mask"));
 const downscaleInput = /** @type {HTMLInputElement} */ (document.getElementById("downscale-ratio"));
 const cropHeightInput = /** @type {HTMLInputElement} */ (document.getElementById("crop-height"));
@@ -384,6 +385,7 @@ function loop() {
     overlay: overlaySelect.value,
     viewMode: displayViewSelect.value,
     showProcessPip: showProcessPipCheck.checked,
+    showCalibration: showCalibrationCheck?.checked ?? false,
     showMask: showMaskCheck.checked,
     showCrop: true,
     grayscaleProcess: detectOpts.grayscaleProcess,

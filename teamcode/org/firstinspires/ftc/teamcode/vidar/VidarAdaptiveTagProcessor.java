@@ -62,7 +62,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-        cropDecoder.init(width, height, calibration, season);
+        cropDecoder.init(width, height, calibration, season, profile);
         latestTag = null;
         latestScoutObservation = null;
         lastScout = null;
@@ -212,6 +212,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
                 decoded.tagId,
                 decoded.fieldPose,
                 captureTimeNanos,
+                cameraName,
                 decoded.centerX,
                 decoded.centerY,
                 scout.band,

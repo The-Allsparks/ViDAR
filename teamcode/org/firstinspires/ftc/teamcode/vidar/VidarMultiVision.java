@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.vidar;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarCalibrationDiagnostics;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarTransformRegistry;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -31,6 +33,9 @@ public class VidarMultiVision {
     private final VidarMetricsLogger metricsLogger = new VidarMetricsLogger();
     private final VidarResourceBudget resourceBudget = new VidarResourceBudget();
     private final VidarOdomHistory odomHistory = new VidarOdomHistory();
+    private final VidarTransformRegistry transformRegistry;
+    private final VidarCalibrationDiagnostics calibrationDiagnostics =
+            new VidarCalibrationDiagnostics();
     private VidarGlobalVisionWorker globalWorker;
 
     private Pose2D lastOdomSample;
@@ -95,6 +100,9 @@ public class VidarMultiVision {
         this.season = season != null ? season : VidarConfigLoader.defaultSeason();
         VidarRobotConfig activeRobot = robot != null ? robot : VidarConfigLoader.defaultRobot();
         this.robotConfig = activeRobot;
+        this.transformRegistry = new VidarTransformRegistry(activeRobot);
+        this.calibrationDiagnostics.updateFromRegistry(
+                transformRegistry, activeRobot.activeCameraIndex);
         this.ourAlliance = ourAlliance == null ? () -> activeRobot.defaultAlliance : ourAlliance;
         this.odomSupplier = odomSupplier;
         cameraCount = activeRobot.activeCameraCount();
@@ -248,6 +256,12 @@ public class VidarMultiVision {
                 lastTagScout,
                 rankedByCamera,
                 tagsByCamera);
+        calibrationDiagnostics.updateFromRegistry(
+                transformRegistry, robotConfig.activeCameraIndex);
+        if (bestElement != null && bestElement.captureTimeNanos > 0) {
+            calibrationDiagnostics.recordObservationAge(
+                    (updateTimeNanos - bestElement.captureTimeNanos) / 1_000_000.0);
+        }
         return latestFrame;
     }
 
@@ -427,6 +441,10 @@ public class VidarMultiVision {
 
     public VidarRobotConfig getRobotConfig() {
         return robotConfig;
+    }
+
+    public VidarCalibrationDiagnostics calibrationDiagnostics() {
+        return calibrationDiagnostics;
     }
 
     /** Active linear unit for config distances and observation fields (robot overrides season). */

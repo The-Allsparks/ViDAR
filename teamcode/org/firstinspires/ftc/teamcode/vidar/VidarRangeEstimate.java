@@ -8,6 +8,8 @@ public final class VidarRangeEstimate {
     public enum Source {
         SIZE,
         FLOOR,
+        /** Geometric slant range from mount + intrinsics to a horizontal plane at target height. */
+        GROUND_PLANE,
         PLATE_WIDTH
     }
 

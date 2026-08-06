@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics;
+
 /**
  * Fixed mount geometry and per-camera calibration for one side camera.
  * Calibrate intrinsics, horizon, floor LUT, and ROIs on the field.
+ *
+ * <p>Extrinsic mount fields define {@code robot_T_cameraOptical} via {@link
+ * org.firstinspires.ftc.teamcode.vidar.geometry.VidarTransformRegistry}.
  */
 public final class VidarCameraProfile {
 
@@ -33,6 +38,14 @@ public final class VidarCameraProfile {
     /** Known physical plate width for size-based ranging (inches). */
     public final double plateWidth;
     public final VidarCameraRoiConfig roiConfig;
+    /** Sensor width (px) used when intrinsics were calibrated; 0 = use capture default. */
+    public final int calibrationWidth;
+    /** Sensor height (px) used when intrinsics were calibrated; 0 = use capture default. */
+    public final int calibrationHeight;
+    public final VidarCameraIntrinsics.DistortionModel distortionModel;
+    public final double[] distortionCoeffs;
+    public final String calibrationVersion;
+    public final String calibrationDate;
 
     public VidarCameraProfile(
             String name,
@@ -78,6 +91,39 @@ public final class VidarCameraProfile {
             double mountRollDeg,
             double plateWidth,
             VidarCameraRoiConfig roiConfig) {
+        this(name, bearingDeg, horizonRowPx, focalLengthPx, focalLengthYPx,
+                principalPointX, principalPointY, horizontalFovDeg, verticalFovDeg,
+                floorCyPx, floorDist, mountX, mountY, mountZ,
+                mountYawDeg, mountPitchDeg, mountRollDeg, plateWidth, roiConfig,
+                0, 0, VidarCameraIntrinsics.DistortionModel.NONE, null, null, null);
+    }
+
+    public VidarCameraProfile(
+            String name,
+            double bearingDeg,
+            int horizonRowPx,
+            double focalLengthPx,
+            double focalLengthYPx,
+            double principalPointX,
+            double principalPointY,
+            double horizontalFovDeg,
+            double verticalFovDeg,
+            double[] floorCyPx,
+            double[] floorDist,
+            double mountX,
+            double mountY,
+            double mountZ,
+            double mountYawDeg,
+            double mountPitchDeg,
+            double mountRollDeg,
+            double plateWidth,
+            VidarCameraRoiConfig roiConfig,
+            int calibrationWidth,
+            int calibrationHeight,
+            VidarCameraIntrinsics.DistortionModel distortionModel,
+            double[] distortionCoeffs,
+            String calibrationVersion,
+            String calibrationDate) {
         this.name = name;
         this.bearingDeg = bearingDeg;
         this.horizonRowPx = horizonRowPx;
@@ -97,6 +143,13 @@ public final class VidarCameraProfile {
         this.mountRollDeg = mountRollDeg;
         this.plateWidth = plateWidth;
         this.roiConfig = roiConfig == null ? VidarCameraRoiConfig.DEFAULT : roiConfig;
+        this.calibrationWidth = calibrationWidth;
+        this.calibrationHeight = calibrationHeight;
+        this.distortionModel = distortionModel == null
+                ? VidarCameraIntrinsics.DistortionModel.NONE : distortionModel;
+        this.distortionCoeffs = distortionCoeffs == null ? new double[0] : distortionCoeffs.clone();
+        this.calibrationVersion = calibrationVersion;
+        this.calibrationDate = calibrationDate;
     }
 
     /** Single-camera teaching default — front-facing, matches sim/vidar-tuning.json. */
@@ -144,6 +197,15 @@ public final class VidarCameraProfile {
         }
         if (plateWidth <= 0) {
             warnings.add(name + ": plateWidth not configured");
+        }
+        if (calibrationWidth > 0 && calibrationHeight > 0) {
+            if (principalPointX < 0 || principalPointX > calibrationWidth
+                    || principalPointY < 0 || principalPointY > calibrationHeight) {
+                warnings.add(name + ": principal point outside calibration resolution");
+            }
+        }
+        if (distortionModel == VidarCameraIntrinsics.DistortionModel.FISHEYE) {
+            warnings.add(name + ": fisheye distortion unsupported on-robot");
         }
         VidarRoiRect element = roiConfig.elementRoi(frameW, frameH);
         if (element.width <= 0 || element.height <= 0) {

@@ -9,6 +9,7 @@ from vidar.units import DistanceUnit
 
 ROOT = Path(__file__).resolve().parents[1]
 SEASON_FILES = sorted((ROOT / "config/seasons").glob("*.json"))
+ROBOT_FILES = sorted((ROOT / "config/robots").glob("example*.json"))
 
 
 def test_load_biobuzz_season():
@@ -55,6 +56,19 @@ def test_load_example_robot():
     assert len(robot.cameras) == 4
     assert robot.cameras[0].profile.name == "front"
     assert robot.cameras[0].profile.floor_lut
+    assert robot.cameras[0].profile.focal_length_px == pytest.approx(246)
+
+
+@pytest.mark.parametrize("robot_path", ROBOT_FILES, ids=lambda p: p.stem)
+def test_all_robot_json_files_load(robot_path: Path):
+    robot = load_robot(robot_path)
+    assert len(robot.cameras) >= 1
+    assert robot.cameras[0].profile.focal_length_px > 0
+    fx = robot.cameras[0].profile.focal_length_px
+    if "c920" in robot_path.stem:
+        assert fx == pytest.approx(340)
+    elif "svpro" in robot_path.stem or robot_path.stem == "example-robot":
+        assert fx == pytest.approx(246)
 
 
 def test_decode_season_april_tags():

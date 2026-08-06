@@ -1,5 +1,6 @@
 import { scaleRect, processToCapture } from "./config.js";
 import { letterboxRect } from "./canvas-util.js";
+import { drawCalibrationDiagram, drawSamplePixelRays } from "./calibration-viz.js";
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -7,7 +8,7 @@ import { letterboxRect } from "./canvas-util.js";
  * @param {import('./detection.js').Detection[]} detections
  * @param {{ x: number, y: number, w: number, h: number }} roiProcess
  * @param {import('./config.js').VidarTuning} tuning
- * @param {{ overlay: string, viewMode: string, showProcessPip: boolean, showMask: boolean, showCrop: boolean, grayscaleProcess?: boolean, processCanvas: HTMLCanvasElement | null, maskCanvas: HTMLCanvasElement | null, tagRegion?: { x: number, y: number, w: number, h: number } | null }} opts
+ * @param {{ overlay: string, viewMode: string, showProcessPip: boolean, showMask: boolean, showCrop: boolean, showCalibration?: boolean, grayscaleProcess?: boolean, processCanvas: HTMLCanvasElement | null, maskCanvas: HTMLCanvasElement | null, tagRegion?: { x: number, y: number, w: number, h: number } | null }} opts
  */
 export function renderFrame(ctx, sourceCanvas, detections, roiProcess, tuning, opts) {
   const displayW = ctx.canvas.width;
@@ -231,6 +232,13 @@ export function renderFrame(ctx, sourceCanvas, detections, roiProcess, tuning, o
     ctx.fillStyle = "#8fa3bf";
     ctx.font = "11px sans-serif";
     ctx.fillText(`Process ${procW}×${procH}${opts.grayscaleProcess ? " gray" : ""}`, pad + 4, pad + 14);
+  }
+
+  if (opts.showCalibration) {
+    drawCalibrationDiagram(ctx, displayW - 150, 8, 40, tuning);
+    if (!detectionView) {
+      drawSamplePixelRays(ctx, oxCap, oyCap, sxCap, syCap, tuning);
+    }
   }
 }
 

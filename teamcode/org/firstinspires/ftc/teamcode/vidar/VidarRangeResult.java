@@ -25,7 +25,7 @@ public final class VidarRangeResult {
         this.confidence = confidence;
         this.source0 = source0;
         this.source1 = source1;
-        this.sourceCount = Math.max(0, Math.min(sourceCount, 2));
+        this.sourceCount = Math.max(0, Math.min(sourceCount, 3));
     }
 
     public static VidarRangeResult invalid() {

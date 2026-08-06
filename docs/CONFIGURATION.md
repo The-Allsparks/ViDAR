@@ -20,7 +20,12 @@ Templates live in the repo:
 | `config/seasons/2022-powerplay.json` | POWERPLAY 2022-23 | Red + blue CONES (4 in base) |
 | `config/seasons/2021-freightfrenzy.json` | FREIGHT FRENZY 2021-22 | CARGO wiffle balls (2.75 in), BOXES, DUCKS |
 | `config/seasons/2020-ultimategoal.json` | ULTIMATE GOAL 2020-21 | Red + blue RINGS (5 in OD) |
-| `config/robots/example-robot.json` | — | Four-camera layout with example mount offsets |
+| `config/robots/example-robot.json` | 4× SVPRO | Team default — same as `example-robot-svpro-4cam.json` |
+| `config/robots/example-robot-svpro-4cam.json` | 4× SVPRO | Explicit four-camera SVPRO template |
+| `config/robots/example-robot-svpro-1cam.json` | 1× SVPRO | Bench / first hub validation |
+| `config/robots/example-robot-c920-4cam.json` | 4× C920-class | ~70° HFOV reference (fx ≈ 340) |
+
+See [`config/robots/README.md`](../config/robots/README.md) for camera selection, ranging impact, and floor LUT notes.
 
 Copy the file for your active season to `TeamCode/src/main/assets/vidar/season.json`. HSV and filter values in older-season templates are **starting points** — tune on field before competition.
 
@@ -163,7 +168,13 @@ Legacy flat `profile` keys on a camera entry still load for backward compatibili
 
 ```json
 "cameraCount": 2,
-"cameraDefaults": { "focalLengthPx": 340, "floorLut": [...], "roi": { ... } },
+"cameraDefaults": {
+  "focalLengthPx": 246,
+  "horizontalFovDeg": 105,
+  "floorLutStatus": "recalibrate-on-robot",
+  "floorLut": [...],
+  "roi": { ... }
+},
 "cameras": [
   { "index": 0, "webcamName": "Webcam 1", "name": "front",
     "mount": { "bearingDeg": 0, "x": 6.5, "y": 0, "z": 9.0, "pitchDeg": -12 } }

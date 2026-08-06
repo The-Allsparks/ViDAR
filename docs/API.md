@@ -11,7 +11,7 @@ This document is the **language-neutral contract** for ViDAR's outer layer. Impl
 | **JSON config keys** | camelCase (unchanged): `diameter`, `minElementConfidence` |
 | **Distance fields** | Plain names (`distance`, `range`, `diameter`); unit from `distanceUnit`. Legacy `*In` and `*Dist` JSON keys still load. `Px`, `Deg`, `Nanos`, `Ms` unchanged. |
 | **Robot frame** | +X forward, +Y left, in the active distance unit |
-| **Timestamps** | Monotonic `captureTimeNanos` on every observation |
+| **Timestamps** | VisionPortal `frameCaptureNanos` (`captureTimeNanos` on observations) — same mailbox path for 1–4 cameras |
 
 Type prefix `Vidar` is used in Java (`VidarRangeResult`). Other languages may drop the prefix but must preserve field names.
 
@@ -25,6 +25,7 @@ Type prefix `Vidar` is used in Java (`VidarRangeResult`). Other languages may dr
 |-------|---------|
 | `SIZE` | Known physical diameter → pixel radius |
 | `FLOOR` | Floor-row LUT from image Y |
+| `GROUND_PLANE` | Mount + intrinsics ray intersect at ball-center height (element diameter / 2) |
 | `PLATE_WIDTH` | Known plate width → pixel width |
 
 ### `ElementDetectorType` / `VidarElementDetectorType`
@@ -93,7 +94,7 @@ sourceDistance(source: RangeSource): float
 sourceWeight(source: RangeSource): float
 ```
 
-**Fusion** (at most two estimates, no list allocation):
+**Fusion** (up to three estimates for elements: SIZE + FLOOR LUT + GROUND_PLANE, no list allocation):
 
 ```
 fuseRangeWeighted(maxRangeMismatchRatio, ...estimates): RangeResult
@@ -115,7 +116,10 @@ All static in Java `VidarGeometry`; module functions in Python `vidar.geometry`.
 | `distanceFromFloor` | `cyPx, profile` | range from LUT (in) |
 | `buildSizeEstimate` | `dSize, radiusPx, circleFitQuality, partialOcclusion, touchesBoundary` | `RangeEstimate` |
 | `buildFloorEstimate` | `dFloor, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
+| `distanceFromGroundPlane` | `cx, cy, profile, targetHeightZ` | slant range from mount + intrinsics |
+| `buildGroundPlaneEstimate` | `dGround, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
 | `buildPlateWidthEstimate` | `dWidth, pixelWidth, rectangularity, whiteRatio, partialVisibility, touchesRoiBoundary, rotationPenalty` | `RangeEstimate` |
+| `fusePlateRange` | plate pixel + profile + floor cy | `RangeResult` (width + floor + ground @ z=0) |
 | `fuseRangeWeighted` | `maxRangeMismatchRatio?, ...estimates` | `RangeResult` |
 | `robotX` | `range, bearingDeg, profile?` | robot X (in) |
 | `robotY` | `range, bearingDeg, profile?` | robot Y (in) |
@@ -129,6 +133,27 @@ Python also exposes **camelCase aliases** (`distanceFromSize = distance_from_siz
 
 ---
 
+## Coordinate frames and transforms
+
+**Status:** **Implemented**, **Tested in simulation**. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md). Distortion: pinhole on-robot (`distortionModel: "none"` default); FTC USB cameras are not fisheye — mild Brown-Conrady at edges is optional future work.
+
+Java package `vidar.geometry`; Python module `vidar.transforms`.
+
+| Type / function | Role |
+|-----------------|------|
+| `VidarFrameId` / `FrameId` | `FIELD`, `ROBOT`, `CAMERA_OPTICAL` |
+| `VidarTransform3D` / `Transform3D` | `destination_T_source`; compose, inverse, point vs direction |
+| `VidarCameraIntrinsics` / `CameraIntrinsics` | `fx`, `fy`, `cx`, `cy`, `pixelToRay`, `pointToPixel` |
+| `VidarImageTransform` / `ImageTransform` | processed pixel → calibrated sensor pixel |
+| `VidarTransformRegistry` / `build_robot_t_camera` | cached `robot_T_camera` from profile |
+| `VidarGroundPlane` / `intersect_ground_plane` | floor z=0 intersection |
+| `VidarAprilTagTransforms` | documented `field_T_robot` chain |
+| `VidarCalibrationDataset` / `calibration_dataset` | offline JSONL schema validation |
+
+Notation: **`robot_T_camera`** maps points from camera optical frame into robot frame.
+
+---
+
 ## Observations
 
 ### `ElementObservation` / `VidarElementObservation`
@@ -138,7 +163,7 @@ Immutable fused game-piece detection.
 | Field | Type | Notes |
 |-------|------|-------|
 | `cameraName` | string | |
-| `captureTimeNanos` | int64 | monotonic capture time |
+| `captureTimeNanos` | int64 | VisionPortal `frameCaptureNanos` at mailbox publish |
 | `cx`, `cy` | float | image center, full-frame px |
 | `boundingWidthPx`, `boundingHeightPx` | float | axis-aligned box |
 | `fittedCx`, `fittedCy`, `radiusPx` | float | circle fit |
@@ -148,7 +173,7 @@ Immutable fused game-piece detection.
 | `detectorType` | `ElementDetectorType` | |
 | `confidence` | float | 0–1 composite |
 | `range`, `rangeUncertainty` | float | fused slant range |
-| `dSize`, `dFloor` | float | component ranges |
+| `dSize`, `dFloor`, `dGround` | float | component ranges (element fusion) |
 | `rangeResult` | `RangeResult` | full fusion detail |
 | `robotX`, `robotY` | float | robot-frame floor point |
 | `houghVotes` | int | 0 for color-blob path |
@@ -164,7 +189,7 @@ Python extension: `elementId` string (map key in Java is external via `getGameEl
 | `widthPx`, `heightPx`, `angleDeg` | float |
 | `aspectRatio`, `whiteRatio` | float |
 | `range`, `rangeUncertainty` | float |
-| `sizeBasedRange`, `floorBasedRange` | float |
+| `sizeBasedRange`, `floorBasedRange`, `groundBasedRange` | float |
 | `rangeResult` | `RangeResult` |
 | `viewingAnglePenalty`, `partialVisibilityPenalty` | float |
 | `confidence` | float |

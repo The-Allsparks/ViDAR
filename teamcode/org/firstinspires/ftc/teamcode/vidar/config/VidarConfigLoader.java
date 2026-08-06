@@ -428,6 +428,20 @@ public final class VidarConfigLoader {
         }
         flat.put("principalPointX", camera.optDouble("principalPointX", 320));
         flat.put("principalPointY", camera.optDouble("principalPointY", 240));
+        flat.put("calibrationWidth", camera.optInt("calibrationWidth", camera.optInt("imageWidth", 0)));
+        flat.put("calibrationHeight", camera.optInt("calibrationHeight", camera.optInt("imageHeight", 0)));
+        if (camera.has("distortionModel")) {
+            flat.put("distortionModel", camera.getString("distortionModel"));
+        }
+        if (camera.has("distortionCoeffs")) {
+            flat.put("distortionCoeffs", camera.getJSONArray("distortionCoeffs"));
+        }
+        if (camera.has("calibrationVersion")) {
+            flat.put("calibrationVersion", camera.getString("calibrationVersion"));
+        }
+        if (camera.has("calibrationDate")) {
+            flat.put("calibrationDate", camera.getString("calibrationDate"));
+        }
         flat.put("horizontalFovDeg", camera.optDouble("horizontalFovDeg", 70));
         flat.put("verticalFovDeg", camera.optDouble("verticalFovDeg", 55));
         flat.put("plateWidth", camera.has("plateWidth")
@@ -534,6 +548,13 @@ public final class VidarConfigLoader {
         JSONObject roi = p.optJSONObject("roi");
         VidarCameraRoiConfig roiConfig = parseRoi(roi);
 
+        int calW = p.optInt("calibrationWidth", p.optInt("imageWidth", 0));
+        int calH = p.optInt("calibrationHeight", p.optInt("imageHeight", 0));
+        org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics.DistortionModel distModel =
+                org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics.DistortionModel
+                        .fromJson(p.optString("distortionModel", "none"));
+        double[] distCoeffs = parseDoubleArray(p.optJSONArray("distortionCoeffs"));
+
         return new VidarRobotConfig.CameraProfileSpec(
                 p.getString("name"),
                 p.getDouble("bearingDeg"),
@@ -552,7 +573,21 @@ public final class VidarConfigLoader {
                 p.optDouble("mountPitchDeg", 0),
                 p.optDouble("mountRollDeg", 0),
                 p.optDouble("plateWidth", 12.0),
-                roiConfig);
+                roiConfig,
+                calW, calH, distModel, distCoeffs,
+                p.optString("calibrationVersion", null),
+                p.optString("calibrationDate", null));
+    }
+
+    private static double[] parseDoubleArray(JSONArray array) throws JSONException {
+        if (array == null) {
+            return null;
+        }
+        double[] out = new double[array.length()];
+        for (int i = 0; i < array.length(); i++) {
+            out[i] = array.getDouble(i);
+        }
+        return out;
     }
 
     private static VidarHsvRange parseHsv(JSONObject hsv) throws JSONException {
@@ -749,8 +784,14 @@ public final class VidarConfigLoader {
                 .append(",\"focalLengthPx\":").append(profile.focalLengthPx)
                 .append(",\"focalLengthYPx\":").append(profile.focalLengthYPx)
                 .append(",\"principalPointX\":").append(profile.principalPointX)
-                .append(",\"principalPointY\":").append(profile.principalPointY)
-                .append(",\"horizontalFovDeg\":").append(profile.horizontalFovDeg)
+                .append(",\"principalPointY\":").append(profile.principalPointY);
+        if (profile.calibrationWidth > 0) {
+            sb.append(",\"calibrationWidth\":").append(profile.calibrationWidth);
+        }
+        if (profile.calibrationHeight > 0) {
+            sb.append(",\"calibrationHeight\":").append(profile.calibrationHeight);
+        }
+        sb.append(",\"horizontalFovDeg\":").append(profile.horizontalFovDeg)
                 .append(",\"verticalFovDeg\":").append(profile.verticalFovDeg)
                 .append(",\"plateWidth\":").append(profile.plateWidth)
                 .append(",\"floorLut\":[");

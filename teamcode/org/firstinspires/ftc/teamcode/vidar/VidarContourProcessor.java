@@ -154,6 +154,8 @@ public class VidarContourProcessor implements VisionProcessor {
 
     private VidarFrameMailbox frameMailbox;
 
+    private Runnable mailboxDrainCallback;
+
 
 
     private Paint gameDrawStroke;
@@ -182,6 +184,10 @@ public class VidarContourProcessor implements VisionProcessor {
 
         this.frameMailbox = mailbox;
 
+    }
+
+    public void setMailboxDrainCallback(Runnable callback) {
+        this.mailboxDrainCallback = callback;
     }
 
 
@@ -368,6 +374,12 @@ public class VidarContourProcessor implements VisionProcessor {
 
             frameMailbox.publish(frame, captureTimeNanos);
 
+            if (mailboxDrainCallback != null) {
+
+                mailboxDrainCallback.run();
+
+            }
+
             return bestGame;
 
         }
@@ -380,7 +392,7 @@ public class VidarContourProcessor implements VisionProcessor {
 
 
 
-    /** Worker or synchronous portal path — runs tic-toc slot selection then the matching pass. */
+    /** Worker or legacy fallback — runs tic-toc slot selection then the matching pass. */
 
     public void processOwnedFrame(Mat frame, long captureTimeNanos) {
 
@@ -1024,23 +1036,26 @@ public class VidarContourProcessor implements VisionProcessor {
 
                     profile.plateWidth, profile.focalLengthPx, fullWidthPx);
 
-            double dFloor = VidarGeometry.distanceFromFloor(
+            double cyForFloor = (absCy - scaled.sourceCrop.y) / scaled.scale;
 
-                    (absCy - scaled.sourceCrop.y) / scaled.scale, profile);
+            boolean nearHorizon = absCy <= profile.horizonRowPx + 8;
 
-            VidarRangeEstimate widthEst = VidarGeometry.buildPlateWidthEstimate(
+            double horizonConf = profile.horizonRowPx > 0
+                    ? Math.max(0.3, 1.0 - profile.horizonRowPx / 120.0) : 0.5;
+
+            double dFloor = VidarGeometry.distanceFromFloor(cyForFloor, profile);
+
+            double dGround = VidarGeometry.distanceFromGroundPlane(absCx, absCy, profile, 0.0);
+
+            VidarRangeResult rangeResult = VidarGeometry.fusePlateRange(
+
+                    absCx, absCy, cyForFloor,
 
                     dWidth, fullWidthPx, hit.rectangularity, hit.whiteRatio,
 
-                    partialPenalty < 1.0, hit.touchesBoundary, rotationPenalty);
+                    partialPenalty < 1.0, hit.touchesBoundary, rotationPenalty,
 
-            VidarRangeEstimate floorEst = VidarGeometry.buildFloorEstimate(
-
-                    dFloor, (absCy - scaled.sourceCrop.y) / scaled.scale, 0.5, false);
-
-            VidarRangeResult rangeResult = VidarGeometry.fuseRangeWeighted(
-
-                    season.maxRangeMismatchRatio, widthEst, floorEst);
+                    nearHorizon, horizonConf, profile, season.maxRangeMismatchRatio);
 
             double range = rangeResult.isValid() ? rangeResult.distance : Double.NaN;
 
@@ -1091,6 +1106,8 @@ public class VidarContourProcessor implements VisionProcessor {
                         dWidth,
 
                         dFloor,
+
+                        dGround,
 
                         rangeResult,
 

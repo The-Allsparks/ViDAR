@@ -2,6 +2,7 @@
 from vidar.geometry import (
     build_size_estimate,
     build_floor_estimate,
+    build_ground_plane_estimate,
     build_plate_width_estimate,
     distance_from_size,
     distance_from_width,
@@ -22,6 +23,7 @@ __all__ = [
     "fuse_range_weighted",
     "build_size_estimate",
     "build_floor_estimate",
+    "build_ground_plane_estimate",
     "build_plate_width_estimate",
     "MotionTransform",
     "LocalizationFusionPure",
