@@ -80,7 +80,10 @@ public final class VidarBlobUtil {
             return "none";
         }
         return String.format(
-                "range=%s in · robot (%s, %s) · cam=%s · aspect=%.2f",
+                "width=%s floor=%s ground=%s in · fused=%s · robot (%s, %s) · cam=%s · aspect=%.2f",
+                fmtIn(plate.sizeBasedRange),
+                fmtIn(plate.floorBasedRange),
+                fmtIn(plate.groundBasedRange),
                 fmtIn(plate.range),
                 fmtIn(plate.robotX),
                 fmtIn(plate.robotY),
@@ -131,13 +134,33 @@ public final class VidarBlobUtil {
         if (element == null) {
             return "none";
         }
+        String fused = element.rangeResult != null
+                ? String.format(" n=%d", element.rangeResult.sourceCount) : "";
         return String.format(
-                "size=%s floor=%s in · robot (%s, %s) · votes=%d",
+                "size=%s floor=%s ground=%s in · fused=%s%s · robot (%s, %s) · votes=%d",
                 fmtIn(element.dSize),
                 fmtIn(element.dFloor),
+                fmtIn(element.dGround),
+                fmtIn(element.range),
+                fused,
                 fmtIn(element.robotX),
                 fmtIn(element.robotY),
                 element.houghVotes);
+    }
+
+    public static String formatCalibrationDiagnostics(
+            java.util.Map<String, Object> diagnostics) {
+        if (diagnostics == null || diagnostics.isEmpty()) {
+            return "—";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (java.util.Map.Entry<String, Object> entry : diagnostics.entrySet()) {
+            if (sb.length() > 0) {
+                sb.append(" · ");
+            }
+            sb.append(entry.getKey()).append('=').append(entry.getValue());
+        }
+        return sb.toString();
     }
 
     private static String fmtIn(double v) {

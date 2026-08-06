@@ -119,6 +119,7 @@ All static in Java `VidarGeometry`; module functions in Python `vidar.geometry`.
 | `distanceFromGroundPlane` | `cx, cy, profile, targetHeightZ` | slant range from mount + intrinsics |
 | `buildGroundPlaneEstimate` | `dGround, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
 | `buildPlateWidthEstimate` | `dWidth, pixelWidth, rectangularity, whiteRatio, partialVisibility, touchesRoiBoundary, rotationPenalty` | `RangeEstimate` |
+| `fusePlateRange` | plate pixel + profile + floor cy | `RangeResult` (width + floor + ground @ z=0) |
 | `fuseRangeWeighted` | `maxRangeMismatchRatio?, ...estimates` | `RangeResult` |
 | `robotX` | `range, bearingDeg, profile?` | robot X (in) |
 | `robotY` | `range, bearingDeg, profile?` | robot Y (in) |
@@ -172,7 +173,7 @@ Immutable fused game-piece detection.
 | `detectorType` | `ElementDetectorType` | |
 | `confidence` | float | 0–1 composite |
 | `range`, `rangeUncertainty` | float | fused slant range |
-| `dSize`, `dFloor` | float | component ranges |
+| `dSize`, `dFloor`, `dGround` | float | component ranges (element fusion) |
 | `rangeResult` | `RangeResult` | full fusion detail |
 | `robotX`, `robotY` | float | robot-frame floor point |
 | `houghVotes` | int | 0 for color-blob path |
@@ -188,7 +189,7 @@ Python extension: `elementId` string (map key in Java is external via `getGameEl
 | `widthPx`, `heightPx`, `angleDeg` | float |
 | `aspectRatio`, `whiteRatio` | float |
 | `range`, `rangeUncertainty` | float |
-| `sizeBasedRange`, `floorBasedRange` | float |
+| `sizeBasedRange`, `floorBasedRange`, `groundBasedRange` | float |
 | `rangeResult` | `RangeResult` |
 | `viewingAnglePenalty`, `partialVisibilityPenalty` | float |
 | `confidence` | float |

@@ -97,7 +97,7 @@ public static final int CAMERA_COUNT = 4;
 public static final boolean ALLIANCE_USE_COLOR_SENSOR = true;
 ```
 
-Each index uses `VidarCameraProfile.FOUR_SIDES[index]` (bearing 0°/90°/180°/270° + mount offsets). Calibrate floor LUT and `focalLengthPx` **per camera**.
+Each index uses `VidarCameraProfile.FOUR_SIDES[index]` (bearing 0°/90°/180°/270° + mount offsets). Copy a robot template from [`config/robots/`](config/robots/README.md) — **SVPRO** (fx ≈ 246, 105° HFOV) vs **C920-class** (fx ≈ 340, ~70° HFOV) — then calibrate floor LUT on-field.
 
 ```java
 VidarMultiVision vision = new VidarMultiVision(hardwareMap, odomSupplier);

@@ -136,5 +136,41 @@ public final class VidarTagConfig {
 
     /** Global decode budget per interval. */
     public static final int MAX_DECODES_PER_INTERVAL = 1;
+
+    /** Horizontal FOV for scout bearing — profile override when calibrated. */
+    public static double horizontalFovDeg(VidarCameraProfile profile) {
+        if (profile != null && profile.horizontalFovDeg > 0) {
+            return profile.horizontalFovDeg;
+        }
+        return HORIZONTAL_FOV_DEG;
+    }
+
+    public static double lensFx(VidarCameraProfile profile, double scaleX) {
+        if (profile != null && profile.focalLengthPx > 0) {
+            return profile.focalLengthPx * scaleX;
+        }
+        return LENS_FX * scaleX;
+    }
+
+    public static double lensFy(VidarCameraProfile profile, double scaleY) {
+        if (profile != null && profile.focalLengthYPx > 0) {
+            return profile.focalLengthYPx * scaleY;
+        }
+        return LENS_FY * scaleY;
+    }
+
+    public static double lensCx(VidarCameraProfile profile, double scaleX) {
+        if (profile != null && profile.principalPointX > 0) {
+            return profile.principalPointX * scaleX;
+        }
+        return LENS_CX * scaleX;
+    }
+
+    public static double lensCy(VidarCameraProfile profile, double scaleY) {
+        if (profile != null && profile.principalPointY > 0) {
+            return profile.principalPointY * scaleY;
+        }
+        return LENS_CY * scaleY;
+    }
 }
 

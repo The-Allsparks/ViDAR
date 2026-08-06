@@ -140,6 +140,7 @@ class ElementObservation:
     range_uncertainty: float
     d_size: float
     d_floor: float
+    d_ground: float
     range_result: RangeResult
     robot_x: float
     robot_y: float
@@ -207,6 +208,10 @@ class ElementObservation:
         return self.d_floor
 
     @property
+    def dGround(self) -> float:
+        return self.d_ground
+
+    @property
     def rangeResult(self) -> RangeResult:
         return self.range_result
 
@@ -239,6 +244,7 @@ class PlateObservation:
     range_uncertainty: float
     size_based_range: float
     floor_based_range: float
+    ground_based_range: float
     range_result: RangeResult
     viewing_angle_penalty: float
     partial_visibility_penalty: float

@@ -71,6 +71,8 @@ public class VidarDiscoverOpMode extends LinearOpMode {
             telemetry.addData("Alliance", alliance.formatStatus());
             telemetry.addData("Element", VidarBlobUtil.formatElement(element));
             telemetry.addData("Element detail", VidarBlobUtil.formatElementDetail(element));
+            telemetry.addData("Calibration", VidarBlobUtil.formatCalibrationDiagnostics(
+                    vision.calibrationDiagnostics().toTelemetryMap()));
             telemetry.addData("Plate", VidarBlobUtil.formatPlate(plate, ours));
             telemetry.addData("Plate detail", VidarBlobUtil.formatPlateDetail(plate));
             telemetry.addData("Foe", VidarBlobUtil.formatPlate(vision.getBestFoe(), ours));

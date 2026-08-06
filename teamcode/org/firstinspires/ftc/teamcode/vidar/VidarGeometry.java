@@ -494,9 +494,39 @@ public final class VidarGeometry {
                 areaPx, aspectRatio, circularity, fillRatio, interiorScore,
                 detectorType, confidence,
                 rangeResult.distance, rangeResult.uncertainty,
-                dSize, dFloor,
+                dSize, dFloor, dGround,
                 rangeResult,
                 robotX, robotY);
+    }
+
+    /**
+     * Fuse plate width, floor LUT, and ground-plane (z = 0) slant ranges.
+     */
+    public static VidarRangeResult fusePlateRange(
+            double cx,
+            double cy,
+            double cyForFloor,
+            double dWidth,
+            double pixelWidth,
+            double rectangularity,
+            double whiteRatio,
+            boolean partialVisibility,
+            boolean touchesRoiBoundary,
+            double rotationPenalty,
+            boolean nearHorizon,
+            double horizonConfidence,
+            VidarCameraProfile profile,
+            double maxRangeMismatchRatio) {
+        double dFloor = distanceFromFloor(cyForFloor, profile);
+        double dGround = distanceFromGroundPlane(cx, cy, profile, 0.0);
+        VidarRangeEstimate widthEst = buildPlateWidthEstimate(
+                dWidth, pixelWidth, rectangularity, whiteRatio,
+                partialVisibility, touchesRoiBoundary, rotationPenalty);
+        VidarRangeEstimate floorEst = buildFloorEstimate(
+                dFloor, cyForFloor, horizonConfidence, nearHorizon);
+        VidarRangeEstimate groundEst = buildGroundPlaneEstimate(
+                dGround, cyForFloor, horizonConfidence, nearHorizon);
+        return fuseRangeWeighted(maxRangeMismatchRatio, widthEst, floorEst, groundEst);
     }
 
     public static double composeElementConfidence(

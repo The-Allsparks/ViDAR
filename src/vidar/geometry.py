@@ -31,6 +31,7 @@ __all__ = [
     "build_floor_estimate",
     "build_ground_plane_estimate",
     "build_plate_width_estimate",
+    "fuse_plate_range",
     "fuse_range_weighted",
     "distance_from_ground_plane",
     "ray_direction_robot_frame",
@@ -142,6 +143,40 @@ def build_ground_plane_estimate(
     base_uncertainty = d_ground * 0.10 / max(0.25, horizon_confidence)
     weight = 1.0 / (base_uncertainty * base_uncertainty)
     return RangeEstimate(RangeSource.GROUND_PLANE, d_ground, weight, base_uncertainty)
+
+
+def fuse_plate_range(
+    cx: float,
+    cy: float,
+    cy_for_floor: float,
+    d_width: float,
+    pixel_width: float,
+    rectangularity: float,
+    white_ratio: float,
+    partial_visibility: bool,
+    touches_roi_boundary: bool,
+    rotation_penalty: float,
+    near_horizon: bool,
+    horizon_confidence: float,
+    profile: CameraProfile,
+    max_range_mismatch_ratio: float = MAX_RANGE_MISMATCH_RATIO,
+) -> RangeResult:
+    d_floor = distance_from_floor(cy_for_floor, profile)
+    d_ground = distance_from_ground_plane(cx, cy, profile, 0.0)
+    width_est = build_plate_width_estimate(
+        d_width,
+        pixel_width,
+        rectangularity,
+        white_ratio,
+        partial_visibility,
+        touches_roi_boundary,
+        rotation_penalty,
+    )
+    floor_est = build_floor_estimate(d_floor, cy_for_floor, horizon_confidence, near_horizon)
+    ground_est = build_ground_plane_estimate(d_ground, cy_for_floor, horizon_confidence, near_horizon)
+    return fuse_range_weighted(
+        width_est, floor_est, ground_est, max_range_mismatch_ratio=max_range_mismatch_ratio
+    )
 
 
 def build_plate_width_estimate(
@@ -408,6 +443,7 @@ def fuse_element_observation(
         range_uncertainty=range_result.uncertainty,
         d_size=d_size,
         d_floor=d_floor,
+        d_ground=d_ground,
         range_result=range_result,
         robot_x=robot_x,
         robot_y=robot_y,
@@ -424,6 +460,7 @@ buildSizeEstimate = build_size_estimate
 buildFloorEstimate = build_floor_estimate
 buildGroundPlaneEstimate = build_ground_plane_estimate
 buildPlateWidthEstimate = build_plate_width_estimate
+fusePlateRange = fuse_plate_range
 fuseRangeWeighted = fuse_range_weighted
 distanceFromGroundPlane = distance_from_ground_plane
 floorPointInRobot = floor_point_in_robot

@@ -19,6 +19,7 @@ public final class VidarPlateObservation {
     public final double rangeUncertainty;
     public final double sizeBasedRange;
     public final double floorBasedRange;
+    public final double groundBasedRange;
     public final VidarRangeResult rangeResult;
     public final double viewingAnglePenalty;
     public final double partialVisibilityPenalty;
@@ -43,7 +44,7 @@ public final class VidarPlateObservation {
             double robotY,
             String cameraName) {
         this(alliance, cx, cy, widthPx, heightPx, angleDeg, aspectRatio, whiteRatio,
-                range, Double.NaN, Double.NaN, Double.NaN, null,
+                range, Double.NaN, Double.NaN, Double.NaN, Double.NaN, null,
                 1.0, 1.0, confidence, robotX, robotY, cameraName, 0);
     }
 
@@ -60,6 +61,7 @@ public final class VidarPlateObservation {
             double rangeUncertainty,
             double sizeBasedRange,
             double floorBasedRange,
+            double groundBasedRange,
             VidarRangeResult rangeResult,
             double viewingAnglePenalty,
             double partialVisibilityPenalty,
@@ -80,6 +82,7 @@ public final class VidarPlateObservation {
         this.rangeUncertainty = rangeUncertainty;
         this.sizeBasedRange = sizeBasedRange;
         this.floorBasedRange = floorBasedRange;
+        this.groundBasedRange = groundBasedRange;
         this.rangeResult = rangeResult;
         this.viewingAnglePenalty = viewingAnglePenalty;
         this.partialVisibilityPenalty = partialVisibilityPenalty;

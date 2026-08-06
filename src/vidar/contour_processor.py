@@ -19,12 +19,13 @@ from vidar.contour_detect import (
 )
 from vidar.frame_pipeline import ScaledRoi, detection_scaled
 from vidar.geometry import (
-    build_plate_width_estimate,
     compose_plate_confidence,
+    distance_from_floor,
+    distance_from_ground_plane,
     distance_from_width,
     floor_point_in_robot,
     fuse_element_observation,
-    fuse_range_weighted,
+    fuse_plate_range,
 )
 from vidar.models import ElementDetectorType, CameraProfile, SeasonConfig
 from vidar.types import ElementObservation, PlateObservation, RankedElementFrame
@@ -281,7 +282,15 @@ class ContourProcessor:
             d_width = distance_from_width(
                 plate.width, self.profile.focal_length_px, hit.width
             )
-            width_est = build_plate_width_estimate(
+            cy_for_floor = hit.cy
+            near_horizon = cy_for_floor <= self.profile.horizon_row_px + 8
+            horizon_conf = max(0.3, 1.0 - self.profile.horizon_row_px / 120.0)
+            d_floor = distance_from_floor(cy_for_floor, self.profile)
+            d_ground = distance_from_ground_plane(hit.cx, hit.cy, self.profile, 0.0)
+            range_result = fuse_plate_range(
+                hit.cx,
+                hit.cy,
+                cy_for_floor,
                 d_width,
                 hit.width,
                 hit.rectangularity,
@@ -289,9 +298,10 @@ class ContourProcessor:
                 False,
                 hit.touches_boundary,
                 0.1,
-            )
-            range_result = fuse_range_weighted(
-                width_est, max_range_mismatch_ratio=self.season.max_range_mismatch_ratio
+                near_horizon,
+                horizon_conf,
+                self.profile,
+                max_range_mismatch_ratio=self.season.max_range_mismatch_ratio,
             )
             confidence = compose_plate_confidence(
                 hit.white_ratio,
@@ -320,7 +330,8 @@ class ContourProcessor:
                 range=range_result.distance,
                 range_uncertainty=range_result.uncertainty,
                 size_based_range=d_width,
-                floor_based_range=math.nan,
+                floor_based_range=d_floor,
+                ground_based_range=d_ground,
                 range_result=range_result,
                 viewing_angle_penalty=1.0,
                 partial_visibility_penalty=1.0,

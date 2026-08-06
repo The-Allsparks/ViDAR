@@ -27,7 +27,9 @@ verticalFovDeg = 88
 distortionModel = "none"
 ```
 
-Wider FOV than a C920 (~78°): same physical object occupies fewer pixels at a given range — re-run floor LUT and size-based ranging after swapping cameras. Edge pixels may show mild radial distortion; still not fisheye — only tune Brown-Conrady if checkerboard calibration shows meaningful error.
+Wider FOV than a C920 (~78°): same physical object occupies fewer pixels at a given range — re-run floor LUT and size-based ranging after swapping cameras. Template JSON files include `"floorLutStatus": "example-placeholder-recalibrate-on-robot"` until you measure on-field.
+
+**Robot templates:** [`config/robots/README.md`](../config/robots/README.md) compares SVPRO vs C920 example files.
 
 --- — **Implemented** (manual + validation; checkerboard OpMode **Planned**)
 

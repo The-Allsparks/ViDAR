@@ -164,7 +164,7 @@ ViDAR uses the SDK pose directly in `VidarTagObservation.fieldPoseAtCapture`. `V
 
 ## Ground-plane intersection
 
-For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z = 0** in robot frame. Rejects parallel rays and rays pointing away from the floor. `VidarGeometry.floorPointInRobot()` uses `robot_T_camera` on the primary path; floor LUT remains a fusion fallback.
+For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z = 0** in robot frame (plates) or **z = diameter/2** for ball-center element fusion. Rejects parallel rays and rays pointing away from the floor. `VidarGeometry.floorPointInRobot()` uses `robot_T_camera` on the primary path; floor LUT remains a fusion fallback.
 
 ---
 
@@ -172,7 +172,7 @@ For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z =
 
 - **Browser sim:** enable **Calibration axes (robot / camera)** — axis triad overlay (X red, Y green, Z blue), forward ray, sample pixel markers.
 - **Hardware:** `VidarRoiCalibrationOpMode` for ROI/horizon (existing).
-- **Diagnostics:** `VidarCalibrationDiagnostics` — calibration profile, resolution, transform notation, observation age, lookup failures (low-rate telemetry).
+- **Diagnostics:** `VidarCalibrationDiagnostics` — calibration profile, resolution, transform notation, observation age (`VidarMultiVision.calibrationDiagnostics()`, surfaced in **ViDAR: Discover**).
 
 ---
 
@@ -183,15 +183,18 @@ Under `cameraDefaults` or per-camera `camera`:
 ```json
 "calibrationWidth": 640,
 "calibrationHeight": 480,
-"calibrationVersion": "example-v1",
+"calibrationVersion": "svpro-640x480-v1",
 "calibrationDate": "2026-08-05",
 "distortionModel": "none",
-"focalLengthPx": 340,
+"focalLengthPx": 246,
+"focalLengthYPx": 246,
+"horizontalFovDeg": 105,
+"verticalFovDeg": 88,
 "principalPointX": 320,
 "principalPointY": 240
 ```
 
-Mount block defines `robot_T_camera` translation and orientation (degrees).
+Mount block defines `robot_T_camera` translation and orientation (degrees). C920-class cameras use `focalLengthPx ≈ 340`, `horizontalFovDeg ≈ 70` — see `config/robots/README.md`.
 
 ---
 
