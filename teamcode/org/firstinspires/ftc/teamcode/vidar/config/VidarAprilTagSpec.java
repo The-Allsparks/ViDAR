@@ -1,11 +1,9 @@
 package org.firstinspires.ftc.teamcode.vidar.config;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
 
 /**
@@ -64,18 +62,13 @@ public final class VidarAprilTagSpec {
     }
 
     public AprilTagMetadata toMetadata() {
-        AprilTagMetadata meta = new AprilTagMetadata(id, name, size, DistanceUnit.INCH);
-        if (hasFieldPosition()) {
-            meta.fieldPosition = new Position(DistanceUnit.INCH, (float) xIn, (float) yIn, (float) zIn);
-            meta.fieldOrientation = Rotation.getQuaternion(
-                    AxesReference.INTRINSIC,
-                    AxesOrder.XYZ,
-                    AngleUnit.DEGREES,
-                    (float) rollDeg,
-                    (float) pitchDeg,
-                    (float) yawDeg);
+        if (!hasFieldPosition()) {
+            return new AprilTagMetadata(id, name, size, DistanceUnit.INCH);
         }
-        return meta;
+        Position fieldPos = new Position(DistanceUnit.INCH, xIn, yIn, zIn, 0);
+        YawPitchRollAngles fieldOri = new YawPitchRollAngles(
+                AngleUnit.DEGREES, yawDeg, pitchDeg, rollDeg, 0);
+        return new AprilTagMetadata(id, name, size, DistanceUnit.INCH, fieldPos, fieldOri);
     }
 
     private static double normalizeDeg(double deg) {

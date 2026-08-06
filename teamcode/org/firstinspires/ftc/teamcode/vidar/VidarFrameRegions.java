@@ -47,6 +47,11 @@ public final class VidarFrameRegions {
         return HorizontalBand.MIDDLE;
     }
 
+    public static Rect tagTopHalf(int frameCols, int frameRows) {
+        VidarRoiRect tag = VidarCameraRoiConfig.DEFAULT.tagRoi(frameCols, frameRows);
+        return new Rect(0, tag.y, frameCols, tag.height);
+    }
+
     public static Rect tagDecodeCrop(int frameCols, int frameRows, HorizontalBand band) {
         VidarRoiRect tag = VidarCameraRoiConfig.DEFAULT.tagRoi(frameCols, frameRows);
         int topH = tag.height;

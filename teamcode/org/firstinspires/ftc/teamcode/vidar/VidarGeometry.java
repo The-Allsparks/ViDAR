@@ -235,7 +235,8 @@ public final class VidarGeometry {
         double bearingRad = Math.toRadians(profile.bearingDeg + profile.mountYawDeg);
         double[] panned = rotateZ(base, bearingRad);
         double[] pitched = rotateX(panned, Math.toRadians(profile.mountPitchDeg));
-        return normalize3(rotateZ(pitched, Math.toRadians(profile.mountRollDeg)));
+        double[] rolled = rotateZ(pitched, Math.toRadians(profile.mountRollDeg));
+        return normalize3(rolled[0], rolled[1], rolled[2]);
     }
 
     /**

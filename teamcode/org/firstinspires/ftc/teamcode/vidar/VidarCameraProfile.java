@@ -100,7 +100,7 @@ public final class VidarCameraProfile {
     }
 
     /** Single-camera teaching default — front-facing, matches sim/vidar-tuning.json. */
-    public static final VidarCameraProfile FRONT = FOUR_SIDES[0];
+    public static final VidarCameraProfile FRONT;
 
     /**
      * Four side cameras with identical tilt; calibrate each LUT on the field.
@@ -112,6 +112,10 @@ public final class VidarCameraProfile {
             buildSide("back", 180, -6.5, 0),
             buildSide("left", 270, 0, 6.5),
     };
+
+    static {
+        FRONT = FOUR_SIDES[0];
+    }
 
     private static VidarCameraProfile buildSide(String name, double bearing, double mountX, double mountY) {
         return new VidarCameraProfile(

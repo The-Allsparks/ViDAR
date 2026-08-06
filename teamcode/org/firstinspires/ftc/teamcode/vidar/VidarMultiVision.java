@@ -357,7 +357,7 @@ public class VidarMultiVision {
             }
         }
 
-        Collections.sort(candidates, Comparator.comparingDouble(s -> s.score).reversed());
+        candidates.sort(Comparator.comparingDouble((ScoredElement s) -> s.score).reversed());
         List<VidarElementObservation> deduped = new ArrayList<>();
         int fusionCap = runtimeConfig.fusionMaxRankedElements();
         int overflow = 0;

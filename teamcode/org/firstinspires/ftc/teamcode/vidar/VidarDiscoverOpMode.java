@@ -60,8 +60,8 @@ public class VidarDiscoverOpMode extends LinearOpMode {
             VidarTagScoutResult scout = vision.getLastTagScout();
             VidarTagObservation tag = vision.getLatestTag();
             Pose2D fieldNow = vision.getFusedFieldPose();
-            if (fieldNow == null) {
-                fieldNow = vision.getBackdatedFieldPose(odomHolder[0]);
+            if (fieldNow == null && tag != null) {
+                fieldNow = vision.getBackdatedFieldPose(odomHolder[0], odomHolder[0]);
             }
             VidarAlliance ours = alliance.get();
 

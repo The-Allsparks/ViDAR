@@ -101,11 +101,6 @@ public final class VidarMetrics {
             case "element":
             case "contour":
                 lastElementProcessorMs = ms;
-                lastElementProcessorMs = ms;
-                break;
-            case "element":
-                lastElementProcessorMs = ms;
-                lastElementProcessorMs = ms;
                 break;
             case "plate":
                 lastPlateProcessorMs = ms;

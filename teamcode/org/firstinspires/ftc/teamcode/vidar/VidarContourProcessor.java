@@ -128,6 +128,8 @@ public class VidarContourProcessor implements VisionProcessor {
 
     private Mat reusableHsv;
 
+    private Mat reusableRgb;
+
     private Mat reusableMask;
 
     private Mat reusableWrapMask;
@@ -332,6 +334,8 @@ public class VidarContourProcessor implements VisionProcessor {
 
         if (reusableHsv != null) reusableHsv.release();
 
+        if (reusableRgb != null) reusableRgb.release();
+
         if (reusableMask != null) reusableMask.release();
 
         if (reusableWrapMask != null) reusableWrapMask.release();
@@ -346,7 +350,7 @@ public class VidarContourProcessor implements VisionProcessor {
 
         if (reusableHierarchy != null) reusableHierarchy.release();
 
-        reusableScaledRgba = reusableHsv = reusableMask = reusableWrapMask = null;
+        reusableScaledRgba = reusableHsv = reusableRgb = reusableMask = reusableWrapMask = null;
 
         kernelEllipse = kernelRect = null;
 
@@ -492,7 +496,15 @@ public class VidarContourProcessor implements VisionProcessor {
 
         try {
 
-            Imgproc.cvtColor(scaled.image, reusableHsv, Imgproc.COLOR_RGBA2HSV);
+            if (reusableRgb == null) {
+
+                reusableRgb = new Mat();
+
+            }
+
+            Imgproc.cvtColor(scaled.image, reusableRgb, Imgproc.COLOR_RGBA2RGB);
+
+            Imgproc.cvtColor(reusableRgb, reusableHsv, Imgproc.COLOR_RGB2HSV);
 
 
 
