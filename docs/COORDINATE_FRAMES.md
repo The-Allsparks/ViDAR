@@ -144,7 +144,7 @@ flowchart LR
 | Tag scout | bearing | `BEARING_ONLY` — never localizes |
 | Tag decode | `FIELD` | measured (SDK pose) |
 
-Helpers: `VidarObservationSpatial`, `VidarSpatialDepthKind`. Observations carry `captureTimeNanos` (callback/receipt time — not exposure start unless the platform provides it).
+Helpers: `VidarObservationSpatial`, `VidarSpatialDepthKind`. Observations carry VisionPortal **`frameCaptureNanos`** (propagated as `captureTimeNanos`). All cameras publish through `VidarFrameMailbox`; single-camera setups drain synchronously via `VidarVision.drainMailboxSync()`, multi-camera setups use `VidarGlobalVisionWorker` — both call `processSnapshot()` with the same SDK timestamp. This is the SDK frame-capture instant, not exposure start unless the platform provides that.
 
 Timestamped pose lookup: `VidarPoseLookup` + existing `VidarOdomHistory` (bounded ring buffer, interpolation when bracketed).
 
@@ -226,7 +226,7 @@ The on-robot nonlinear optimizer is **not implemented** in this PR.
 ## Limitations
 
 - No runtime fisheye or full Brown-Conrady correction on Control Hub (**Planned** offline).  
-- FTC camera timestamps are receipt/callback time — document honestly.  
+- FTC `frameCaptureNanos` is propagated unchanged; not a separate ViDAR clock.  
 - Multi-camera hardware validation **not** claimed.  
 - Four-camera USB stress **not Hardware validated**.
 

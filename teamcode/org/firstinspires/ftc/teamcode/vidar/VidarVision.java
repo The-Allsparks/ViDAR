@@ -29,6 +29,8 @@ public class VidarVision {
     private VidarElementObservation bestElement;
     private VidarPlateObservation bestPlate;
 
+    private int lastProcessedGeneration;
+
     public VidarVision(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
         this(hardwareMap, VidarConfig.CAMERA_NAME, VidarConfig.cameraProfile(), null, VidarConfig.CAMERA_NAME, null);
     }
@@ -123,12 +125,13 @@ public class VidarVision {
         tagProcessor = new VidarAdaptiveTagProcessor(
                 scheduler, profile, portalLabel, metrics, this.season, resourceBudget);
 
+        frameMailbox = new VidarFrameMailbox(metrics);
+        contourProcessor.setFrameMailbox(frameMailbox);
+        tagProcessor.setFrameMailbox(frameMailbox);
         if (asyncWorkerEnabled) {
-            frameMailbox = new VidarFrameMailbox(metrics);
-            contourProcessor.setFrameMailbox(frameMailbox);
-            tagProcessor.setFrameMailbox(frameMailbox);
+            contourProcessor.setMailboxDrainCallback(null);
         } else {
-            frameMailbox = null;
+            contourProcessor.setMailboxDrainCallback(this::drainMailboxSync);
         }
 
         org.firstinspires.ftc.vision.VisionPortal.Builder builder =
@@ -311,6 +314,18 @@ public class VidarVision {
             tagProcessor.processTagPass(snap.frame, snap.captureTimeNanos);
         } else if (metrics != null) {
             metrics.incrementSkippedSlots();
+        }
+    }
+
+    /** Synchronous mailbox drain for single-camera setups (same snapshot path as the global worker). */
+    void drainMailboxSync() {
+        if (frameMailbox == null || !isWorkerProcessingAllowed()) {
+            return;
+        }
+        VidarFrameMailbox.Snapshot snap = frameMailbox.tryTake(lastProcessedGeneration);
+        if (snap != null) {
+            lastProcessedGeneration = snap.generation;
+            processSnapshot(snap);
         }
     }
 

@@ -11,7 +11,7 @@ This document is the **language-neutral contract** for ViDAR's outer layer. Impl
 | **JSON config keys** | camelCase (unchanged): `diameter`, `minElementConfidence` |
 | **Distance fields** | Plain names (`distance`, `range`, `diameter`); unit from `distanceUnit`. Legacy `*In` and `*Dist` JSON keys still load. `Px`, `Deg`, `Nanos`, `Ms` unchanged. |
 | **Robot frame** | +X forward, +Y left, in the active distance unit |
-| **Timestamps** | Monotonic `captureTimeNanos` on every observation |
+| **Timestamps** | VisionPortal `frameCaptureNanos` (`captureTimeNanos` on observations) — same mailbox path for 1–4 cameras |
 
 Type prefix `Vidar` is used in Java (`VidarRangeResult`). Other languages may drop the prefix but must preserve field names.
 
@@ -159,7 +159,7 @@ Immutable fused game-piece detection.
 | Field | Type | Notes |
 |-------|------|-------|
 | `cameraName` | string | |
-| `captureTimeNanos` | int64 | monotonic capture time |
+| `captureTimeNanos` | int64 | VisionPortal `frameCaptureNanos` at mailbox publish |
 | `cx`, `cy` | float | image center, full-frame px |
 | `boundingWidthPx`, `boundingHeightPx` | float | axis-aligned box |
 | `fittedCx`, `fittedCy`, `radiusPx` | float | circle fit |

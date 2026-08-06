@@ -154,6 +154,8 @@ public class VidarContourProcessor implements VisionProcessor {
 
     private VidarFrameMailbox frameMailbox;
 
+    private Runnable mailboxDrainCallback;
+
 
 
     private Paint gameDrawStroke;
@@ -182,6 +184,10 @@ public class VidarContourProcessor implements VisionProcessor {
 
         this.frameMailbox = mailbox;
 
+    }
+
+    public void setMailboxDrainCallback(Runnable callback) {
+        this.mailboxDrainCallback = callback;
     }
 
 
@@ -368,6 +374,12 @@ public class VidarContourProcessor implements VisionProcessor {
 
             frameMailbox.publish(frame, captureTimeNanos);
 
+            if (mailboxDrainCallback != null) {
+
+                mailboxDrainCallback.run();
+
+            }
+
             return bestGame;
 
         }
@@ -380,7 +392,7 @@ public class VidarContourProcessor implements VisionProcessor {
 
 
 
-    /** Worker or synchronous portal path — runs tic-toc slot selection then the matching pass. */
+    /** Worker or legacy fallback — runs tic-toc slot selection then the matching pass. */
 
     public void processOwnedFrame(Mat frame, long captureTimeNanos) {
 

@@ -46,8 +46,7 @@ public final class VidarPoseLookup {
     }
 
     /**
-     * Lookup robot field pose at {@code captureTimeNanos} (VisionPortal callback/receipt time —
-     * not exposure start unless the platform provides that).
+     * Lookup robot field pose at {@code captureTimeNanos} (VisionPortal {@code frameCaptureNanos}).
      */
     public LookupResult atCapture(long captureTimeNanos) {
         if (history == null || captureTimeNanos <= 0) {
