@@ -212,6 +212,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
                 decoded.tagId,
                 decoded.fieldPose,
                 captureTimeNanos,
+                cameraName,
                 decoded.centerX,
                 decoded.centerY,
                 scout.band,

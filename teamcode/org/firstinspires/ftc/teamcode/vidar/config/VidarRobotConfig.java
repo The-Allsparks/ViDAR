@@ -95,6 +95,12 @@ public final class VidarRobotConfig {
         public final double mountRollDeg;
         public final double plateWidth;
         public final VidarCameraRoiConfig roiConfig;
+        public final int calibrationWidth;
+        public final int calibrationHeight;
+        public final org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics.DistortionModel distortionModel;
+        public final double[] distortionCoeffs;
+        public final String calibrationVersion;
+        public final String calibrationDate;
 
         public CameraProfileSpec(
                 String name,
@@ -116,6 +122,41 @@ public final class VidarRobotConfig {
                 double mountRollDeg,
                 double plateWidth,
                 VidarCameraRoiConfig roiConfig) {
+            this(name, bearingDeg, horizonRowPx, focalLengthPx, focalLengthYPx,
+                    principalPointX, principalPointY, horizontalFovDeg, verticalFovDeg,
+                    floorCyPx, floorDist, mountX, mountY, mountZ,
+                    mountYawDeg, mountPitchDeg, mountRollDeg, plateWidth, roiConfig,
+                    0, 0,
+                    org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics.DistortionModel.NONE,
+                    null, null, null);
+        }
+
+        public CameraProfileSpec(
+                String name,
+                double bearingDeg,
+                int horizonRowPx,
+                double focalLengthPx,
+                double focalLengthYPx,
+                double principalPointX,
+                double principalPointY,
+                double horizontalFovDeg,
+                double verticalFovDeg,
+                double[] floorCyPx,
+                double[] floorDist,
+                double mountX,
+                double mountY,
+                double mountZ,
+                double mountYawDeg,
+                double mountPitchDeg,
+                double mountRollDeg,
+                double plateWidth,
+                VidarCameraRoiConfig roiConfig,
+                int calibrationWidth,
+                int calibrationHeight,
+                org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics.DistortionModel distortionModel,
+                double[] distortionCoeffs,
+                String calibrationVersion,
+                String calibrationDate) {
             this.name = name;
             this.bearingDeg = bearingDeg;
             this.horizonRowPx = horizonRowPx;
@@ -135,6 +176,14 @@ public final class VidarRobotConfig {
             this.mountRollDeg = mountRollDeg;
             this.plateWidth = plateWidth;
             this.roiConfig = roiConfig == null ? VidarCameraRoiConfig.DEFAULT : roiConfig;
+            this.calibrationWidth = calibrationWidth;
+            this.calibrationHeight = calibrationHeight;
+            this.distortionModel = distortionModel == null
+                    ? org.firstinspires.ftc.teamcode.vidar.geometry.VidarCameraIntrinsics.DistortionModel.NONE
+                    : distortionModel;
+            this.distortionCoeffs = distortionCoeffs;
+            this.calibrationVersion = calibrationVersion;
+            this.calibrationDate = calibrationDate;
         }
 
         public VidarCameraProfile toProfile() {
@@ -146,7 +195,10 @@ public final class VidarRobotConfig {
                     floorCyPx, floorDist,
                     mountX, mountY, mountZ,
                     mountYawDeg, mountPitchDeg, mountRollDeg,
-                    plateWidth, roiConfig);
+                    plateWidth, roiConfig,
+                    calibrationWidth, calibrationHeight,
+                    distortionModel, distortionCoeffs,
+                    calibrationVersion, calibrationDate);
         }
     }
 }

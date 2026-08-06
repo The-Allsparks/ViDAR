@@ -129,6 +129,27 @@ Python also exposes **camelCase aliases** (`distanceFromSize = distance_from_siz
 
 ---
 
+## Coordinate frames and transforms
+
+**Status:** **Implemented**, **Tested in simulation**. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md).
+
+Java package `vidar.geometry`; Python module `vidar.transforms`.
+
+| Type / function | Role |
+|-----------------|------|
+| `VidarFrameId` / `FrameId` | `FIELD`, `ROBOT`, `CAMERA_OPTICAL` |
+| `VidarTransform3D` / `Transform3D` | `destination_T_source`; compose, inverse, point vs direction |
+| `VidarCameraIntrinsics` / `CameraIntrinsics` | `fx`, `fy`, `cx`, `cy`, `pixelToRay`, `pointToPixel` |
+| `VidarImageTransform` / `ImageTransform` | processed pixel → calibrated sensor pixel |
+| `VidarTransformRegistry` / `build_robot_t_camera` | cached `robot_T_camera` from profile |
+| `VidarGroundPlane` / `intersect_ground_plane` | floor z=0 intersection |
+| `VidarAprilTagTransforms` | documented `field_T_robot` chain |
+| `VidarCalibrationDataset` / `calibration_dataset` | offline JSONL schema validation |
+
+Notation: **`robot_T_camera`** maps points from camera optical frame into robot frame.
+
+---
+
 ## Observations
 
 ### `ElementObservation` / `VidarElementObservation`

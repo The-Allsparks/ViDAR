@@ -24,6 +24,7 @@ Supports **1–4 USB webcams** architecturally; sustained multi-camera USB stabi
 | [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) | Architecture and feature status |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Tuning reference |
 | [docs/CALIBRATION.md](docs/CALIBRATION.md) | Field calibration workflow |
+| [docs/COORDINATE_FRAMES.md](docs/COORDINATE_FRAMES.md) | Frames, transforms, intrinsics, validation |
 | [docs/TEACHING.md](docs/TEACHING.md) | Java lessons for Control Hub |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Multi-cam wiring, validation, Pedro |
 | [sim/](sim/) | Browser simulator with live overlays |
@@ -142,6 +143,10 @@ Control Hub has limited USB ports — use a **powered USB 2.0 hub** (FTC docs hi
 ## Optional: Python / Docker
 
 Off-robot experiments only (`docker compose up --build`). Competition path is Java + browser sim.
+
+## Acknowledgements
+
+ViDAR’s coordinate-frame and calibration foundation was substantially informed by Matt Vitelli’s [*How Robots Understand Space*](https://vivalosmentors.org/wp-content/uploads/2026/08/How_Robots_Understand_Space-Vitelli.pdf) ([Viva Los Mentors](https://vivalosmentors.org/details/)). See [docs/COORDINATE_FRAMES.md](docs/COORDINATE_FRAMES.md) for full attribution. This is conceptual credit only — Matt Vitelli did not author or endorse ViDAR.
 
 ## Rules
 

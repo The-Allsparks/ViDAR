@@ -230,14 +230,9 @@ def _rotate_z(v: tuple[float, float, float], rad: float) -> tuple[float, float, 
 
 
 def ray_direction_robot_frame(cx: float, cy: float, profile: CameraProfile) -> tuple[float, float, float]:
-    u = (cx - profile.principal_point_x) / profile.focal_length_px
-    v = (cy - profile.principal_point_y) / profile.focal_length_y_px
-    cam = _normalize3(u, v, 1.0)
-    base = (cam[2], -cam[0], -cam[1])
-    bearing_rad = math.radians(profile.bearing_deg + profile.mount_yaw_deg)
-    panned = _rotate_z(base, bearing_rad)
-    pitched = _rotate_x(panned, math.radians(profile.mount_pitch_deg))
-    return _normalize3(*_rotate_z(pitched, math.radians(profile.mount_roll_deg)))
+    from vidar.transforms import ray_direction_robot_frame as _ray
+
+    return _ray(cx, cy, profile)
 
 
 def floor_point_in_robot(

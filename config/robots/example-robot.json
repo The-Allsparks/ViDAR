@@ -14,6 +14,11 @@
     "allowRuntimeToggle": true
   },
   "cameraDefaults": {
+    "calibrationWidth": 640,
+    "calibrationHeight": 480,
+    "calibrationVersion": "example-v1",
+    "calibrationDate": "2026-08-05",
+    "distortionModel": "none",
     "horizonRowPx": 12,
     "focalLengthPx": 340,
     "focalLengthYPx": 340,

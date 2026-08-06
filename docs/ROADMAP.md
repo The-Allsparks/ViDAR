@@ -242,6 +242,21 @@ Maintain a team **validation log** (spreadsheet or `docs/validation-log.md`): da
 
 ---
 
+## Coordinate frames and offline calibration
+
+| Task | Status |
+|------|--------|
+| Explicit `robot_T_camera`, intrinsics, crop mapping | ✅ **Implemented**, **Tested in simulation** |
+| Browser calibration axis overlay | ✅ **Tested in simulation** |
+| JSONL offline calibration dataset schema | ✅ **Implemented** |
+| Nonlinear extrinsic optimizer (Ceres / offline) | **Planned** |
+| Runtime fisheye / Brown-Conrady on Control Hub | **Planned** |
+| One-camera / multi-camera hardware validation | **Planned** |
+
+Workflow (planned): Record Dataset → Extract Scans → Optimize Poses → Validate → Export. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md).
+
+---
+
 ## TensorFlow for ViDAR?
 
 **Verdict: not worth it for the core ViDAR stack right now.**

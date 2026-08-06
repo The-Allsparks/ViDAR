@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.vidar;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarElementSpec;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarPlateSpec;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarGroundPlane;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarTransformRegistry;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarVec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -220,8 +223,25 @@ public final class VidarGeometry {
     /**
      * Unit ray direction in robot frame for a full-frame pixel.
      * Robot frame: +X forward, +Y left, +Z up. Camera pitch negative = looking down.
+     *
+     * <p>Uses cached {@code robot_T_cameraOptical} from {@link VidarTransformRegistry}.
      */
     public static double[] rayDirectionRobotFrame(double cx, double cy, VidarCameraProfile profile) {
+        if (profile == null) {
+            return new double[] { Double.NaN, Double.NaN, Double.NaN };
+        }
+        VidarTransformRegistry.CameraTransforms transforms =
+                VidarTransformRegistry.buildForProfile(profile);
+        if (transforms == null) {
+            return legacyRayDirectionRobotFrame(cx, cy, profile);
+        }
+        VidarVec3 ray = transforms.robotTCamera.transformDirection(
+                transforms.intrinsics.pixelToRay(cx, cy));
+        return new double[] { ray.x, ray.y, ray.z };
+    }
+
+    /** Legacy inline implementation — kept for regression tests. */
+    static double[] legacyRayDirectionRobotFrame(double cx, double cy, VidarCameraProfile profile) {
         double u = (cx - profile.principalPointX) / profile.focalLengthPx;
         double v = (cy - profile.principalPointY) / profile.focalLengthYPx;
         double[] cam = normalize3(u, v, 1.0);
@@ -242,18 +262,49 @@ public final class VidarGeometry {
     /**
      * Floor contact point in robot frame from slant range along the pixel ray.
      * Returns {@code [robotX, robotY, robotZ]} (floor targets have z near 0).
+     *
+     * <p>Primary path uses {@code robot_T_cameraOptical}; falls back to legacy ray math on failure.
      */
     public static double[] floorPointInRobot(
             double cx, double cy, double slantRange, VidarCameraProfile profile) {
         if (profile == null || Double.isNaN(slantRange) || slantRange <= 0) {
             return new double[] { Double.NaN, Double.NaN, Double.NaN };
         }
-        double[] dir = rayDirectionRobotFrame(cx, cy, profile);
+        VidarTransformRegistry.CameraTransforms transforms =
+                VidarTransformRegistry.buildForProfile(profile);
+        if (transforms != null) {
+            VidarGroundPlane.Intersection hit = VidarGroundPlane.floorPointFromSlantRange(
+                    transforms, cx, cy, slantRange, Double.NaN);
+            if (hit.valid) {
+                return new double[] { hit.robotX, hit.robotY, 0.0 };
+            }
+        }
+        double[] dir = legacyRayDirectionRobotFrame(cx, cy, profile);
         return new double[] {
                 profile.mountX + slantRange * dir[0],
                 profile.mountY + slantRange * dir[1],
                 profile.mountZ + slantRange * dir[2]
         };
+    }
+
+    /**
+     * Ground-plane intersection from pixel ray only (no slant range).
+     * Assumes target contacts z = 0 floor.
+     */
+    public static VidarGroundPlane.Intersection intersectGroundPlane(
+            double cx, double cy, VidarCameraProfile profile) {
+        if (profile == null) {
+            return VidarGroundPlane.Intersection.rejected("no_profile");
+        }
+        VidarTransformRegistry.CameraTransforms transforms =
+                VidarTransformRegistry.buildForProfile(profile);
+        if (transforms == null) {
+            return VidarGroundPlane.Intersection.rejected("no_transform");
+        }
+        VidarVec3 origin = transforms.robotTCamera.translation;
+        VidarVec3 dir = transforms.robotTCamera.transformDirection(
+                transforms.intrinsics.pixelToRay(cx, cy));
+        return VidarGroundPlane.intersect(origin, dir, Double.NaN);
     }
 
     public static double robotX(double range, double bearingDeg, VidarCameraProfile profile) {
