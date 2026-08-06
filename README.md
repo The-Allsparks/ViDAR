@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <img src="assets/vidar-logo-transparent.svg" alt="ViDAR" width="120" />
 </p>
 
@@ -11,10 +11,10 @@
 </p>
 
 <p align="center">
-  <a href="docs/SYSTEM_DESIGN.md"><strong>System design</strong></a> ┬╖
-  <a href="docs/API.md"><strong>API contract</strong></a> ┬╖
-  <a href="#browser-simulator"><strong>Browser simulator</strong></a> ┬╖
-  <a href="#quick-start"><strong>Quick start</strong></a> ┬╖
+  <a href="docs/SYSTEM_DESIGN.md"><strong>System design</strong></a> ·
+  <a href="docs/API.md"><strong>API contract</strong></a> ·
+  <a href="#browser-simulator"><strong>Browser simulator</strong></a> ·
+  <a href="#quick-start"><strong>Quick start</strong></a> ·
   <a href="#using-vidar-in-your-code"><strong>Using ViDAR in your code</strong></a>
 </p>
 
@@ -34,7 +34,7 @@ ViDAR helps teams:
 - **See game pieces and plates reliably:** color-blob detection with geometric filtering, optional local Hough validation, and uncertainty-weighted range fusion (size, floor LUT, ground plane).
 - **Tell friend from foe at runtime:** alliance from a REV Color Sensor on your robot sign and/or gamepad override at INIT.
 - **Use AprilTags sparingly but reliably:** scout every frame; official FTC decode capped at **1 per second**; scout observations never alter absolute pose.
-- **Scale to 1ΓÇô4 cameras:** per-camera ROIs, mounts, and scheduling; fusion picks the best global element, plate, and tag each loop.
+- **Scale to 1–4 cameras:** per-camera ROIs, mounts, and scheduling; fusion picks the best global element, plate, and tag each loop.
 - **Tune before hardware:** browser simulator mirrors Java logic so students can iterate on ROIs, colors, and calibration overlays on a laptop.
 - **Integrate your way:** read observations from any OpMode; Pedro Pathing and other autos are optional consumers, not dependencies.
 
@@ -65,7 +65,7 @@ Repository: **[The-Allsparks/ViDAR](https://github.com/The-Allsparks/ViDAR)**
 | Multi-camera fusion + world model | Implemented; **not hardware-validated at 4 cameras** |
 | AprilTag scout + async decode | Implemented; tested in simulation |
 | Browser simulator + Python parity tests | Available |
-| Sustained 4├ù USB webcam on Control Hub | **Requires team validation.** See [docs/ROADMAP.md](docs/ROADMAP.md) |
+| Sustained 4× USB webcam on Control Hub | **Requires team validation.** See [docs/ROADMAP.md](docs/ROADMAP.md) |
 
 Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md).
 
@@ -102,9 +102,9 @@ Default pipeline: **`VidarContourProcessor`**, one scaled ROI pass for season **
 
 | Target | Approach |
 |--------|----------|
-| **Elements** | HSV mask ΓåÆ contour geometry ΓåÆ optional local Hough |
-| **Plates** | Color mask ΓåÆ rotated rect ΓåÆ white-digit gate ΓåÆ width-based range |
-| **AprilTags** | Scout every frame; official decode Γëñ 1 s globally |
+| **Elements** | HSV mask → contour geometry → optional local Hough |
+| **Plates** | Color mask → rotated rect → white-digit gate → width-based range |
+| **AprilTags** | Scout every frame; official decode ≤ 1 s globally |
 
 Per-camera ROIs default to **lower 65%** (elements), **middle 40%** (plates), and **upper 65%** (tags): overlapping bands, not a fixed 50/50 split.
 
@@ -119,7 +119,7 @@ Up to three slant-range estimates fused with uncertainty weighting:
 
 ### Multi-camera
 
-Set `VidarConfig.CAMERA_COUNT` (1ΓÇô4). Name webcams **`Webcam 1`** ΓÇª **`Webcam 4`**. Each index uses `VidarCameraProfile.FOUR_SIDES` (0┬░ / 90┬░ / 180┬░ / 270┬░ bearings + mount offsets). Copy a template from [`config/robots/`](config/robots/README.md) and recalibrate floor LUT on-field.
+Set `VidarConfig.CAMERA_COUNT` (1–4). Name webcams **`Webcam 1`** … **`Webcam 4`**. Each index uses `VidarCameraProfile.FOUR_SIDES` (0° / 90° / 180° / 270° bearings + mount offsets). Copy a template from [`config/robots/`](config/robots/README.md) and recalibrate floor LUT on-field.
 
 ### OpModes
 
@@ -141,9 +141,9 @@ Tune before hardware: mock scene or webcam, detection overlays, calibration-axis
 # or: python scripts/serve_sim.py
 ```
 
-Open **http://127.0.0.1:8765** ΓåÆ **Start**.
+Open **http://127.0.0.1:8765** → **Start**.
 
-Tuning file: `sim/vidar-tuning.json` Γåö `VidarConfig.java` / season JSON.
+Tuning file: `sim/vidar-tuning.json` ↔ `VidarConfig.java` / season JSON.
 
 Run offline tests:
 
@@ -169,11 +169,11 @@ python -m pytest tests/ -v
 ### 2. Install on the Control Hub
 
 1. Clone the [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcRobotController) and open it in Android Studio.
-2. Copy `teamcode/org/firstinspires/ftc/teamcode/vidar/` ΓåÆ `TeamCode/src/main/java/.../vidar/`.
+2. Copy `teamcode/org/firstinspires/ftc/teamcode/vidar/` → `TeamCode/src/main/java/.../vidar/`.
 3. Copy a robot template from [`config/robots/`](config/robots/README.md) to `TeamCode/src/main/assets/vidar/robot.json`.
-4. Configure USB webcams as **`Webcam 1`** ΓÇª **`Webcam 4`** (see `VidarConfig.CAMERA_NAMES`).
-5. Set `VidarConfig.CAMERA_COUNT` (1ΓÇô4).
-6. Run **ViDAR: Discover** ΓåÆ **ViDAR: TeleOp** ΓåÆ **ViDAR: Auto Seek**.
+4. Configure USB webcams as **`Webcam 1`** … **`Webcam 4`** (see `VidarConfig.CAMERA_NAMES`).
+5. Set `VidarConfig.CAMERA_COUNT` (1–4).
+6. Run **ViDAR: Discover** → **ViDAR: TeleOp** → **ViDAR: Auto Seek**.
 
 ### Alliance (friend / foe)
 
@@ -211,7 +211,7 @@ ViDAR **detects and remembers**. It does **not** own field pose or drive your ro
 |--------|-------------|
 | `VidarElementObservation` / `VidarPlateObservation` | TeleOp assist, intake alignment, foe avoidance |
 | `VidarWorldModel` | Short-term tracks (`nearestElement()`, ranked frames) |
-| AprilTag decode (Γëñ 1 s) | Sparse field fixes when **you** fuse them with odom / Pinpoint |
+| AprilTag decode (≤ 1 s) | Sparse field fixes when **you** fuse them with odom / Pinpoint |
 
 **Standalone:** **ViDAR: TeleOp**, **ViDAR: Auto Seek**, and custom OpModes work with no pathing dependency.
 
@@ -262,7 +262,7 @@ The competition path remains **Java + browser sim**.
 
 ## Acknowledgements
 
-ViDARΓÇÖs coordinate-frame and calibration architecture was **substantially informed** by [**Matt Vitelli**](https://github.com/MattVitelli)ΓÇÖs presentation [*How Robots Understand Space*](https://vivalosmentors.org/wp-content/uploads/2026/08/How_Robots_Understand_Space-Vitelli.pdf) ([Viva Los Mentors](https://vivalosmentors.org/details/)). That work motivated explicit frames, destination-from-source transform chains, practical intrinsic/extrinsic calibration, visualization-first validation, and offline pose refinement, adapted here for FTC vision on the Control Hub.
+ViDAR’s coordinate-frame and calibration architecture was **substantially informed** by [**Matt Vitelli**](https://github.com/MattVitelli)’s presentation [*How Robots Understand Space*](https://vivalosmentors.org/wp-content/uploads/2026/08/How_Robots_Understand_Space-Vitelli.pdf) ([Viva Los Mentors](https://vivalosmentors.org/details/)). That work motivated explicit frames, destination-from-source transform chains, practical intrinsic/extrinsic calibration, visualization-first validation, and offline pose refinement, adapted here for FTC vision on the Control Hub.
 
 Full attribution and frame conventions: [docs/COORDINATE_FRAMES.md](docs/COORDINATE_FRAMES.md).
 
