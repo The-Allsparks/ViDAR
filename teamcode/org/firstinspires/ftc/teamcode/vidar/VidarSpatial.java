@@ -70,15 +70,15 @@ public final class VidarSpatial {
             Supplier<VidarAlliance> allianceSupplier) {
         VidarMultiVision vision = new VidarMultiVision(
                 hardwareMap, robot, season, odomSupplier, allianceSupplier);
-        VidarWorldModel world = new VidarWorldModel(
-                odomSupplier,
-                () -> vision.getFusedFieldPose());
-        return new VidarSpatial(vision, world, odomSupplier, null);
+        VidarWorldModel world = new VidarWorldModel(odomSupplier, null);
+        VidarSpatial spatial = new VidarSpatial(vision, world, odomSupplier, null);
+        world.setFieldPoseSupplier(spatial::fieldPoseForWorldTracks);
+        return spatial;
     }
 
     public void setFieldPoseSupplier(Supplier<Pose2D> supplier) {
         this.fieldPoseSupplier = supplier;
-        world.setFieldPoseSupplier(supplier != null ? supplier : vision::getFusedFieldPose);
+        world.setFieldPoseSupplier(this::fieldPoseForWorldTracks);
     }
 
     public void setFieldPosePrior(Pose2D prior) {
@@ -253,6 +253,17 @@ public final class VidarSpatial {
 
     public void close() {
         vision.close();
+    }
+
+    /** Team override first, then odom-extrapolated field pose for world tracks. */
+    Pose2D fieldPoseForWorldTracks() {
+        if (fieldPoseSupplier != null) {
+            Pose2D external = fieldPoseSupplier.get();
+            if (external != null) {
+                return external;
+            }
+        }
+        return vision.getFieldPoseForMotionTracking();
     }
 
     private static void addUnique(List<VidarSpatialPoint> list, VidarSpatialPoint candidate) {

@@ -55,7 +55,7 @@ ViDAR does **not** require Pedro. If you use path following:
 
 ## 7 — Motion tracking (requires odom)
 
-Run **ViDAR: Spatial Map** with Pinpoint / Pedro / team odom wired at `create()`.
+Run **ViDAR: Spatial Map** with Pinpoint / Pedro / team odom wired at `create()`. World tracks extrapolate field pose from odom between tag fixes automatically; for Pedro-primary localization you can still call `spatial.setFieldPoseSupplier(follower::getPose)`.
 
 - [ ] Telemetry shows `Motion tracks: true`
 - [ ] Discover element line shows season `elementId` (e.g. `artifact_purple · …`)

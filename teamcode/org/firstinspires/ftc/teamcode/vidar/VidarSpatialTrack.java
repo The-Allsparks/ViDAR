@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 /**
@@ -95,14 +93,14 @@ public final class VidarSpatialTrack {
                 predFieldX = fieldXIn + velFieldXInPerSec * dtSec;
                 predFieldY = fieldYIn + velFieldYInPerSec * dtSec;
             }
-            double[] robot = fieldToRobot(predFieldX, predFieldY, fieldPose);
+            double[] robot = VidarCoordinateFrames.fieldToRobot(predFieldX, predFieldY, fieldPose);
             return copyWith(robot[0], robot[1], predFieldX, predFieldY,
                     velFieldXInPerSec, velFieldYInPerSec, confidence * 0.99,
-                    lastSeenNanos, nowNanos, missCount, staticStableFrames, motionClass);
+                    lastSeenNanos, lastUpdateNanos, missCount, staticStableFrames, motionClass);
         }
         return copyWith(robotX, robotY, fieldXIn, fieldYIn,
                 velFieldXInPerSec, velFieldYInPerSec, confidence * 0.99,
-                lastSeenNanos, nowNanos, missCount, staticStableFrames, motionClass);
+                lastSeenNanos, lastUpdateNanos, missCount, staticStableFrames, motionClass);
     }
 
     /** Gate distance in robot frame to a detection (uses predicted robot position). */
@@ -118,8 +116,12 @@ public final class VidarSpatialTrack {
         Double fieldX = null;
         Double fieldY = null;
         if (fieldPose != null) {
-            fieldX = fieldPose.getX(DistanceUnit.INCH) + detection.robotX;
-            fieldY = fieldPose.getY(DistanceUnit.INCH) + detection.robotY;
+            double[] field = VidarCoordinateFrames.robotToField(
+                    detection.robotX, detection.robotY, fieldPose);
+            if (!Double.isNaN(field[0]) && !Double.isNaN(field[1])) {
+                fieldX = field[0];
+                fieldY = field[1];
+            }
         }
         MotionClass motion = MotionClass.UNKNOWN;
         return new VidarSpatialTrack(
@@ -151,8 +153,12 @@ public final class VidarSpatialTrack {
         Double newFieldX = fieldXIn;
         Double newFieldY = fieldYIn;
         if (fieldPose != null) {
-            newFieldX = fieldPose.getX(DistanceUnit.INCH) + detection.robotX;
-            newFieldY = fieldPose.getY(DistanceUnit.INCH) + detection.robotY;
+            double[] field = VidarCoordinateFrames.robotToField(
+                    detection.robotX, detection.robotY, fieldPose);
+            if (!Double.isNaN(field[0]) && !Double.isNaN(field[1])) {
+                newFieldX = field[0];
+                newFieldY = field[1];
+            }
         }
 
         double alpha = VidarConfig.WORLD_TRACK_POS_ALPHA;
@@ -209,7 +215,7 @@ public final class VidarSpatialTrack {
         VidarSpatialTrack predicted = predict(nowNanos, fieldPose);
         return predicted.copyWith(predicted.robotX, predicted.robotY, predicted.fieldXIn, predicted.fieldYIn,
                 predicted.velFieldXInPerSec, predicted.velFieldYInPerSec,
-                predicted.confidence * 0.96, predicted.lastSeenNanos, nowNanos,
+                predicted.confidence * 0.96, predicted.lastSeenNanos, predicted.lastUpdateNanos,
                 missCount + 1, staticStableFrames, motionClass);
     }
 
@@ -249,19 +255,5 @@ public final class VidarSpatialTrack {
             return 0;
         }
         return (toNanos - fromNanos) / 1_000_000_000.0;
-    }
-
-    static double[] fieldToRobot(double fieldX, double fieldY, Pose2D robotFieldPose) {
-        double rx = robotFieldPose.getX(DistanceUnit.INCH);
-        double ry = robotFieldPose.getY(DistanceUnit.INCH);
-        double heading = Math.toRadians(robotFieldPose.getHeading(AngleUnit.DEGREES));
-        double dx = fieldX - rx;
-        double dy = fieldY - ry;
-        double cos = Math.cos(-heading);
-        double sin = Math.sin(-heading);
-        return new double[] {
-                dx * cos - dy * sin,
-                dx * sin + dy * cos
-        };
     }
 }

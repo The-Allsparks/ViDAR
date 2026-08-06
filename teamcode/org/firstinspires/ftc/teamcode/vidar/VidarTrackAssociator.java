@@ -77,10 +77,11 @@ final class VidarTrackAssociator {
             if (trackUsed[match.trackIndex] || detUsed[match.detectionIndex]) {
                 continue;
             }
-            VidarSpatialTrack track = predicted.get(match.trackIndex);
+            VidarSpatialTrack predictedTrack = predicted.get(match.trackIndex);
+            VidarSpatialTrack sourceTrack = tracks.get(match.trackIndex);
             VidarTrackDetection det = detections.get(match.detectionIndex);
-            double dtSec = VidarSpatialTrack.dtSeconds(track.lastUpdateNanos, nowNanos);
-            updated.add(track.updateFromDetection(det, nowNanos, fieldPose, dtSec));
+            double dtSec = VidarSpatialTrack.dtSeconds(sourceTrack.lastUpdateNanos, nowNanos);
+            updated.add(predictedTrack.updateFromDetection(det, nowNanos, fieldPose, dtSec));
             trackUsed[match.trackIndex] = true;
             detUsed[match.detectionIndex] = true;
         }

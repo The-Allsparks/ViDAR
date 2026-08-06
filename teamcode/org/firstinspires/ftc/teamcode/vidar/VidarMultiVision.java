@@ -55,6 +55,7 @@ public class VidarMultiVision {
     private VidarTagScoutObservation latestScoutObservation;
     private VidarTagScoutResult lastTagScout;
     private Pose2D fusedFieldPose;
+    private Pose2D odomAtLastFusedFieldPose;
     private volatile VidarObservationFrame latestFrame = VidarObservationFrame.empty();
 
     public VidarMultiVision(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
@@ -285,9 +286,43 @@ public class VidarMultiVision {
                 latestTag, latestScoutObservation, odomAtCapture, odomNow);
         if (fused != null) {
             fusedFieldPose = fused;
+            odomAtLastFusedFieldPose = odomNow;
         } else {
             fusedFieldPose = localization.lastFusedFieldPose();
         }
+    }
+
+    /**
+     * Field pose for motion-corrected world tracks — extrapolates tag fusion with odom between
+     * decode cycles. When odom is configured but no tag anchor exists yet, uses odom directly
+     * (Pinpoint / Pedro field-relative pose).
+     */
+    public Pose2D getFieldPoseForMotionTracking() {
+        if (odomSupplier == null) {
+            if (fusedFieldPose != null) {
+                return fusedFieldPose;
+            }
+            return localization.fieldPosePrior();
+        }
+        Pose2D odomNow = odomSupplier.get();
+        if (odomNow == null) {
+            return fusedFieldPose;
+        }
+        if (latestTag != null && latestTag.fieldPoseAtCapture != null) {
+            Pose2D odomAtCapture = odomHistory.at(latestTag.captureTimeNanos);
+            if (odomAtCapture == null) {
+                odomAtCapture = odomNow;
+            }
+            Pose2D backdated = VidarMotionCorrection.tagFieldNow(latestTag, odomAtCapture, odomNow);
+            if (backdated != null) {
+                return backdated;
+            }
+        }
+        Pose2D anchor = localization.lastFusedFieldPose();
+        if (anchor != null && odomAtLastFusedFieldPose != null) {
+            return VidarMotionCorrection.robotFieldPoseNow(anchor, odomAtLastFusedFieldPose, odomNow);
+        }
+        return odomNow;
     }
 
     /** Last snapshot from {@link #update()} — safe to read multiple times per cycle. */

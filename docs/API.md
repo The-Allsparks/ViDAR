@@ -300,6 +300,8 @@ close(): void
 
 **Setup:** copy `config/robots/*.json` → `assets/vidar/robot.json` — see [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md).
 
+Motion-corrected tracks require an odom supplier at `create()`. Field pose for tracks extrapolates from odom between tag fixes; optional `setFieldPoseSupplier()` for Pedro-primary pose.
+
 ### `VidarSpatialPoint`
 
 | Field | Type | Notes |
