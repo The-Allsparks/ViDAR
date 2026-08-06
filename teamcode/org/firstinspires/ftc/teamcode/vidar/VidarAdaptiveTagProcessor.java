@@ -4,84 +4,105 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
-import java.util.function.Supplier;
-
 /**
- * Adaptive AprilTag path: scout on plate frames; official FTC processor decode on schedule.
- * Scout observations guide scheduling but never alter absolute field pose.
+ * Adaptive AprilTag path: scout on tag frames; official FTC processor decode on schedule.
+ * ViDAR does not consume odometry — tag observations carry field pose at capture time only.
  */
 public class VidarAdaptiveTagProcessor implements VisionProcessor {
 
     private final VidarProcessScheduler scheduler;
     private final VidarTagCropDecoder cropDecoder = new VidarTagCropDecoder();
-    private final Supplier<Pose2D> odomSupplier;
+    private final VidarTagScoutRunner tagScout = new VidarTagScoutRunner();
+    private final VidarSeasonConfig season;
     private final String cameraName;
     private final VidarCameraProfile profile;
     private final VidarMetrics metrics;
+    private final VidarResourceBudget resourceBudget;
 
-    private VidarTagScoutResult lastScout;
-    private VidarTagObservation latestTag;
-    private VidarTagScoutObservation latestScoutObservation;
-    private long lastDecodeNanos;
-    private Rect lastDecodeRegion;
-    private int lastDecodePixels;
+    private volatile VidarTagScoutResult lastScout;
+    private volatile VidarTagObservation latestTag;
+    private volatile VidarTagScoutObservation latestScoutObservation;
+    private volatile Rect lastDecodeRegion;
+    private volatile int lastDecodePixels;
     private int currentDecimation = VidarTagConfig.SCOUT_DECIMATION;
+    private VidarFrameMailbox frameMailbox;
 
     public VidarAdaptiveTagProcessor(
             VidarProcessScheduler scheduler,
             VidarCameraProfile profile,
-            String cameraName,
-            Supplier<Pose2D> odomSupplier,
-            Supplier<Pose2D> fieldPosePriorSupplier) {
-        this(scheduler, profile, cameraName, odomSupplier, fieldPosePriorSupplier, null);
+            String cameraName) {
+        this(scheduler, profile, cameraName, null, null, null);
     }
 
     public VidarAdaptiveTagProcessor(
             VidarProcessScheduler scheduler,
             VidarCameraProfile profile,
             String cameraName,
-            Supplier<Pose2D> odomSupplier,
-            Supplier<Pose2D> fieldPosePriorSupplier,
-            VidarMetrics metrics) {
+            VidarMetrics metrics,
+            VidarSeasonConfig season,
+            VidarResourceBudget resourceBudget) {
         this.scheduler = scheduler;
         this.profile = profile;
         this.cameraName = cameraName;
-        this.odomSupplier = odomSupplier;
         this.metrics = metrics;
+        this.season = season;
+        this.resourceBudget = resourceBudget;
+    }
+
+    public void setFrameMailbox(VidarFrameMailbox mailbox) {
+        this.frameMailbox = mailbox;
     }
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-        cropDecoder.init(width, height, calibration);
-        lastDecodeNanos = 0;
+        cropDecoder.init(width, height, calibration, season);
         latestTag = null;
         latestScoutObservation = null;
         lastScout = null;
         lastDecodePixels = 0;
+        lastDecodeRegion = null;
         currentDecimation = VidarTagConfig.SCOUT_DECIMATION;
     }
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
+        if (frameMailbox != null) {
+            return latestTag;
+        }
+        processOwnedFrame(frame, captureTimeNanos);
+        return latestTag;
+    }
+
+    public void processOwnedFrame(Mat frame, long captureTimeNanos) {
+        VidarProcessScheduler.Slot slot = scheduler.beginFrame(captureTimeNanos);
+        if (slot == VidarProcessScheduler.Slot.ELEMENT) {
+            if (metrics != null) {
+                metrics.incrementSkippedSlots();
+            }
+            return;
+        }
+        processTagPass(frame, captureTimeNanos);
+    }
+
+    public void processTagPass(Mat frame, long captureTimeNanos) {
         long t0 = System.nanoTime();
         if (!VidarTagConfig.ENABLED || frame == null || frame.empty()) {
             recordTagTime(t0);
-            return latestTag;
+            return;
         }
 
-        VidarProcessScheduler.Slot slot = scheduler.beginFrame(captureTimeNanos);
-        if (slot == VidarProcessScheduler.Slot.BALL) {
-            recordTagTime(t0);
-            return latestTag;
+        if (metrics != null) {
+            metrics.recordFrameAge((System.nanoTime() - captureTimeNanos) / 1_000_000.0);
         }
 
-        lastScout = VidarTagScout.run(frame);
+        lastScout = tagScout.run(frame);
         if (lastScout != null) {
             latestScoutObservation = VidarTagScoutObservation.fromScoutResult(
                     lastScout, profile, frame.cols(), captureTimeNanos, cameraName);
@@ -91,26 +112,28 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             }
         }
 
+        boolean reduceTag = resourceBudget != null && resourceBudget.shouldReduceTagFrequency();
         boolean forceDecode = VidarTagGate.consumeDriverRequest();
-        boolean worthDecode = lastScout != null
+        VidarTagScoutResult scout = lastScout;
+        boolean worthDecode = scout != null
                 && VidarTagCropPlanner.worthDecode(
-                        lastScout.widthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
-        boolean canDecode = lastScout != null
+                        scout.widthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
+        boolean canDecode = !reduceTag
+                && scout != null
                 && (worthDecode || forceDecode)
-                && (forceDecode || VidarTagGate.shouldSample(lastScout, frame.cols()))
+                && (forceDecode || VidarTagGate.shouldSample(scout, frame.cols()))
                 && VidarDecodeArbiter.tryAcquire(captureTimeNanos, cameraName);
 
         if (canDecode) {
             scheduler.setOddSlot(VidarProcessScheduler.Slot.TAG_DECODE);
-            tryDecode(frame, captureTimeNanos);
+            scheduleDecode(frame, captureTimeNanos, scout);
             recordTagTime(t0);
-            return latestTag;
+            return;
         }
 
-        scheduler.setOddSlot(VidarProcessScheduler.Slot.PLATE_SCOUT);
+        scheduler.setOddSlot(VidarProcessScheduler.Slot.TAG_SCOUT);
         currentDecimation = VidarTagConfig.SCOUT_DECIMATION;
         recordTagTime(t0);
-        return latestTag;
     }
 
     private void recordTagTime(long t0) {
@@ -119,42 +142,81 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
         }
     }
 
-    private void tryDecode(Mat frame, long captureTimeNanos) {
-        if (lastScout == null) {
+    private void scheduleDecode(Mat frame, long captureTimeNanos, VidarTagScoutResult scout) {
+        if (scout == null) {
             return;
         }
 
         int decimation = VidarTagCropPlanner.chooseDecimation(
-                lastScout.widthPx,
-                VidarTagConfig.SCOUT_WIDTH,
-                frame.cols());
+                scout.widthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
         decimation = Math.max(decimation, currentDecimation);
-        lastDecodeRegion = VidarFrameRegions.tagDecodeCrop(
-                profile, frame.cols(), frame.rows(), lastScout.band);
+        Rect decodeRegion = VidarFrameRegions.tagDecodeCrop(
+                profile, frame.cols(), frame.rows(), scout.band);
+        lastDecodeRegion = decodeRegion;
 
-        VidarTagCropDecoder.DecodeResult decoded = cropDecoder.decode(
-                frame,
-                lastDecodeRegion,
-                decimation,
-                captureTimeNanos,
-                lastScout);
-
-        lastDecodeNanos = captureTimeNanos;
-
-        if (decoded != null) {
-            lastDecodePixels = decoded.decodePixels;
-            Pose2D odomAtCapture = odomSupplier != null ? odomSupplier.get() : null;
-            latestTag = new VidarTagObservation(
-                    decoded.tagId,
-                    decoded.fieldPose,
-                    odomAtCapture,
-                    captureTimeNanos,
-                    decoded.centerX,
-                    decoded.centerY,
-                    lastScout.band,
-                    decoded.decimationUsed,
-                    decoded.decodePixels);
+        if (VidarConfig.ASYNC_TAG_DECODE_ENABLED) {
+            VidarTagDecodeWorker.submit(
+                    this, frame, decodeRegion, decimation, captureTimeNanos, scout, metrics);
+        } else {
+            tryDecode(frame, captureTimeNanos, decimation, decodeRegion, scout);
         }
+    }
+
+    void executeDecodeJob(
+            Mat cropCopy,
+            Rect decodeRegion,
+            int decimation,
+            long captureTimeNanos,
+            VidarTagScoutResult scout) {
+        long t0 = System.nanoTime();
+        try {
+            VidarTagCropDecoder.DecodeResult decoded = cropDecoder.decode(
+                    cropCopy, decodeRegion, decimation, captureTimeNanos, scout);
+            applyDecodeResult(decoded, captureTimeNanos, scout);
+        } catch (RuntimeException ex) {
+            if (metrics != null) {
+                metrics.setLastError(ex.getMessage());
+            }
+            throw ex;
+        } finally {
+            if (metrics != null) {
+                metrics.recordProcessorTime("tagDecode", (System.nanoTime() - t0) / 1_000_000.0);
+            }
+        }
+    }
+
+    private void tryDecode(
+            Mat frame,
+            long captureTimeNanos,
+            int decimation,
+            Rect decodeRegion,
+            VidarTagScoutResult scout) {
+        long t0 = System.nanoTime();
+        VidarTagCropDecoder.DecodeResult decoded = cropDecoder.decode(
+                frame, decodeRegion, decimation, captureTimeNanos, scout);
+        applyDecodeResult(decoded, captureTimeNanos, scout);
+        if (metrics != null) {
+            metrics.recordProcessorTime("tagDecode", (System.nanoTime() - t0) / 1_000_000.0);
+        }
+    }
+
+    private void applyDecodeResult(
+            VidarTagCropDecoder.DecodeResult decoded,
+            long captureTimeNanos,
+            VidarTagScoutResult scout) {
+        if (decoded == null || scout == null) {
+            return;
+        }
+        lastDecodePixels = decoded.decodePixels;
+        latestTag = new VidarTagObservation(
+                decoded.tagId,
+                decoded.fieldPose,
+                captureTimeNanos,
+                decoded.centerX,
+                decoded.centerY,
+                scout.band,
+                decoded.decimationUsed,
+                decoded.decodePixels);
     }
 
     public VidarTagScoutResult getLastScout() {
@@ -167,12 +229,6 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
 
     public VidarTagScoutObservation getLatestScoutObservation() {
         return latestScoutObservation;
-    }
-
-    /** @deprecated Scout landmarks no longer localize — use {@link #getLatestScoutObservation()}. */
-    @Deprecated
-    public VidarScoutLandmarkObservation getLatestScoutLandmark() {
-        return null;
     }
 
     public Rect getLastDecodeRegion() {
@@ -191,7 +247,8 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             float scaleBmpPxToCanvasPx,
             float scaleCanvasDensity,
             Object userContext) {
-        if (lastDecodeRegion == null) {
+        Rect region = lastDecodeRegion;
+        if (region == null) {
             return;
         }
 
@@ -199,19 +256,20 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
         band.setColor(Color.argb(110, 180, 140, 255));
         band.setStyle(Paint.Style.STROKE);
         band.setStrokeWidth(2f * scaleCanvasDensity);
-        float l = (float) (lastDecodeRegion.x * scaleBmpPxToCanvasPx);
-        float t = (float) (lastDecodeRegion.y * scaleBmpPxToCanvasPx);
-        float r = (float) ((lastDecodeRegion.x + lastDecodeRegion.width) * scaleBmpPxToCanvasPx);
-        float b = (float) ((lastDecodeRegion.y + lastDecodeRegion.height) * scaleBmpPxToCanvasPx);
+        float l = (float) (region.x * scaleBmpPxToCanvasPx);
+        float t = (float) (region.y * scaleBmpPxToCanvasPx);
+        float r = (float) ((region.x + region.width) * scaleBmpPxToCanvasPx);
+        float b = (float) ((region.y + region.height) * scaleBmpPxToCanvasPx);
         canvas.drawRect(l, t, r, b, band);
 
-        if (latestTag != null) {
+        VidarTagObservation tag = latestTag;
+        if (tag != null) {
             Paint text = new Paint();
             text.setColor(Color.WHITE);
             text.setTextSize(12f * scaleCanvasDensity);
             text.setAntiAlias(true);
             canvas.drawText(
-                    "tag " + latestTag.tagId + " @" + latestTag.decodePixels + "px",
+                    "tag " + tag.tagId + " @" + tag.decodePixels + "px",
                     l + 4f,
                     t + 14f * scaleCanvasDensity,
                     text);

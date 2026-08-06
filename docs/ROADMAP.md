@@ -15,8 +15,7 @@ flowchart TB
 
   subgraph vidar [ViDAR per camera]
     VP[VisionPortal]
-    Balls[Color-blob balls + optional local Hough]
-    Plates[Plate processor + width-based range]
+    CP[VidarContourProcessor — elements + plates]
     Tags[Adaptive tags + non-localizing scout]
   end
 
@@ -31,11 +30,9 @@ flowchart TB
   end
 
   cameras --> VP
-  VP --> Balls
-  VP --> Plates
+  VP --> CP
   VP --> Tags
-  Balls --> MV
-  Plates --> MV
+  CP --> MV
   Tags --> MV
   MV --> WM
   MV --> LOC
@@ -52,8 +49,8 @@ ViDAR **detects and remembers**; it does **not** own field pose. A separate loca
 | Task | Status |
 |------|--------|
 | `VidarConfig.CAMERA_COUNT` (1–4) | Done |
-| `VidarCameraProfile` mount bearing + `mountXIn`/`mountYIn` | Done |
-| `VidarMultiVision` global ball/plate/tag pick | Done |
+| `VidarCameraProfile` mount bearing + `mountX`/`mountY` | Done |
+| `VidarMultiVision` global element/plate/tag pick | Done |
 | Per-camera calibration OpMode | Done (`VidarRoiCalibrationOpMode`) |
 | Sim multi-cam preview | Backlog (deferred — not blocking) |
 
@@ -61,9 +58,9 @@ ViDAR **detects and remembers**; it does **not** own field pose. A separate loca
 
 **Mount calibration checklist:**
 
-1. Measure lens position from robot center → `mountXIn`, `mountYIn` in `VidarCameraProfile.FOUR_SIDES`.
-2. Confirm per-camera ROIs and horizon (`VidarCameraRoiConfig` — defaults: ball lower 65%, tag upper 65%; use `VidarRoiCalibrationOpMode`).
-3. Per camera: ball at 12/24/36/48″ → update `floorCyPx` / `floorDistIn` and `focalLengthPx`.
+1. Measure lens position from robot center → `mountX`, `mountY` in `VidarCameraProfile.FOUR_SIDES`.
+2. Confirm per-camera ROIs and horizon (`VidarCameraRoiConfig` — defaults: element lower 65%, tag upper 65%; use `VidarRoiCalibrationOpMode`).
+3. Per camera: element at 12/24/36/48″ → update `floorCyPx` / `floorDist` and `focalLengthPx`.
 4. Alliance at runtime via `VidarAllianceSelector` (color sensor on own sign and/or gamepad Y/B at INIT).
 
 ---
@@ -72,15 +69,15 @@ ViDAR **detects and remembers**; it does **not** own field pose. A separate loca
 
 | Item | Status |
 |------|--------|
-| Color-blob ball detection (replace Hough-first) | **Done** |
+| Unified contour element detection | **Done** |
 | Per-camera overlapping ROIs | **Done** |
 | Scout-only localization removed | **Done** |
 | Motion-correct world model | **Done** |
 | Uncertainty-weighted range fusion | **Done** |
 | Camera scheduler (disable processors before stream stop) | **Done** |
 | Full checkerboard intrinsic calibration OpMode | **Closed — not planned** |
-| Runtime auto-switch ball detector under CPU load | **Closed — not planned** (metrics only) |
-| Profile-aware tag scout ROI in `VidarTagScout.run()` | **Open — low priority** |
+| Runtime auto-switch element detector under CPU load | **Closed — not planned** (metrics only) |
+| Profile-aware tag scout ROI in `VidarTagScoutRunner` | **Open — low priority** |
 | Four-camera USB stress validation | **Open — requires hardware** |
 
 ---
@@ -100,11 +97,11 @@ Pipeline: **HSV mask → contour → `minAreaRect` → white-digit ratio → wid
 
 ## Phase 3 — World model & assisted behaviors ✅ foundation
 
-`VidarWorldModel` keeps short-term tracks (balls, allies, foes) with TTL merge.
+`VidarWorldModel` keeps short-term tracks (elements, allies, foes) with TTL merge.
 
 | Behavior | Uses |
 |----------|------|
-| Auto ball collection | `nearestBall()`, fused range, remembered bearing |
+| Auto element collection | `nearestElement()`, fused range, remembered bearing |
 | Defensive nudge | `intakeBlocked()`, foe tracks |
 | Offensive lane choice | foe density in forward cone (extend in your team code) |
 
@@ -117,7 +114,7 @@ Pipeline: **HSV mask → contour → `minAreaRect` → white-digit ratio → wid
 ViDAR outputs:
 
 - `VidarTagObservation` + `getBackdatedFieldPose(odomNow)` — sparse absolute fixes
-- `VidarWorldModel` — robot-relative obstacles and balls
+- `VidarWorldModel` — robot-relative obstacles and game elements
 
 Suggested split:
 
@@ -202,14 +199,14 @@ Structured test plan before trusting ViDAR in auto.
 
 | Metric | Target | How |
 |--------|--------|-----|
-| Ball FPS per camera | ≥ 15 | Discover telemetry + FTC Dashboard |
+| Element FPS per camera | ≥ 15 | Discover telemetry + FTC Dashboard |
 | Tag decode latency | < 400 ms | Log time around decode |
 | Tag decode CPU spike | acceptable at 2 s interval | Dashboard CPU |
 | Plate false positives | < 1/min on empty field | 5 min static scene |
 
 ### 1 — Single-camera calibration
 
-- [ ] `BALL_DIAMETER_IN` measured
+- [ ] `DEFAULT_ELEMENT_DIAMETER` measured
 - [ ] Floor LUT within ±3″ at 12/24/36/48″
 - [ ] `focalLengthPx` within ±10% of tape measure
 - [ ] Plate detects real alliance panel, rejects red tape on floor
@@ -223,21 +220,21 @@ Structured test plan before trusting ViDAR in auto.
 
 ### 3 — Match lighting
 
-- [ ] Venue lighting: balls + plates at 24″ and 48″
-- [ ] Glare: white ball holes still detected
+- [ ] Venue lighting: elements + plates at 24″ and 48″
+- [ ] Glare: perforated elements still detected
 - [ ] Motion blur: slow drive-by detection rate
 
 ### 4 — Integration
 
 - [ ] `VidarWorldModel` foe memory survives 1 s occlusion
-- [ ] Auto Seek stops at `PICKUP_STOP_IN`
+- [ ] Auto Seek stops at `PICKUP_STOP`
 - [ ] Tag fix + odom backdating vs known field dimension
 
 ### 5 — Pedro auto routines
 
 - [ ] Localization module provides stable `Pose2D` at 20 Hz
 - [ ] ViDAR tag correction every 2+ s does not jerk path
-- [ ] Assisted intake uses `nearestBall()` without fighting Pedro turn
+- [ ] Assisted intake uses `nearestElement()` without fighting Pedro turn
 
 ### Deliverable
 
@@ -267,7 +264,7 @@ If experimenting: run TFOD on **one** camera at low resolution, **not** alongsid
 |------|------|
 | `VidarMultiVision` | 1–4 camera fusion |
 | `VidarCameraProfile` | Mount bearing + offsets + LUT |
-| `VidarPlateProcessor` | Friend/foe plates |
+| `VidarContourProcessor` | Season elements + friend/foe plates |
 | `VidarWorldModel` | Short-term spatial memory |
 | `VidarAdaptiveTagProcessor` | Scout + crop decode tags |
 | `VidarGeometry` | Range fusion + robot frame |

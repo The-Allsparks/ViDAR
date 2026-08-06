@@ -15,16 +15,16 @@ public final class VidarPlateObservation {
     public final double angleDeg;
     public final double aspectRatio;
     public final double whiteRatio;
-    public final double rangeIn;
-    public final double rangeUncertaintyIn;
-    public final double sizeBasedRangeIn;
-    public final double floorBasedRangeIn;
+    public final double range;
+    public final double rangeUncertainty;
+    public final double sizeBasedRange;
+    public final double floorBasedRange;
     public final VidarRangeResult rangeResult;
     public final double viewingAnglePenalty;
     public final double partialVisibilityPenalty;
     public final double confidence;
-    public final double robotXIn;
-    public final double robotYIn;
+    public final double robotX;
+    public final double robotY;
     public final String cameraName;
     public final long captureTimeNanos;
 
@@ -37,14 +37,14 @@ public final class VidarPlateObservation {
             double angleDeg,
             double aspectRatio,
             double whiteRatio,
-            double rangeIn,
+            double range,
             double confidence,
-            double robotXIn,
-            double robotYIn,
+            double robotX,
+            double robotY,
             String cameraName) {
         this(alliance, cx, cy, widthPx, heightPx, angleDeg, aspectRatio, whiteRatio,
-                rangeIn, Double.NaN, Double.NaN, Double.NaN, null,
-                1.0, 1.0, confidence, robotXIn, robotYIn, cameraName, 0);
+                range, Double.NaN, Double.NaN, Double.NaN, null,
+                1.0, 1.0, confidence, robotX, robotY, cameraName, 0);
     }
 
     public VidarPlateObservation(
@@ -56,16 +56,16 @@ public final class VidarPlateObservation {
             double angleDeg,
             double aspectRatio,
             double whiteRatio,
-            double rangeIn,
-            double rangeUncertaintyIn,
-            double sizeBasedRangeIn,
-            double floorBasedRangeIn,
+            double range,
+            double rangeUncertainty,
+            double sizeBasedRange,
+            double floorBasedRange,
             VidarRangeResult rangeResult,
             double viewingAnglePenalty,
             double partialVisibilityPenalty,
             double confidence,
-            double robotXIn,
-            double robotYIn,
+            double robotX,
+            double robotY,
             String cameraName,
             long captureTimeNanos) {
         this.alliance = alliance;
@@ -76,16 +76,16 @@ public final class VidarPlateObservation {
         this.angleDeg = angleDeg;
         this.aspectRatio = aspectRatio;
         this.whiteRatio = whiteRatio;
-        this.rangeIn = rangeIn;
-        this.rangeUncertaintyIn = rangeUncertaintyIn;
-        this.sizeBasedRangeIn = sizeBasedRangeIn;
-        this.floorBasedRangeIn = floorBasedRangeIn;
+        this.range = range;
+        this.rangeUncertainty = rangeUncertainty;
+        this.sizeBasedRange = sizeBasedRange;
+        this.floorBasedRange = floorBasedRange;
         this.rangeResult = rangeResult;
         this.viewingAnglePenalty = viewingAnglePenalty;
         this.partialVisibilityPenalty = partialVisibilityPenalty;
         this.confidence = confidence;
-        this.robotXIn = robotXIn;
-        this.robotYIn = robotYIn;
+        this.robotX = robotX;
+        this.robotY = robotY;
         this.cameraName = cameraName;
         this.captureTimeNanos = captureTimeNanos;
     }

@@ -2,7 +2,8 @@ FROM python:3.11-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    VIDAR_CONFIG=/app/config/default.yaml
+    VIDAR_SEASON=/app/config/seasons/2026-biobuzz.json \
+    VIDAR_ROBOT=/app/config/robots/example-robot.json
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \

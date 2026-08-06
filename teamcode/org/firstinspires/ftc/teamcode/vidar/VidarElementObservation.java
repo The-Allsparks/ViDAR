@@ -1,9 +1,10 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
 /**
- * Fused ball detection with color-blob pipeline outputs and range uncertainty.
+ * Fused season game-element detection (ball, block, ring, pixel, …) with range and
+ * robot-frame position.
  */
-public final class VidarBallObservation {
+public final class VidarElementObservation {
 
     public final String cameraName;
     public final long captureTimeNanos;
@@ -20,21 +21,21 @@ public final class VidarBallObservation {
     public final double circularity;
     public final double fillRatio;
     public final double interiorValidationScore;
-    public final VidarBallDetectorType detectorType;
+    public final VidarElementDetectorType detectorType;
     /** 0–1 composite confidence. */
     public final double confidence;
-    public final double rangeIn;
-    public final double rangeUncertaintyIn;
-    public final double dSizeIn;
-    public final double dFloorIn;
+    public final double range;
+    public final double rangeUncertainty;
+    public final double dSize;
+    public final double dFloor;
     public final VidarRangeResult rangeResult;
-    /** Robot-frame floor position (inches): +X forward, +Y left. */
-    public final double robotXIn;
-    public final double robotYIn;
+    /** Robot-frame floor position: +X forward, +Y left (active distance unit). */
+    public final double robotX;
+    public final double robotY;
     /** Legacy Hough vote count (0 for color-blob detections). */
     public final int houghVotes;
 
-    public VidarBallObservation(
+    public VidarElementObservation(
             String cameraName,
             long captureTimeNanos,
             double cx, double cy,
@@ -42,41 +43,19 @@ public final class VidarBallObservation {
             double fittedCx, double fittedCy, double radiusPx,
             double areaPx, double aspectRatio, double circularity, double fillRatio,
             double interiorValidationScore,
-            VidarBallDetectorType detectorType,
+            VidarElementDetectorType detectorType,
             double confidence,
-            double rangeIn, double rangeUncertaintyIn,
-            double dSizeIn, double dFloorIn,
+            double range, double rangeUncertainty,
+            double dSize, double dFloor,
             VidarRangeResult rangeResult,
-            double robotXIn, double robotYIn) {
+            double robotX, double robotY) {
         this(cameraName, captureTimeNanos, cx, cy, boundingWidthPx, boundingHeightPx,
                 fittedCx, fittedCy, radiusPx, areaPx, aspectRatio, circularity, fillRatio,
-                interiorValidationScore, detectorType, confidence, rangeIn, rangeUncertaintyIn,
-                dSizeIn, dFloorIn, rangeResult, robotXIn, robotYIn, 0);
+                interiorValidationScore, detectorType, confidence, range, rangeUncertainty,
+                dSize, dFloor, rangeResult, robotX, robotY, 0);
     }
 
-    /** @deprecated Legacy constructor — use full constructor. */
-    @Deprecated
-    public VidarBallObservation(
-            double cx,
-            double cy,
-            double radiusPx,
-            double rangeIn,
-            double dSizeIn,
-            double dFloorIn,
-            double confidence,
-            double robotXIn,
-            double robotYIn,
-            int houghVotes,
-            String cameraName) {
-        this(cameraName, 0, cx, cy, radiusPx * 2, radiusPx * 2,
-                cx, cy, radiusPx, Math.PI * radiusPx * radiusPx,
-                1.0, 1.0, 0.85, 0.5,
-                VidarBallDetectorType.LEGACY_HOUGH, confidence,
-                rangeIn, Double.NaN, dSizeIn, dFloorIn, null,
-                robotXIn, robotYIn, houghVotes);
-    }
-
-    public VidarBallObservation(
+    public VidarElementObservation(
             String cameraName,
             long captureTimeNanos,
             double cx, double cy,
@@ -84,12 +63,12 @@ public final class VidarBallObservation {
             double fittedCx, double fittedCy, double radiusPx,
             double areaPx, double aspectRatio, double circularity, double fillRatio,
             double interiorValidationScore,
-            VidarBallDetectorType detectorType,
+            VidarElementDetectorType detectorType,
             double confidence,
-            double rangeIn, double rangeUncertaintyIn,
-            double dSizeIn, double dFloorIn,
+            double range, double rangeUncertainty,
+            double dSize, double dFloor,
             VidarRangeResult rangeResult,
-            double robotXIn, double robotYIn,
+            double robotX, double robotY,
             int houghVotes) {
         this.cameraName = cameraName;
         this.captureTimeNanos = captureTimeNanos;
@@ -107,13 +86,13 @@ public final class VidarBallObservation {
         this.interiorValidationScore = interiorValidationScore;
         this.detectorType = detectorType;
         this.confidence = confidence;
-        this.rangeIn = rangeIn;
-        this.rangeUncertaintyIn = rangeUncertaintyIn;
-        this.dSizeIn = dSizeIn;
-        this.dFloorIn = dFloorIn;
+        this.range = range;
+        this.rangeUncertainty = rangeUncertainty;
+        this.dSize = dSize;
+        this.dFloor = dFloor;
         this.rangeResult = rangeResult;
-        this.robotXIn = robotXIn;
-        this.robotYIn = robotYIn;
+        this.robotX = robotX;
+        this.robotY = robotY;
         this.houghVotes = houghVotes;
     }
 }

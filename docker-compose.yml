@@ -5,7 +5,8 @@ services:
       dockerfile: docker/Dockerfile
     container_name: vidar-dev
     environment:
-      VIDAR_CONFIG: /app/config/default.yaml
+      VIDAR_SEASON: /app/config/seasons/2026-biobuzz.json
+      VIDAR_ROBOT: /app/config/robots/example-robot.json
       VIDAR_CAMERA_MODE: ${VIDAR_CAMERA_MODE:-mock}
     volumes:
       - ./config:/app/config:ro

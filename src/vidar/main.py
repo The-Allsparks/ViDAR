@@ -3,35 +3,34 @@ from __future__ import annotations
 import os
 import time
 from dataclasses import replace
-from pathlib import Path
 
 import cv2
 
-from vidar.config import load_config
 from vidar.camera.manager import CameraManager
+from vidar.config import load_config
 from vidar.detection.pipeline import DetectionPipeline
 from vidar.output.telemetry import TelemetryPublisher
-
-
-def _config_path() -> Path:
-    return Path(os.environ.get("VIDAR_CONFIG", "config/default.yaml"))
+from vidar.units import effective_distance_unit, format_distance
 
 
 def run() -> None:
-    config = load_config(_config_path())
-    config_path = _config_path()
+    config = load_config()
     if os.environ.get("VIDAR_CAMERA_MODE"):
         config = replace(config, camera_mode=os.environ["VIDAR_CAMERA_MODE"])
 
-    print(f"[vidar] config={config_path} mode={config.camera_mode} cameras={config.camera_count}")
     print(
-        f"[vidar] process resolution={config.process_width}x{config.process_height} "
-        f"target_fps={config.fps_target}"
+        f"[vidar] season={config.season.season_id} robot={config.robot.robot_name} "
+        f"mode={config.camera_mode} cameras={config.camera_count}"
+    )
+    print(
+        f"[vidar] capture={config.capture_width}x{config.capture_height} "
+        f"roi_scale={config.process_roi_scale} target_fps={config.fps_target}"
     )
 
     cameras = CameraManager(config)
     pipeline = DetectionPipeline(config)
     telemetry = TelemetryPublisher(config.telemetry_port)
+    dist_unit = effective_distance_unit(config.robot, config.season)
 
     frame_count = 0
     window_started = time.perf_counter()
@@ -45,13 +44,12 @@ def run() -> None:
                 if not ok or frame is None:
                     continue
 
-                processed = pipeline.preprocess(frame)
-                detections = pipeline.detect(processed, camera_index)
+                detections = pipeline.detect(frame, camera_index)
                 all_detections.extend(detections)
 
                 if config.show_debug:
-                    annotated = pipeline.annotate(processed, detections)
-                    cv2.imshow(f"ViDAR cam {camera_index}", annotated)
+                    annotated = pipeline.annotate(frame, detections)
+                    cv2.imshow(f"ViDAR {config.robot.cameras[camera_index].profile.name}", annotated)
 
             frame_count += 1
             elapsed = time.perf_counter() - loop_started
@@ -60,8 +58,12 @@ def run() -> None:
             if frame_count % config.print_fps_every == 0:
                 summary = ", ".join(
                     f"{det.category}:{det.label}@({det.cx:.0f},{det.cy:.0f})"
-                    + (f" {det.range_in:.0f}in" if det.range_in is not None else "")
-                    for det in all_detections[:6]
+                    + (
+                        f" {format_distance(det.range, dist_unit)}"
+                        if det.range is not None
+                        else ""
+                    )
+                    for det in all_detections[:8]
                 )
                 print(f"[vidar] fps={fps:.1f} detections={len(all_detections)} {summary}")
 
@@ -70,7 +72,6 @@ def run() -> None:
             if config.show_debug and cv2.waitKey(1) & 0xFF == ord("q"):
                 break
 
-            # Gentle pacing when mock mode runs uncapped
             if config.camera_mode == "mock":
                 target_frame_time = 1.0 / max(config.fps_target, 1)
                 spent = time.perf_counter() - window_started

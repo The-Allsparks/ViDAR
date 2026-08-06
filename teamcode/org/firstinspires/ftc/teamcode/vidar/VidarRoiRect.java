@@ -26,7 +26,7 @@ public final class VidarRoiRect {
         this(x, y, width, height, true);
     }
 
-    /** Fraction of frame height from top (0–1). Default ball: lower 65%. */
+    /** Default element: lower 65%. */
     public static VidarRoiRect lowerFraction(int frameW, int frameH, double fraction) {
         int h = Math.max(1, (int) Math.round(frameH * fraction));
         return new VidarRoiRect(0, frameH - h, frameW, h);

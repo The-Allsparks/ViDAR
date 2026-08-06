@@ -31,10 +31,10 @@ public final class VidarLocalizationFusion {
     public Pose2D fusedFieldPoseNow(
             VidarTagObservation decoded,
             VidarTagScoutObservation scout,
+            Pose2D odomAtCapture,
             Pose2D odomNow) {
         if (decoded != null && decoded.fieldPoseAtCapture != null) {
-            Pose2D candidate = VidarPoseBackdate.fieldPoseNow(
-                    decoded, odomNow, DistanceUnit.INCH, AngleUnit.DEGREES);
+            Pose2D candidate = VidarMotionCorrection.tagFieldNow(decoded, odomAtCapture, odomNow);
             if (passesPoseGates(decoded, candidate, odomNow)) {
                 lastFusedFieldPose = applyCorrectionLimit(candidate);
                 lastCorrectionNanos = System.nanoTime();

@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 /**
- * Lesson 3 — seek nearest remembered ball; stop for foes blocking intake.
+ * Lesson 3 — seek nearest remembered element; stop for foes blocking intake.
  *
  * <p>INIT: color sensor on own sign auto-sets alliance; hold Y/B to override.
  */
@@ -50,8 +50,8 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
             world.update(vision, now);
             ours = alliance.get();
 
-            VidarBallObservation element = vision.getBestElement();
-            VidarWorldModel.Track remembered = world.nearestBall();
+            VidarElementObservation element = vision.getBestElement();
+            VidarWorldModel.Track remembered = world.nearestElement();
 
             double turn = 0;
             double drive = 0;
@@ -61,12 +61,12 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
                 turn = VidarConfig.AVOID_TURN_POWER;
                 telemetry.addData("State", "BLOCKED by remembered foe");
             } else if (element != null
-                    && element.confidence >= VidarConfig.MIN_BALL_CONFIDENCE
-                    && !Double.isNaN(element.rangeIn)) {
+                    && element.confidence >= VidarConfig.MIN_ELEMENT_CONFIDENCE
+                    && !Double.isNaN(element.range)) {
                 double error = VidarBlobUtil.errorFromCenter(element, frameWidth);
                 turn = clamp(error / (frameWidth / 2.0) * VidarConfig.SEEK_TURN_GAIN, -1, 1);
 
-                if (element.rangeIn <= VidarConfig.PICKUP_STOP_IN) {
+                if (element.range <= VidarConfig.PICKUP_STOP) {
                     drive = 0;
                     telemetry.addData("State", "AT PICKUP RANGE");
                 } else if (Math.abs(error) < VidarConfig.SEEK_ALIGNED_PIXELS) {
@@ -77,7 +77,7 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
                 }
             } else if (remembered != null) {
                 turn = clamp(remembered.bearingDeg() / 45.0 * VidarConfig.SEEK_TURN_GAIN, -1, 1);
-                telemetry.addData("State", "TURNING toward remembered ball");
+                telemetry.addData("State", "TURNING toward remembered element");
             } else if (element != null) {
                 double error = VidarBlobUtil.errorFromCenter(element, frameWidth);
                 turn = clamp(error / (frameWidth / 2.0) * VidarConfig.SEEK_TURN_GAIN, -1, 1);
@@ -91,7 +91,7 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
             rightDrive.setPower(drive - turn);
 
             telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.addData("Ball", VidarBlobUtil.formatBall(element));
+            telemetry.addData("Element", VidarBlobUtil.formatElement(element));
             telemetry.addData("Remembered", VidarBlobUtil.formatWorldTrack(remembered));
             telemetry.addData("Foe", VidarBlobUtil.formatPlate(vision.getBestFoe(), ours));
             telemetry.addData("Drive/Turn", "%.2f / %.2f", drive, turn);

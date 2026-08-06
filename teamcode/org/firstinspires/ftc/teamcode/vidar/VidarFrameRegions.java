@@ -15,30 +15,25 @@ public final class VidarFrameRegions {
 
     private VidarFrameRegions() {}
 
-    public static VidarRoiRect ballRoi(VidarCameraProfile profile, int frameCols, int frameRows) {
-        return profile.roiConfig.ballRoi(frameCols, frameRows).clamped(frameCols, frameRows);
+    public static VidarRoiRect elementRoi(VidarCameraProfile profile, int frameCols, int frameRows) {
+        return profile.roiConfig.elementRoi(frameCols, frameRows).clamped(frameCols, frameRows);
     }
 
     public static VidarRoiRect plateRoi(VidarCameraProfile profile, int frameCols, int frameRows) {
         return profile.roiConfig.plateRoi(frameCols, frameRows).clamped(frameCols, frameRows);
     }
 
+    /** Union of element and plate bands — one crop for shared contour processing. */
+    public static VidarRoiRect detectionRoi(VidarCameraProfile profile, int frameCols, int frameRows) {
+        VidarRoiRect element = elementRoi(profile, frameCols, frameRows);
+        VidarRoiRect plate = plateRoi(profile, frameCols, frameRows);
+        int top = Math.min(element.y, plate.y);
+        int bottom = Math.max(element.y + element.height, plate.y + plate.height);
+        return new VidarRoiRect(0, top, frameCols, bottom - top, true).clamped(frameCols, frameRows);
+    }
+
     public static VidarRoiRect tagRoi(VidarCameraProfile profile, int frameCols, int frameRows) {
         return profile.roiConfig.tagRoi(frameCols, frameRows).clamped(frameCols, frameRows);
-    }
-
-    /** @deprecated Use {@link #ballRoi(VidarCameraProfile, int, int)}. */
-    @Deprecated
-    public static Rect ballCrop(int frameCols, int frameRows) {
-        VidarRoiRect roi = VidarCameraRoiConfig.DEFAULT.ballRoi(frameCols, frameRows);
-        return roi.toOpenCvRect();
-    }
-
-    /** @deprecated Use {@link #tagRoi(VidarCameraProfile, int, int)}. */
-    @Deprecated
-    public static Rect tagTopHalf(int frameCols, int frameRows) {
-        VidarRoiRect roi = VidarCameraRoiConfig.DEFAULT.tagRoi(frameCols, frameRows);
-        return roi.toOpenCvRect();
     }
 
     public static HorizontalBand bandForCx(double cx, int frameCols) {

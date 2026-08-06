@@ -13,27 +13,27 @@ from vidar_pure import (
     RoiRect,
     CameraRoiConfig,
     fuse_range_weighted,
-    build_ball_size_estimate,
+    build_size_estimate,
     build_floor_estimate,
     build_plate_width_estimate,
     MotionTransform,
     LocalizationFusionPure,
-    distance_from_size_inches,
-    distance_from_width_inches,
+    distance_from_size,
+    distance_from_width,
 )
 
 
 class TestRangeFusion:
     def test_size_only_estimate(self):
-        d = distance_from_size_inches(5.0, 340, 20)
+        d = distance_from_size(5.0, 340, 20)
         assert 40 < d < 45
 
     def test_weighted_fusion_agreement(self):
-        size = build_ball_size_estimate(36, 20, 0.9, False, False)
+        size = build_size_estimate(36, 20, 0.9, False, False)
         floor = build_floor_estimate(38, 60, 0.8, False)
         result = fuse_range_weighted(size, floor)
         assert result.is_valid
-        assert 34 < result.distance_in < 40
+        assert 34 < result.distance < 40
         assert result.confidence > 0
 
     def test_invalid_floor_rejected(self):
@@ -42,20 +42,20 @@ class TestRangeFusion:
         assert floor.rejection_reason in ("near_horizon", "invalid_lut")
 
     def test_estimator_disagreement_lowers_confidence(self):
-        size = build_ball_size_estimate(24, 20, 0.9, False, False)
+        size = build_size_estimate(24, 20, 0.9, False, False)
         floor = build_floor_estimate(48, 60, 0.8, False)
         result = fuse_range_weighted(size, floor)
         assert result.confidence < 0.8
 
     def test_plate_width_range(self):
-        d = distance_from_width_inches(12.0, 340, 80)
+        d = distance_from_width(12.0, 340, 80)
         assert 48 < d < 52
         est = build_plate_width_estimate(d, 80, 0.8, 0.3, False, False, 0.1)
         assert est.is_valid
 
 
 class TestRoiTransforms:
-    def test_lower_fraction_default_ball(self):
+    def test_lower_fraction_default_element(self):
         roi = RoiRect.lower_fraction(640, 480, 0.65)
         assert roi.y == int(480 * 0.35)
         assert roi.height == int(480 * 0.65)
@@ -67,10 +67,10 @@ class TestRoiTransforms:
 
     def test_overlapping_rois(self):
         cfg = CameraRoiConfig()
-        ball = cfg.ball_roi(640, 480)
+        element = cfg.element_roi(640, 480)
         tag = cfg.tag_roi(640, 480)
-        assert ball.y > tag.y
-        assert ball.y < tag.y + tag.height
+        assert element.y > tag.y
+        assert element.y < tag.y + tag.height
 
     def test_invalid_roi_clamped(self):
         roi = RoiRect(-10, -5, 700, 500).clamped(640, 480)

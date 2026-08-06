@@ -58,7 +58,7 @@ public class VidarTeleOp extends LinearOpMode {
 
             VidarAlliance ours = alliance.get();
             telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.addData("Ball", VidarBlobUtil.formatBall(vision.getBestElement()));
+            telemetry.addData("Element", VidarBlobUtil.formatElement(vision.getBestElement()));
             telemetry.addData("Foe", VidarBlobUtil.formatPlate(vision.getBestFoe(), ours));
             telemetry.addData("World foes", world.getTracks(VidarWorldModel.Kind.FOE).size());
             telemetry.addData("Drive", "%.2f  Turn: %.2f", drive, turn);

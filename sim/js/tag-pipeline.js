@@ -1,5 +1,5 @@
 /**
- * Top-half tag scout + gated decode (mirrors Java VidarTagScout / VidarAdaptiveTagProcessor).
+ * Top-half tag scout + gated decode (mirrors Java VidarTagScoutRunner / VidarAdaptiveTagProcessor).
  */
 
 /** @typedef {'LEFT'|'MIDDLE'|'RIGHT'} HorizontalBand */
@@ -152,13 +152,13 @@ export function decodeTagOnCrop(fullFrame, region, cfg, decimation) {
 
   if (!best) return null;
 
-  const rangeIn = (cfg.tagSizeIn ?? 4) * (width * 0.55) / Math.max(1, best.widthPx);
+  const range = (cfg.tagSizeIn ?? 4) * (width * 0.55) / Math.max(1, best.widthPx);
   return {
     tagId: cfg.desiredTagId >= 0 ? cfg.desiredTagId : 11,
     centerX: best.cx,
     centerY: best.cy,
     widthPx: best.widthPx,
-    rangeIn,
+    range,
     decodePixels: workW * workH,
   };
 }
@@ -235,8 +235,8 @@ export function updateTagPipeline(state, processFrame, cfg, nowMs, gate) {
     band: scout.band,
     decimation: dec,
     decodePixels: decoded.decodePixels,
-    fieldX: Math.cos(fieldHeading) * decoded.rangeIn,
-    fieldY: Math.sin(fieldHeading) * decoded.rangeIn,
+    fieldX: Math.cos(fieldHeading) * decoded.range,
+    fieldY: Math.sin(fieldHeading) * decoded.range,
     fieldHeadingDeg: (fieldHeading * 180) / Math.PI,
     odomX: state.odom.x,
     odomY: state.odom.y,

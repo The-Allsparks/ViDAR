@@ -1,16 +1,16 @@
 # ViDAR
 
-Low-resolution, CPU-conscious vision for FTC — **ball collection**, **friend/foe plates**, and **sparse AprilTags** on the Control Hub.
+Low-resolution, CPU-conscious vision for FTC — **game-element tracking**, **friend/foe plates**, and **sparse AprilTags** on the Control Hub.
 
 ## What it does
 
-| Layer | Ball / plate ROIs (configurable, overlapping) | Tag ROI (upper band) |
-|-------|------------------------------------------------|----------------------|
-| **Balls** | Color-blob + geometric filter + optional local Hough | — |
+| Layer | Element / plate ROIs (configurable, overlapping) | Tag ROI (upper band) |
+|-------|-----------------------------------------------------|----------------------|
+| **Elements** | Color-blob + geometric filter + optional local Hough | — |
 | **Plates** | Color mask → rotated rect → white-digit gate → width-based range | — |
 | **Tags** | — | Scout every frame; official FTC decode ≤ 1 s |
 
-Default ball pipeline: **color segmentation** (`VidarBallProcessor`), not full-frame Hough. Per-camera ROIs default to lower 65% (ball), middle 40% (plate), upper 65% (tag) — not a fixed 50/50 split.
+Default element pipeline: **color segmentation** via `VidarContourProcessor` (unified element + plate pass), not full-frame Hough. Per-camera ROIs default to lower 65% (element), middle 40% (plate), upper 65% (tag) — not a fixed 50/50 split.
 
 Supports **1–4 USB webcams** architecturally; sustained multi-camera USB stability requires **hardware validation** on your Control Hub. Scout tag observations **never alter absolute pose** — only decoded AprilTags pass localization gates.
 
@@ -20,6 +20,7 @@ Supports **1–4 USB webcams** architecturally; sustained multi-camera USB stabi
 
 | Path | Purpose |
 |------|---------|
+| [docs/API.md](docs/API.md) | Cross-language outer-layer API contract |
 | [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) | Architecture and feature status |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Tuning reference |
 | [docs/CALIBRATION.md](docs/CALIBRATION.md) | Field calibration workflow |
@@ -30,7 +31,7 @@ Supports **1–4 USB webcams** architecturally; sustained multi-camera USB stabi
 
 ## Browser simulator
 
-Tune before hardware — mock scene or webcam, overlays for balls, plates, tags, and auto-seek.
+Tune before hardware — mock scene or webcam, overlays for elements, plates, tags, and auto-seek.
 
 ```powershell
 .\scripts\serve_sim.ps1
@@ -108,18 +109,18 @@ world.update(vision, System.nanoTime());
 
 ```
 vidar/
-├── VidarConfig.java / VidarTagConfig.java
+├── VidarConfig.java / VidarRuntimeConfig.java
+├── config/                         ← season + robot JSON loaders
 ├── VidarCameraProfile.java / VidarCameraMount.java
-├── VidarGeometry.java / VidarFrameRegions.java
-├── VidarBallProcessor.java / VidarBallObservation.java   # color-blob default
-├── VidarHoughBallProcessor.java                        # legacy Hough-only
-├── VidarPlateProcessor.java / VidarPlateObservation.java / VidarAlliance.java
-├── VidarAllianceSelector.java      # gamepad + color sensor alliance
-├── VidarAdaptiveTagProcessor.java / VidarTagCropDecoder.java / …
-├── VidarVision.java              # one camera
-├── VidarMultiVision.java         # 1–4 cameras fused
-├── VidarWorldModel.java          # short-term spatial memory
-├── VidarBlobUtil.java
+├── VidarGeometry.java / VidarFrameRegions.java / VidarFramePipeline.java
+├── VidarContourProcessor.java      ← unified element + plate detection
+├── VidarContourDetect.java / VidarElementObservation.java
+├── VidarPlateObservation.java / VidarAllianceSelector.java
+├── VidarAdaptiveTagProcessor.java / VidarTagScoutRunner.java / VidarTagDecodeWorker.java
+├── VidarFrameMailbox.java          ← zero-copy frame handoff to worker thread
+├── VidarVision.java                ← one camera
+├── VidarMultiVision.java           ← 1–4 cameras fused
+├── VidarWorldModel.java            ← short-term spatial memory
 ├── VidarDiscoverOpMode.java
 ├── VidarTeleOp.java
 └── VidarAutoSeekOpMode.java

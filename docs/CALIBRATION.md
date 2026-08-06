@@ -19,7 +19,7 @@ OpMode for full checkerboard calibration: **Planned**.
 
 Set per camera in `VidarCameraProfile`:
 
-- `mountXIn`, `mountYIn` — lens position from robot center (+X forward, +Y left)
+- `mountX`, `mountY` — lens position from robot center (+X forward, +Y left)
 - `mountYawDeg`, `mountPitchDeg`, `mountRollDeg`
 - `bearingDeg` — compass direction camera faces (0=front, 90=right, …)
 
@@ -33,29 +33,29 @@ Use `VidarRoiCalibrationOpMode` to visualize:
 
 Adjust `VidarCameraRoiConfig` fractions until incorrect mounting is visually obvious.
 
-## 4. Ball-size range calibration — **Implemented**
+## 4. Element-size range calibration — **Implemented**
 
-1. Place ball at known distances (12, 24, 36, 48 in)
+1. Place element at known distances (12, 24, 36, 48 in)
 2. Record pixel radius at each distance
-3. Verify `VidarConfig.BALL_DIAMETER_IN` and `focalLengthPx`
+3. Verify `VidarConfig.DEFAULT_ELEMENT_DIAMETER` and `focalLengthPx`
 4. Tune HSV until detection is stable
 
 ## 5. Floor LUT calibration — **Implemented**
 
-Update `floorCyPx[]` and `floorDistIn[]` in process-frame coordinates:
+Update `floorCyPx[]` and `floorDist[]` in process-frame coordinates:
 
 ```java
 new double[] {95, 75, 55, 40},  // cy rows
 new double[] {12, 24, 36, 48}   // inches
 ```
 
-Floor LUT is a **secondary** range check for balls and plates — not primary for elevated plates.
+Floor LUT is a **secondary** range check for elements and plates — not primary for elevated plates.
 
 ## 6. Plate-width range calibration — **Implemented**
 
-Set `plateWidthIn` to measured alliance plate width. Primary range formula:
+Set `plateWidth` to measured alliance plate width. Primary range formula:
 
-`distance = plateWidthIn × focalLengthPx / observedPixelWidth`
+`distance = plateWidth × focalLengthPx / observedPixelWidth`
 
 Validate at multiple distances and viewing angles.
 
@@ -65,7 +65,7 @@ Ensure each camera's `bearingDeg` matches physical mounting. Overlapping ROIs sh
 
 ## Validation checklist
 
-- [ ] Ball detected at expected HSV range under venue lighting
+- [ ] Element detected at expected HSV range under venue lighting
 - [ ] Range within ±15% at 12–48 in
 - [ ] Plate width ranging stable when plate is rotated <30°
 - [ ] Tag decode succeeds at expected distances

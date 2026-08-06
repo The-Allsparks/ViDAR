@@ -38,14 +38,6 @@ public final class VidarTagConfig {
 
 
 
-    /** @deprecated Use {@link #DECODE_INTERVAL_MS}. */
-
-    @Deprecated
-
-    public static final long MIN_SAMPLE_INTERVAL_MS = DECODE_INTERVAL_MS;
-
-
-
     /** Scout downscale width for top-half search (lower = faster). */
 
     public static final int SCOUT_WIDTH = 320;
@@ -125,14 +117,6 @@ public final class VidarTagConfig {
 
 
     // --- Scout observations (non-localizing — decode scheduling only) ---
-
-    /** @deprecated Scout landmark fusion removed — scouts never alter absolute pose. */
-    @Deprecated
-    public static final boolean SCOUT_LANDMARK_ENABLED = false;
-
-    /** @deprecated */
-    @Deprecated
-    public static final double SCOUT_LANDMARK_FUSION_WEIGHT = 0.0;
 
     // --- Localization pose gates ---
     public static final double MAX_TRANSLATION_RESIDUAL_IN = 18.0;

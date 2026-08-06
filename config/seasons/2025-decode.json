@@ -1,0 +1,208 @@
+{
+  "seasonId": "2025-decode",
+  "seasonName": "DECODE 2025-26 — purple and green ARTIFACTS (Gopher ResisDent, 4.9 in ± 0.25 in)",
+  "field": {
+    "length": 691.2,
+    "width": 317.0
+  },
+  "apriltags": {
+    "defaultSize": 8.125,
+    "tags": [
+      {
+        "id": 20,
+        "name": "blue_goal",
+        "size": 8.125,
+        "positionIn": { "x": -58.35, "y": -55.63, "z": 29.49 },
+        "orientationDeg": { "yaw": 54 },
+        "localization": true
+      },
+      {
+        "id": 24,
+        "name": "red_goal",
+        "size": 8.125,
+        "positionIn": { "x": -58.35, "y": 55.63, "z": 29.49 },
+        "orientationDeg": { "yaw": -54 },
+        "localization": true
+      },
+      {
+        "id": 21,
+        "name": "obelisk_motif_a",
+        "size": 8.125,
+        "localization": false
+      },
+      {
+        "id": 22,
+        "name": "obelisk_motif_b",
+        "size": 8.125,
+        "localization": false
+      },
+      {
+        "id": 23,
+        "name": "obelisk_motif_c",
+        "size": 8.125,
+        "localization": false
+      }
+    ]
+  },
+  "fusion": {
+    "minElementConfidence": 0.35,
+    "minPlateConfidence": 0.35,
+    "maxRangeMismatchRatio": 0.28
+  },
+  "elements": [
+    {
+      "id": "artifact_purple",
+      "label": "Purple artifact",
+      "diameter": 4.9,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 120,
+        "hMax": 165,
+        "sMin": 40,
+        "sMax": 255,
+        "vMin": 90,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 40,
+        "maxAreaPx": 12000,
+        "minWidthPx": 8,
+        "maxWidthPx": 85,
+        "minHeightPx": 8,
+        "maxHeightPx": 85,
+        "maxAspectRatio": 2.2,
+        "minCircularity": 0.45,
+        "minFillRatio": 0.45,
+        "minInteriorScore": 0.08
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 24,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 8,
+        "maxRadius": 38,
+        "minInterior": 0.10,
+        "minAreaPx": 40
+      }
+    },
+    {
+      "id": "artifact_green",
+      "label": "Green artifact",
+      "diameter": 4.9,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 55,
+        "hMax": 95,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 90,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 40,
+        "maxAreaPx": 12000,
+        "minWidthPx": 8,
+        "maxWidthPx": 85,
+        "minHeightPx": 8,
+        "maxHeightPx": 85,
+        "maxAspectRatio": 2.2,
+        "minCircularity": 0.45,
+        "minFillRatio": 0.45,
+        "minInteriorScore": 0.08
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 24,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 8,
+        "maxRadius": 38,
+        "minInterior": 0.10,
+        "minAreaPx": 40
+      }
+    }
+  ],
+  "plates": [
+    {
+      "alliance": "red",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "hsvWrap": {
+        "hMin": 168,
+        "hMax": 179,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    },
+    {
+      "alliance": "blue",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    }
+  ]
+}

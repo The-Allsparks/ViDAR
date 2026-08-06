@@ -2,20 +2,31 @@ package org.firstinspires.ftc.teamcode.vidar;
 
 /**
  * Graceful degradation based on measured vision-loop CPU and frame age.
+ *
+ * <p>Ladder (when {@link VidarConfig#RESOURCE_BUDGET_ENABLED}):
+ * <ol>
+ *   <li>{@link DegradationLevel#REDUCE_SECONDARY} — high frame age → smaller ROI</li>
+ *   <li>{@link DegradationLevel#DISABLE_LOCAL_HOUGH} — higher frame age → skip local Hough</li>
+ *   <li>{@link DegradationLevel#REDUCE_TAG} — loop CPU over budget → no tag decode</li>
+ *   <li>{@link DegradationLevel#REDUCE_RESOLUTION} — loop CPU 1.1× budget → minimum ROI</li>
+ *   <li>{@link DegradationLevel#DISABLE_PLATES} — loop CPU 1.25× budget → element-only contour pass</li>
+ *   <li>{@link DegradationLevel#IDLE_REAR_CAMERAS} — loop CPU 1.5× budget → optional rear idle
+ *       (requires {@link VidarConfig#RESOURCE_BUDGET_AUTO_IDLE_REAR})</li>
+ * </ol>
  */
 public final class VidarResourceBudget {
 
     public enum DegradationLevel {
         NONE,
-        REDUCE_TAG,
-        DISABLE_LOCAL_HOUGH,
         REDUCE_SECONDARY,
+        DISABLE_LOCAL_HOUGH,
+        REDUCE_TAG,
         REDUCE_RESOLUTION,
         DISABLE_PLATES,
         IDLE_REAR_CAMERAS
     }
 
-    private DegradationLevel level = DegradationLevel.NONE;
+    private volatile DegradationLevel level = DegradationLevel.NONE;
     private double lastLoopCpuMs;
     private double lastFrameAgeMs;
     private int connectedCameras;
@@ -26,7 +37,9 @@ public final class VidarResourceBudget {
         double maxAge = 0;
         if (metrics != null) {
             for (VidarMetrics m : metrics) {
-                if (m == null) continue;
+                if (m == null) {
+                    continue;
+                }
                 maxLoop = Math.max(maxLoop, m.lastLoopCpuMs());
                 maxAge = Math.max(maxAge, m.lastFrameAgeMs());
             }
@@ -39,13 +52,18 @@ public final class VidarResourceBudget {
             return;
         }
 
-        if (maxLoop > VidarConfig.DEGRADATION_LOOP_BUDGET_MS * 1.5) {
+        double budget = VidarConfig.DEGRADATION_LOOP_BUDGET_MS;
+        if (maxLoop > budget * 1.5) {
             level = DegradationLevel.IDLE_REAR_CAMERAS;
-        } else if (maxLoop > VidarConfig.DEGRADATION_LOOP_BUDGET_MS * 1.25) {
+        } else if (maxLoop > budget * 1.25) {
             level = DegradationLevel.DISABLE_PLATES;
-        } else if (maxLoop > VidarConfig.DEGRADATION_LOOP_BUDGET_MS) {
+        } else if (maxLoop > budget * 1.1) {
+            level = DegradationLevel.REDUCE_RESOLUTION;
+        } else if (maxLoop > budget) {
             level = DegradationLevel.REDUCE_TAG;
-        } else if (maxAge > 200) {
+        } else if (maxAge > 180) {
+            level = DegradationLevel.DISABLE_LOCAL_HOUGH;
+        } else if (maxAge > 120) {
             level = DegradationLevel.REDUCE_SECONDARY;
         } else {
             level = DegradationLevel.NONE;
@@ -74,5 +92,24 @@ public final class VidarResourceBudget {
 
     public boolean shouldReduceTagFrequency() {
         return level.ordinal() >= DegradationLevel.REDUCE_TAG.ordinal();
+    }
+
+    public boolean shouldDisablePlates() {
+        return level.ordinal() >= DegradationLevel.DISABLE_PLATES.ordinal();
+    }
+
+    public boolean shouldIdleRearCameras() {
+        return level == DegradationLevel.IDLE_REAR_CAMERAS
+                && VidarConfig.RESOURCE_BUDGET_AUTO_IDLE_REAR;
+    }
+
+    public double processingRoiScale() {
+        if (level.ordinal() >= DegradationLevel.REDUCE_RESOLUTION.ordinal()) {
+            return VidarConfig.DEGRADED_PROCESS_ROI_SCALE;
+        }
+        if (level.ordinal() >= DegradationLevel.REDUCE_SECONDARY.ordinal()) {
+            return VidarConfig.MEDIUM_PROCESS_ROI_SCALE;
+        }
+        return VidarConfig.PROCESS_ROI_SCALE;
     }
 }

@@ -26,17 +26,61 @@ public final class VidarMetrics {
     private long lastStreamRestartDurationMs;
     private int droppedFrames;
     private int staleFrames;
-    private double lastBallProcessorMs;
+    private int skippedSlots;
+    private int processedElementFrames;
+    private int droppedDecodeJobs;
+    private int elementOverflowLast;
+    private double lastElementProcessorMs;
     private double lastPlateProcessorMs;
     private double lastTagProcessorMs;
+    private double lastTagDecodeMs;
     private double lastFrameAgeMs;
     private double lastLoopCpuMs;
     private float portalFps;
     private int activeProcessors;
     private String lastError;
 
+    private int cycleStartDropped;
+    private int cycleStartStale;
+    private int cycleStartSkipped;
+    private int cycleStartProcessedElement;
+    private int cycleStartDroppedDecode;
+
     public VidarMetrics(String cameraName) {
         this.cameraName = cameraName;
+    }
+
+    /** Call at the start of each OpMode vision update cycle for delta metrics. */
+    public void beginCycle() {
+        cycleStartDropped = droppedFrames;
+        cycleStartStale = staleFrames;
+        cycleStartSkipped = skippedSlots;
+        cycleStartProcessedElement = processedElementFrames;
+        cycleStartDroppedDecode = droppedDecodeJobs;
+    }
+
+    public void incrementDroppedDecodeJobs() {
+        droppedDecodeJobs++;
+    }
+
+    public int droppedFramesDelta() {
+        return droppedFrames - cycleStartDropped;
+    }
+
+    public int staleFramesDelta() {
+        return staleFrames - cycleStartStale;
+    }
+
+    public int skippedSlotsDelta() {
+        return skippedSlots - cycleStartSkipped;
+    }
+
+    public int processedElementFramesDelta() {
+        return processedElementFrames - cycleStartProcessedElement;
+    }
+
+    public int droppedDecodeJobsDelta() {
+        return droppedDecodeJobs - cycleStartDroppedDecode;
     }
 
     public void setCameraState(VidarCameraScheduler.State state) {
@@ -54,14 +98,23 @@ public final class VidarMetrics {
 
     public void recordProcessorTime(String processor, double ms) {
         switch (processor) {
-            case "ball":
-                lastBallProcessorMs = ms;
+            case "element":
+            case "contour":
+                lastElementProcessorMs = ms;
+                lastElementProcessorMs = ms;
+                break;
+            case "element":
+                lastElementProcessorMs = ms;
+                lastElementProcessorMs = ms;
                 break;
             case "plate":
                 lastPlateProcessorMs = ms;
                 break;
             case "tag":
                 lastTagProcessorMs = ms;
+                break;
+            case "tagDecode":
+                lastTagDecodeMs = ms;
                 break;
             default:
                 break;
@@ -94,6 +147,18 @@ public final class VidarMetrics {
 
     public void incrementStaleFrames() {
         staleFrames++;
+    }
+
+    public void incrementSkippedSlots() {
+        skippedSlots++;
+    }
+
+    public void incrementProcessedElementFrames() {
+        processedElementFrames++;
+    }
+
+    public void recordElementOverflow(int overflowCount) {
+        elementOverflowLast = Math.max(0, overflowCount);
     }
 
     public void setLastError(String error) {
@@ -132,8 +197,24 @@ public final class VidarMetrics {
         return staleFrames;
     }
 
-    public double lastBallProcessorMs() {
-        return lastBallProcessorMs;
+    public int skippedSlots() {
+        return skippedSlots;
+    }
+
+    public int processedElementFrames() {
+        return processedElementFrames;
+    }
+
+    public int droppedDecodeJobs() {
+        return droppedDecodeJobs;
+    }
+
+    public int elementOverflowLast() {
+        return elementOverflowLast;
+    }
+
+    public double lastElementProcessorMs() {
+        return lastElementProcessorMs;
     }
 
     public double lastPlateProcessorMs() {
@@ -142,6 +223,10 @@ public final class VidarMetrics {
 
     public double lastTagProcessorMs() {
         return lastTagProcessorMs;
+    }
+
+    public double lastTagDecodeMs() {
+        return lastTagDecodeMs;
     }
 
     public double lastFrameAgeMs() {
@@ -172,14 +257,19 @@ public final class VidarMetrics {
         m.put("stateMs", timeInStateMs());
         m.put("streamX", streamTransitionCount);
         m.put("fps", portalFps);
-        m.put("ballMs", lastBallProcessorMs);
+        m.put("elementMs", lastElementProcessorMs);
         m.put("plateMs", lastPlateProcessorMs);
         m.put("tagMs", lastTagProcessorMs);
+        m.put("tagDecodeMs", lastTagDecodeMs);
         m.put("frameAgeMs", lastFrameAgeMs);
         m.put("loopMs", lastLoopCpuMs);
         m.put("processors", activeProcessors);
         m.put("dropped", droppedFrames);
         m.put("stale", staleFrames);
+        m.put("skipped", skippedSlots);
+        m.put("elemFrames", processedElementFrames);
+        m.put("elemOver", elementOverflowLast);
+        m.put("droppedDecode", droppedDecodeJobs);
         if (lastError != null) {
             m.put("error", lastError);
         }

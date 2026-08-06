@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Temporal confirmation filter before observations enter the world model.
- * Uses capture timestamps; rejects stale frames and impossible jumps.
+ * Tunable at runtime via {@link VidarRuntimeConfig}.
  */
 public final class VidarTemporalFilter {
 
@@ -14,44 +14,56 @@ public final class VidarTemporalFilter {
         double lastX;
         double lastY;
         long lastCaptureNanos;
-        String cameraName;
-        VidarBallObservation ball;
+        boolean hasPosition;
+        VidarElementObservation element;
         VidarPlateObservation plate;
     }
 
-    private final Map<String, Pending> ballPending = new HashMap<>();
+    private final Map<String, Pending> elementPending = new HashMap<>();
     private final Map<String, Pending> platePending = new HashMap<>();
+    private volatile VidarRuntimeConfig runtimeConfig;
 
-    public VidarBallObservation filterBall(VidarBallObservation obs) {
+    public VidarTemporalFilter() {}
+
+    public VidarTemporalFilter(VidarRuntimeConfig runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public void setRuntimeConfig(VidarRuntimeConfig runtimeConfig) {
+        this.runtimeConfig = runtimeConfig;
+    }
+
+    public VidarElementObservation filterElement(VidarElementObservation obs) {
         if (obs == null) {
             return null;
         }
-        if (obs.confidence >= VidarConfig.TEMPORAL_STRONG_CONFIDENCE) {
-            updatePending(ballPending, obs.cameraName, obs.robotXIn, obs.robotYIn,
+        if (obs.confidence >= strongConfidence()) {
+            primePending(elementPending, obs.cameraName, obs.robotX, obs.robotY,
                     obs.captureTimeNanos, obs, null);
             return obs;
         }
 
-        Pending p = ballPending.get(obs.cameraName);
+        Pending p = elementPending.get(obs.cameraName);
         if (p == null || obs.captureTimeNanos <= p.lastCaptureNanos) {
             return null;
         }
 
-        if (p.lastX != 0 || p.lastY != 0) {
-            double jump = Math.hypot(obs.robotXIn - p.lastX, obs.robotYIn - p.lastY);
-            if (jump > VidarConfig.TEMPORAL_MAX_JUMP_IN) {
-                ballPending.remove(obs.cameraName);
+        if (p.hasPosition) {
+            double jump = Math.hypot(obs.robotX - p.lastX, obs.robotY - p.lastY);
+            if (jump > maxJump()) {
+                elementPending.remove(obs.cameraName);
                 return null;
             }
         }
 
         p.frames++;
-        p.lastX = obs.robotXIn;
-        p.lastY = obs.robotYIn;
+        p.lastX = obs.robotX;
+        p.lastY = obs.robotY;
+        p.hasPosition = true;
         p.lastCaptureNanos = obs.captureTimeNanos;
-        p.ball = obs;
+        p.element = obs;
 
-        if (p.frames >= VidarConfig.TEMPORAL_CONFIRM_FRAMES) {
+        if (p.frames >= confirmFrames()) {
             return obs;
         }
         return null;
@@ -61,8 +73,8 @@ public final class VidarTemporalFilter {
         if (obs == null) {
             return null;
         }
-        if (obs.confidence >= VidarConfig.TEMPORAL_STRONG_CONFIDENCE) {
-            updatePending(platePending, obs.cameraName, obs.robotXIn, obs.robotYIn,
+        if (obs.confidence >= strongConfidence()) {
+            primePending(platePending, obs.cameraName, obs.robotX, obs.robotY,
                     obs.captureTimeNanos, null, obs);
             return obs;
         }
@@ -72,36 +84,52 @@ public final class VidarTemporalFilter {
             return null;
         }
 
-        if (p.lastX != 0 || p.lastY != 0) {
-            double jump = Math.hypot(obs.robotXIn - p.lastX, obs.robotYIn - p.lastY);
-            if (jump > VidarConfig.TEMPORAL_MAX_JUMP_IN) {
+        if (p.hasPosition) {
+            double jump = Math.hypot(obs.robotX - p.lastX, obs.robotY - p.lastY);
+            if (jump > maxJump()) {
                 platePending.remove(obs.cameraName);
                 return null;
             }
         }
 
         p.frames++;
-        p.lastX = obs.robotXIn;
-        p.lastY = obs.robotYIn;
+        p.lastX = obs.robotX;
+        p.lastY = obs.robotY;
+        p.hasPosition = true;
         p.lastCaptureNanos = obs.captureTimeNanos;
         p.plate = obs;
 
-        if (p.frames >= VidarConfig.TEMPORAL_CONFIRM_FRAMES) {
+        if (p.frames >= confirmFrames()) {
             return obs;
         }
         return null;
     }
 
-    private static void updatePending(Map<String, Pending> map, String camera,
-                                      double x, double y, long captureNanos,
-                                      VidarBallObservation ball, VidarPlateObservation plate) {
+    private void primePending(Map<String, Pending> map, String camera,
+                              double x, double y, long captureNanos,
+                              VidarElementObservation element, VidarPlateObservation plate) {
         Pending p = map.computeIfAbsent(camera, k -> new Pending());
-        p.frames = VidarConfig.TEMPORAL_CONFIRM_FRAMES;
+        p.frames = Math.max(1, confirmFrames());
         p.lastX = x;
         p.lastY = y;
+        p.hasPosition = true;
         p.lastCaptureNanos = captureNanos;
-        p.cameraName = camera;
-        p.ball = ball;
+        p.element = element;
         p.plate = plate;
+    }
+
+    private int confirmFrames() {
+        VidarRuntimeConfig cfg = runtimeConfig;
+        return cfg == null ? VidarConfig.TEMPORAL_CONFIRM_FRAMES : cfg.temporalConfirmFrames();
+    }
+
+    private double strongConfidence() {
+        VidarRuntimeConfig cfg = runtimeConfig;
+        return cfg == null ? VidarConfig.TEMPORAL_STRONG_CONFIDENCE : cfg.temporalStrongConfidence();
+    }
+
+    private double maxJump() {
+        VidarRuntimeConfig cfg = runtimeConfig;
+        return cfg == null ? VidarConfig.TEMPORAL_MAX_JUMP : cfg.temporalMaxJump();
     }
 }

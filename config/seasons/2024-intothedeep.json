@@ -1,0 +1,188 @@
+{
+  "seasonId": "2024-intothedeep",
+  "seasonName": "INTO THE DEEP 2024-25 \u00e2\u20ac\u201d yellow / red / blue SAMPLES (3.5 \u00c3\u2014 1.5 \u00c3\u2014 1.5 in prism; diameterIn = 1.5 in square face for ranging)",
+  "fusion": {
+    "minElementConfidence": 0.35,
+    "minPlateConfidence": 0.35,
+    "maxRangeMismatchRatio": 0.28
+  },
+  "elements": [
+    {
+      "id": "sample_yellow",
+      "label": "Yellow sample (neutral)",
+      "diameter": 1.5,
+      "detector": "color_blob",
+      "hsv": {
+        "hMin": 18,
+        "hMax": 38,
+        "sMin": 120,
+        "sMax": 255,
+        "vMin": 100,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 20,
+        "maxAreaPx": 8000,
+        "minWidthPx": 6,
+        "maxWidthPx": 70,
+        "minHeightPx": 6,
+        "maxHeightPx": 70,
+        "maxAspectRatio": 3.0,
+        "minCircularity": 0.3,
+        "minFillRatio": 0.4,
+        "minInteriorScore": 0.08,
+        "minRectangularity": 0.4
+      },
+      "interior": {
+        "brightMin": 85,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "shape": "rect"
+    },
+    {
+      "id": "sample_red",
+      "label": "Red alliance sample",
+      "diameter": 1.5,
+      "detector": "color_blob",
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 20,
+        "maxAreaPx": 8000,
+        "minWidthPx": 6,
+        "maxWidthPx": 70,
+        "minHeightPx": 6,
+        "maxHeightPx": 70,
+        "maxAspectRatio": 3.0,
+        "minCircularity": 0.3,
+        "minFillRatio": 0.4,
+        "minInteriorScore": 0.08,
+        "minRectangularity": 0.4
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "shape": "rect"
+    },
+    {
+      "id": "sample_blue",
+      "label": "Blue alliance sample",
+      "diameter": 1.5,
+      "detector": "color_blob",
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 20,
+        "maxAreaPx": 8000,
+        "minWidthPx": 6,
+        "maxWidthPx": 70,
+        "minHeightPx": 6,
+        "maxHeightPx": 70,
+        "maxAspectRatio": 3.0,
+        "minCircularity": 0.3,
+        "minFillRatio": 0.4,
+        "minInteriorScore": 0.08,
+        "minRectangularity": 0.4
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "shape": "rect"
+    }
+  ],
+  "plates": [
+    {
+      "alliance": "red",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "hsvWrap": {
+        "hMin": 168,
+        "hMax": 179,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    },
+    {
+      "alliance": "blue",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    }
+  ]
+}

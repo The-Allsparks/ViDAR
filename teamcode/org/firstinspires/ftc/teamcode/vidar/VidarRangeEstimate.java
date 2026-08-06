@@ -12,27 +12,27 @@ public final class VidarRangeEstimate {
     }
 
     public final Source source;
-    public final double distanceIn;
+    public final double distance;
     /** Inverse variance weight (higher = more trusted). 0 = rejected. */
     public final double weight;
-    public final double uncertaintyIn;
+    public final double uncertainty;
     public final String rejectionReason;
 
-    public VidarRangeEstimate(Source source, double distanceIn, double weight, double uncertaintyIn) {
-        this(source, distanceIn, weight, uncertaintyIn, null);
+    public VidarRangeEstimate(Source source, double distance, double weight, double uncertainty) {
+        this(source, distance, weight, uncertainty, null);
     }
 
-    public VidarRangeEstimate(Source source, double distanceIn, double weight,
-                              double uncertaintyIn, String rejectionReason) {
+    public VidarRangeEstimate(Source source, double distance, double weight,
+                              double uncertainty, String rejectionReason) {
         this.source = source;
-        this.distanceIn = distanceIn;
+        this.distance = distance;
         this.weight = weight;
-        this.uncertaintyIn = uncertaintyIn;
+        this.uncertainty = uncertainty;
         this.rejectionReason = rejectionReason;
     }
 
     public boolean isValid() {
-        return weight > 0 && !Double.isNaN(distanceIn) && distanceIn > 0
+        return weight > 0 && !Double.isNaN(distance) && distance > 0
                 && rejectionReason == null;
     }
 

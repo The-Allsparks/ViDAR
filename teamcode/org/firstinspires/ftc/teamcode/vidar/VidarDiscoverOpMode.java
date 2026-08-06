@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 /**
- * Lesson 1 — balls, plates, adaptive AprilTags, multi-camera fusion, world model.
+ * Lesson 1 — elements, plates, adaptive AprilTags, multi-camera fusion, world model.
  *
  * <p>INIT: hold {@code Y} = RED alliance, {@code B} = BLUE (overrides color sensor).
  * Color sensor on own ROBOT SIGN is used when no button is held.
@@ -55,7 +55,7 @@ public class VidarDiscoverOpMode extends LinearOpMode {
             vision.update();
             world.update(vision, now);
 
-            VidarBallObservation ball = vision.getBestElement();
+            VidarElementObservation element = vision.getBestElement();
             VidarPlateObservation plate = vision.getBestPlate();
             VidarTagScoutResult scout = vision.getLastTagScout();
             VidarTagObservation tag = vision.getLatestTag();
@@ -69,13 +69,13 @@ public class VidarDiscoverOpMode extends LinearOpMode {
             telemetry.addData("FPS cam1", vision.getCameraCount() > 0
                     ? String.format("%.1f", vision.camera(0).portalFps()) : "—");
             telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.addData("Ball", VidarBlobUtil.formatBall(ball));
-            telemetry.addData("Ball detail", VidarBlobUtil.formatBallDetail(ball));
+            telemetry.addData("Element", VidarBlobUtil.formatElement(element));
+            telemetry.addData("Element detail", VidarBlobUtil.formatElementDetail(element));
             telemetry.addData("Plate", VidarBlobUtil.formatPlate(plate, ours));
             telemetry.addData("Plate detail", VidarBlobUtil.formatPlateDetail(plate));
             telemetry.addData("Foe", VidarBlobUtil.formatPlate(vision.getBestFoe(), ours));
             telemetry.addData("World tracks", world.trackCount());
-            telemetry.addData("Nearest ball", VidarBlobUtil.formatWorldTrack(world.nearestBall()));
+            telemetry.addData("Nearest element", VidarBlobUtil.formatWorldTrack(world.nearestElement()));
             telemetry.addData("Nearest foe", VidarBlobUtil.formatWorldTrack(world.nearestFoe()));
             telemetry.addData("Intake blocked", world.intakeBlocked());
             telemetry.addData("Tag scout", scout == null ? "none"
@@ -83,7 +83,7 @@ public class VidarDiscoverOpMode extends LinearOpMode {
             telemetry.addData("Tag fix", VidarBlobUtil.formatTag(tag));
             telemetry.addData("Scout obs", VidarBlobUtil.formatScoutObservation(vision.getLatestScoutObservation()));
             if (vision.camera(0) != null) {
-                telemetry.addData("Ball reject", vision.camera(0).ballRejectionStats().summary());
+                telemetry.addData("Element reject", vision.camera(0).elementRejectionStats().summary());
                 telemetry.addData("Cam state", vision.camera(0).directionState().name());
             }
             telemetry.addData("Tag @capture", VidarBlobUtil.formatTagPose(tag));
