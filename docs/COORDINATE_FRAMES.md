@@ -115,7 +115,7 @@ Teams configure extrinsics once in robot JSON (`mount.x/y/z`, `bearingDeg`, `pit
 - optional `distortionModel` / `distortionCoeffs`
 - `pixelToRay()`, `pointToPixel()`
 
-**Operational model:** zero-distortion pinhole on the Control Hub. Brown-Conrady coefficients may be stored for offline tools; fisheye is rejected on-robot. Do not assume 640×480 intrinsics apply to cropped/processed images without `VidarImageTransform`.
+**Operational model:** zero-distortion pinhole on the Control Hub — appropriate for typical FTC USB side cameras (narrow FOV, not fisheye). Mild radial distortion at the image edges may appear after checkerboard calibration; Brown-Conrady coefficients can be stored for offline refinement or optional future runtime use. Fisheye is rejected on-robot and is not expected on ViDAR hardware. Do not assume 640×480 intrinsics apply to cropped/processed images without `VidarImageTransform`.
 
 Legacy fields `focalLengthPx`, `principalPointX/Y` remain authoritative in robot JSON.
 
@@ -225,7 +225,7 @@ The on-robot nonlinear optimizer is **not implemented** in this PR.
 
 ## Limitations
 
-- No runtime fisheye or full Brown-Conrady correction on Control Hub (**Planned** offline).  
+- No runtime Brown-Conrady correction on Control Hub today (**Planned**, low priority — pinhole is usually enough for FTC USB cameras). Fisheye is unsupported and not targeted.  
 - FTC `frameCaptureNanos` is propagated unchanged; not a separate ViDAR clock.  
 - Multi-camera hardware validation **not** claimed.  
 - Four-camera USB stress **not Hardware validated**.

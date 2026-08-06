@@ -40,14 +40,13 @@ public final class VidarGroundPlane {
     private VidarGroundPlane() {}
 
     /**
-     * Intersect a ray from camera origin through {@code rayDirectionRobot} with z = 0 plane.
-     *
-     * @param cameraOriginRobot lens position in robot frame
-     * @param rayDirectionRobot unit direction in robot frame
+     * Intersect a ray from camera origin through {@code rayDirectionRobot} with horizontal
+     * plane at {@code planeZ} in robot frame (+Z up).
      */
-    public static Intersection intersect(
+    public static Intersection intersectAtPlane(
             VidarVec3 cameraOriginRobot,
             VidarVec3 rayDirectionRobot,
+            double planeZ,
             double slantRangeUncertainty) {
         if (cameraOriginRobot == null || rayDirectionRobot == null
                 || !cameraOriginRobot.isFinite() || !rayDirectionRobot.isFinite()) {
@@ -57,10 +56,10 @@ public final class VidarGroundPlane {
         if (Math.abs(dz) < 1e-6) {
             return Intersection.rejected("parallel_to_plane");
         }
-        if (cameraOriginRobot.z <= 0 && dz >= 0) {
-            return Intersection.rejected("pointing_away_from_floor");
+        if (cameraOriginRobot.z <= planeZ && dz >= 0) {
+            return Intersection.rejected("pointing_away_from_plane");
         }
-        double t = -cameraOriginRobot.z / dz;
+        double t = (planeZ - cameraOriginRobot.z) / dz;
         if (t <= 0) {
             return Intersection.rejected("behind_camera");
         }
@@ -70,6 +69,19 @@ public final class VidarGroundPlane {
                 ? Double.NaN
                 : slantRangeUncertainty * (horizontal / Math.max(t, 1e-6));
         return new Intersection(hit.x, hit.y, t, horizUnc, true, null);
+    }
+
+    /**
+     * Intersect a ray from camera origin through {@code rayDirectionRobot} with z = 0 plane.
+     *
+     * @param cameraOriginRobot lens position in robot frame
+     * @param rayDirectionRobot unit direction in robot frame
+     */
+    public static Intersection intersect(
+            VidarVec3 cameraOriginRobot,
+            VidarVec3 rayDirectionRobot,
+            double slantRangeUncertainty) {
+        return intersectAtPlane(cameraOriginRobot, rayDirectionRobot, 0.0, slantRangeUncertainty);
     }
 
     /**

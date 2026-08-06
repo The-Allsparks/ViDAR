@@ -314,16 +314,16 @@ class GroundIntersection:
 
 
 def intersect_ground_plane(
-    origin: Vec3, direction: Vec3, slant_uncertainty: float = math.nan
+    origin: Vec3, direction: Vec3, slant_uncertainty: float = math.nan, *, plane_z: float = 0.0
 ) -> GroundIntersection:
     if not origin.is_finite() or not direction.is_finite():
         return GroundIntersection.rejected("invalid_ray")
     dz = direction.z
     if abs(dz) < 1e-6:
         return GroundIntersection.rejected("parallel_to_plane")
-    if origin.z <= 0 and dz >= 0:
-        return GroundIntersection.rejected("pointing_away_from_floor")
-    t = -origin.z / dz
+    if origin.z <= plane_z and dz >= 0:
+        return GroundIntersection.rejected("pointing_away_from_plane")
+    t = (plane_z - origin.z) / dz
     if t <= 0:
         return GroundIntersection.rejected("behind_camera")
     hit = origin.plus(direction.scaled(t))
@@ -334,6 +334,16 @@ def intersect_ground_plane(
         else slant_uncertainty * (horizontal / max(t, 1e-6))
     )
     return GroundIntersection(hit.x, hit.y, t, horiz_unc, True, None)
+
+
+def distance_from_ground_plane(
+    cx: float, cy: float, profile: CameraProfile, target_height_z: float
+) -> float:
+    ct = build_robot_t_camera(profile)
+    origin = ct.robot_t_camera.translation
+    direction = ct.robot_t_camera.transform_direction(ct.intrinsics.pixel_to_ray(cx, cy))
+    hit = intersect_ground_plane(origin, direction, plane_z=target_height_z)
+    return hit.slant_range if hit.valid else math.nan
 
 
 def floor_point_from_slant_range(

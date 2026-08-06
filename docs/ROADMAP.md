@@ -180,13 +180,15 @@ Power options:
 ### Practical limits
 
 - Use **640×480** portal when tags enabled (`VidarTagConfig`).
-- Identical camera models (e.g. C920) simplify intrinsics sharing.
+- Identical camera models simplify intrinsics sharing (team: SVPRO 8MP module).
 - Short USB cables, strain relief, ferrite if you see dropouts.
 - Log `portal.getCameraState()` and frame timing in a stress OpMode before competition.
 
 ### Cameras
 
-- Logitech C920 / C270 class UVC webcams are common FTC choices.
+- **Team hardware:** [SVPRO 8MP USB module](https://www.amazon.com/dp/B0DCF8WW6V) — 105° HFOV, fixed focus, IMX179, UVC USB 2.0. Wide rectilinear lens (not fisheye); see [CALIBRATION.md](CALIBRATION.md).
+- Logitech C920 / C270 class UVC webcams remain common FTC references; intrinsics differ (~70–80° HFOV).
+- Use **identical camera models** across all four mounts so `cameraDefaults` intrinsics can be shared.
 - Mount all cameras with **horizon near 50%** row for the dual ROI layout.
 
 ---
@@ -250,8 +252,10 @@ Maintain a team **validation log** (spreadsheet or `docs/validation-log.md`): da
 | Browser calibration axis overlay | ✅ **Tested in simulation** |
 | JSONL offline calibration dataset schema | ✅ **Implemented** |
 | Nonlinear extrinsic optimizer (Ceres / offline) | **Planned** |
-| Runtime fisheye / Brown-Conrady on Control Hub | **Planned** |
+| Optional Brown-Conrady runtime (mild radial at image edges) | **Planned** — low priority; pinhole is the default for FTC USB cameras |
 | One-camera / multi-camera hardware validation | **Planned** |
+
+Fisheye lenses are **not** a ViDAR target. Team cameras (SVPRO 105° wide rectilinear) and typical Logitech-class USB modules use pinhole or mild radial distortion — not fisheye projection.
 
 Workflow (planned): Record Dataset → Extract Scans → Optimize Poses → Validate → Export. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md).
 

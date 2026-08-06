@@ -25,6 +25,7 @@ Type prefix `Vidar` is used in Java (`VidarRangeResult`). Other languages may dr
 |-------|---------|
 | `SIZE` | Known physical diameter → pixel radius |
 | `FLOOR` | Floor-row LUT from image Y |
+| `GROUND_PLANE` | Mount + intrinsics ray intersect at ball-center height (element diameter / 2) |
 | `PLATE_WIDTH` | Known plate width → pixel width |
 
 ### `ElementDetectorType` / `VidarElementDetectorType`
@@ -93,7 +94,7 @@ sourceDistance(source: RangeSource): float
 sourceWeight(source: RangeSource): float
 ```
 
-**Fusion** (at most two estimates, no list allocation):
+**Fusion** (up to three estimates for elements: SIZE + FLOOR LUT + GROUND_PLANE, no list allocation):
 
 ```
 fuseRangeWeighted(maxRangeMismatchRatio, ...estimates): RangeResult
@@ -115,6 +116,8 @@ All static in Java `VidarGeometry`; module functions in Python `vidar.geometry`.
 | `distanceFromFloor` | `cyPx, profile` | range from LUT (in) |
 | `buildSizeEstimate` | `dSize, radiusPx, circleFitQuality, partialOcclusion, touchesBoundary` | `RangeEstimate` |
 | `buildFloorEstimate` | `dFloor, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
+| `distanceFromGroundPlane` | `cx, cy, profile, targetHeightZ` | slant range from mount + intrinsics |
+| `buildGroundPlaneEstimate` | `dGround, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
 | `buildPlateWidthEstimate` | `dWidth, pixelWidth, rectangularity, whiteRatio, partialVisibility, touchesRoiBoundary, rotationPenalty` | `RangeEstimate` |
 | `fuseRangeWeighted` | `maxRangeMismatchRatio?, ...estimates` | `RangeResult` |
 | `robotX` | `range, bearingDeg, profile?` | robot X (in) |
@@ -131,7 +134,7 @@ Python also exposes **camelCase aliases** (`distanceFromSize = distance_from_siz
 
 ## Coordinate frames and transforms
 
-**Status:** **Implemented**, **Tested in simulation**. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md).
+**Status:** **Implemented**, **Tested in simulation**. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md). Distortion: pinhole on-robot (`distortionModel: "none"` default); FTC USB cameras are not fisheye — mild Brown-Conrady at edges is optional future work.
 
 Java package `vidar.geometry`; Python module `vidar.transforms`.
 

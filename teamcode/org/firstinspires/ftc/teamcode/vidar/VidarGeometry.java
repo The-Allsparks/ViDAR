@@ -61,6 +61,53 @@ public final class VidarGeometry {
         return Double.NaN;
     }
 
+    /**
+     * Slant range along a pixel ray to a horizontal plane at {@code targetHeightZ} in robot frame.
+     * For floor game pieces use {@code targetHeightZ = elementDiameter / 2} (ball center height).
+     */
+    public static double distanceFromGroundPlane(
+            double cx, double cy, VidarCameraProfile profile, double targetHeightZ) {
+        VidarGroundPlane.Intersection hit =
+                intersectGroundPlaneAtHeight(cx, cy, profile, targetHeightZ);
+        return hit.valid ? hit.slantRange : Double.NaN;
+    }
+
+    public static VidarGroundPlane.Intersection intersectGroundPlaneAtHeight(
+            double cx, double cy, VidarCameraProfile profile, double targetHeightZ) {
+        if (profile == null) {
+            return VidarGroundPlane.Intersection.rejected("no_profile");
+        }
+        VidarTransformRegistry.CameraTransforms transforms =
+                VidarTransformRegistry.buildForProfile(profile);
+        if (transforms == null) {
+            return VidarGroundPlane.Intersection.rejected("no_transform");
+        }
+        VidarVec3 origin = transforms.robotTCamera.translation;
+        VidarVec3 dir = transforms.robotTCamera.transformDirection(
+                transforms.intrinsics.pixelToRay(cx, cy));
+        return VidarGroundPlane.intersectAtPlane(origin, dir, targetHeightZ, Double.NaN);
+    }
+
+    public static VidarRangeEstimate buildGroundPlaneEstimate(
+            double dGround,
+            double cyPx,
+            double horizonConfidence,
+            boolean nearHorizon) {
+        if (Double.isNaN(dGround) || dGround <= 0) {
+            return VidarRangeEstimate.rejected(
+                    VidarRangeEstimate.Source.GROUND_PLANE, "invalid_geometry");
+        }
+        if (nearHorizon) {
+            return VidarRangeEstimate.rejected(
+                    VidarRangeEstimate.Source.GROUND_PLANE, "near_horizon");
+        }
+        // Mount/intrinsic uncertainty — tighter when geometry agrees with calibrated mount.
+        double baseUncertainty = dGround * 0.10 / Math.max(0.25, horizonConfidence);
+        double weight = 1.0 / (baseUncertainty * baseUncertainty);
+        return new VidarRangeEstimate(
+                VidarRangeEstimate.Source.GROUND_PLANE, dGround, weight, baseUncertainty);
+    }
+
     public static VidarRangeEstimate buildSizeEstimate(
             double dSize,
             double radiusPx,
@@ -137,10 +184,10 @@ public final class VidarGeometry {
 
     public static VidarRangeResult fuseRangeWeighted(
             double maxRangeMismatchRatio, VidarRangeEstimate... estimates) {
-        VidarRangeEstimate firstValid = null;
-        VidarRangeEstimate secondValid = null;
+        VidarRangeEstimate[] valid = new VidarRangeEstimate[3];
         VidarRangeEstimate firstAny = null;
         VidarRangeEstimate secondAny = null;
+        int validCount = 0;
         int anyCount = 0;
 
         for (VidarRangeEstimate est : estimates) {
@@ -157,14 +204,12 @@ public final class VidarGeometry {
             if (!est.isValid()) {
                 continue;
             }
-            if (firstValid == null) {
-                firstValid = est;
-            } else if (secondValid == null) {
-                secondValid = est;
+            if (validCount < valid.length) {
+                valid[validCount++] = est;
             }
         }
 
-        if (firstValid == null) {
+        if (validCount == 0) {
             if (anyCount == 0) {
                 return VidarRangeResult.invalid();
             }
@@ -174,16 +219,14 @@ public final class VidarGeometry {
             return new VidarRangeResult(Double.NaN, Double.NaN, 0, firstAny, secondAny, 2);
         }
 
-        double weightSum = firstValid.weight;
-        double weightedDist = firstValid.weight * firstValid.distance;
-        double varianceSum = firstValid.weight * firstValid.uncertainty * firstValid.uncertainty;
-        int validCount = 1;
-
-        if (secondValid != null) {
-            weightSum += secondValid.weight;
-            weightedDist += secondValid.weight * secondValid.distance;
-            varianceSum += secondValid.weight * secondValid.uncertainty * secondValid.uncertainty;
-            validCount = 2;
+        double weightSum = 0;
+        double weightedDist = 0;
+        double varianceSum = 0;
+        for (int i = 0; i < validCount; i++) {
+            VidarRangeEstimate est = valid[i];
+            weightSum += est.weight;
+            weightedDist += est.weight * est.distance;
+            varianceSum += est.weight * est.uncertainty * est.uncertainty;
         }
 
         if (weightSum <= 0) {
@@ -192,19 +235,34 @@ public final class VidarGeometry {
         double fused = weightedDist / weightSum;
         double uncertainty = Math.sqrt(varianceSum / weightSum);
 
-        double disagreementPenalty = 1.0;
-        if (secondValid != null) {
-            double denom = Math.max(firstValid.distance, secondValid.distance);
-            if (denom > 0) {
-                double maxDiff = Math.abs(firstValid.distance - secondValid.distance) / denom;
-                if (maxDiff > maxRangeMismatchRatio) {
-                    disagreementPenalty = Math.max(0.2, 1.0 - maxDiff);
+        double maxPairDiff = 0;
+        for (int i = 0; i < validCount; i++) {
+            for (int j = i + 1; j < validCount; j++) {
+                double a = valid[i].distance;
+                double b = valid[j].distance;
+                double denom = Math.max(a, b);
+                if (denom > 0) {
+                    maxPairDiff = Math.max(maxPairDiff, Math.abs(a - b) / denom);
                 }
             }
         }
+        double disagreementPenalty = 1.0;
+        if (validCount > 1 && maxPairDiff > maxRangeMismatchRatio) {
+            disagreementPenalty = Math.max(0.2, 1.0 - maxPairDiff);
+        }
         double confidence = Math.min(1.0, (weightSum / validCount) * disagreementPenalty);
-        return new VidarRangeResult(
-                fused, uncertainty, confidence, firstValid, secondValid, validCount);
+
+        VidarRangeEstimate top0 = valid[0];
+        VidarRangeEstimate top1 = validCount > 1 ? valid[1] : null;
+        for (int i = 1; i < validCount; i++) {
+            if (valid[i].weight > top0.weight) {
+                top1 = top0;
+                top0 = valid[i];
+            } else if (top1 == null || valid[i].weight > top1.weight) {
+                top1 = valid[i];
+            }
+        }
+        return new VidarRangeResult(fused, uncertainty, confidence, top0, top1, validCount);
     }
 
     private static double profileHorizonConfidence(int horizonRowPx) {
@@ -405,13 +463,19 @@ public final class VidarGeometry {
         double dSize = distanceFromSize(
                 activeElement.diameter, profile.focalLengthPx, radiusPx);
         double dFloor = distanceFromFloor(cy, profile);
+        double ballCenterZ = activeElement.diameter * 0.5;
+        double dGround = distanceFromGroundPlane(cx, cy, profile, ballCenterZ);
         boolean nearHorizon = cy <= profile.horizonRowPx + 8;
+        double horizonConf = profileHorizonConfidence(profile.horizonRowPx);
 
         VidarRangeEstimate sizeEst = buildSizeEstimate(
                 dSize, radiusPx, circleFitQuality, partialOcclusion, touchesBoundary);
         VidarRangeEstimate floorEst = buildFloorEstimate(
-                dFloor, cy, profileHorizonConfidence(profile.horizonRowPx), nearHorizon);
-        VidarRangeResult rangeResult = fuseRangeWeighted(activeSeason.maxRangeMismatchRatio, sizeEst, floorEst);
+                dFloor, cy, horizonConf, nearHorizon);
+        VidarRangeEstimate groundEst = buildGroundPlaneEstimate(
+                dGround, cy, horizonConf, nearHorizon);
+        VidarRangeResult rangeResult = fuseRangeWeighted(
+                activeSeason.maxRangeMismatchRatio, sizeEst, floorEst, groundEst);
 
         double confidence = composeElementConfidence(
                 interiorScore, circularity, fillRatio, circleFitQuality,

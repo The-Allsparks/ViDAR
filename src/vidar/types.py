@@ -20,6 +20,7 @@ class RangeSource(str, Enum):
 
     SIZE = "SIZE"
     FLOOR = "FLOOR"
+    GROUND_PLANE = "GROUND_PLANE"
     PLATE_WIDTH = "PLATE_WIDTH"
 
 
