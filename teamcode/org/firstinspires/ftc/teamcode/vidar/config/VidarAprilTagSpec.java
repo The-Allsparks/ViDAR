@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.config;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
 
 /**
@@ -61,14 +58,13 @@ public final class VidarAprilTagSpec {
         return normalizeDeg(fieldBearing - robotHeadingDeg);
     }
 
+    /**
+     * FTC library entry (id, name, size). Field pose lives on this spec — used by
+     * {@link VidarSeasonConfig} for bearing gates; SDK {@code fieldPosition} metadata
+     * is not required for ViDAR fusion.
+     */
     public AprilTagMetadata toMetadata() {
-        if (!hasFieldPosition()) {
-            return new AprilTagMetadata(id, name, size, DistanceUnit.INCH);
-        }
-        Position fieldPos = new Position(DistanceUnit.INCH, xIn, yIn, zIn, 0);
-        YawPitchRollAngles fieldOri = new YawPitchRollAngles(
-                AngleUnit.DEGREES, yawDeg, pitchDeg, rollDeg, 0);
-        return new AprilTagMetadata(id, name, size, DistanceUnit.INCH, fieldPos, fieldOri);
+        return new AprilTagMetadata(id, name, size, DistanceUnit.INCH);
     }
 
     private static double normalizeDeg(double deg) {
