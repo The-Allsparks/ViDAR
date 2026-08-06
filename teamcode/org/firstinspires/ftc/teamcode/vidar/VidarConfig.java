@@ -214,24 +214,7 @@ public final class VidarConfig {
      */
     public static final boolean USE_CENTER_ROI = false;
 
-    // --- Drive tuning for VidarTeleOp (optional motor names in config) ---
-    public static final String LEFT_DRIVE = "left";
-    public static final String RIGHT_DRIVE = "right";
-    public static final double DRIVE_SPEED = 0.5;
-    /** If a robot blob is within this many pixels of frame center, nudge away. */
-    public static final double AVOID_CENTER_RADIUS = 60;
-    public static final double AVOID_TURN_POWER = 0.35;
-
-    // --- Auto seek (VidarAutoSeekOpMode) ---
-    public static final double SEEK_TURN_GAIN = 0.45;
-    public static final double SEEK_DRIVE_POWER = 0.35;
-    public static final double SEEK_ALIGNED_PIXELS = 25;
-    public static final double SEARCH_TURN_POWER = 0.15;
-
-    /** Stop forward motion when fused range is at or below this (inches). */
-    public static final double PICKUP_STOP = 14.0;
-
-    /** VisionPortal resolution — 480p on all cameras when tags are enabled. */
+    // --- Alliance plate detection (rotated rect + white digits) ---
     public static Size portalCameraResolution() {
         if (VidarTagConfig.ENABLED) {
             return VidarTagConfig.CAPTURE_RESOLUTION;
@@ -259,12 +242,6 @@ public final class VidarConfig {
                 0, half, s.getWidth(), s.getHeight());
     }
 
-    /** Do not drive toward elements beyond this fused range. */
-    public static final double SEEK_MAX_RANGE_IN = 72.0;
-
-    /** Forward power scale: (range - PICKUP_STOP) * gain, clamped to SEEK_DRIVE_POWER. */
-    public static final double RANGE_DRIVE_GAIN = 0.025;
-
     // --- Alliance plate detection (rotated rect + white digits) ---
     public static final double PLATE_MIN_AREA_PX = 120;
     public static final double PLATE_MAX_AREA_PX = 12000;
@@ -285,12 +262,34 @@ public final class VidarConfig {
     public static final double MIN_PLATE_CONFIDENCE = 0.35;
 
     // --- Short-term world model (VidarWorldModel) ---
+    /** When false, skip motion correction and track memory (live vision only). */
+    public static final boolean WORLD_MOTION_TRACKING_ENABLED = true;
     public static final double WORLD_ELEMENT_TTL_SEC = 2.5;
     public static final double WORLD_FOE_TTL_SEC = 3.0;
     public static final double WORLD_ALLY_TTL_SEC = 4.0;
+    /** @deprecated use {@link #WORLD_TRACK_GATE_RADIUS_IN} for association */
     public static final double WORLD_MERGE_RADIUS_IN = 8.0;
     public static final double WORLD_BLOCK_RANGE_IN = 36.0;
     public static final double WORLD_BLOCK_CONE_DEG = 35.0;
+
+    /** Association gate — detection must fall within this of predicted robot position (inches). */
+    public static final double WORLD_TRACK_GATE_RADIUS_IN = 12.0;
+    public static final double WORLD_TRACK_GATE_RADIUS_FOE_IN = 18.0;
+    /** Position filter on match: new = alpha * det + (1-alpha) * pred. */
+    public static final double WORLD_TRACK_POS_ALPHA = 0.7;
+    public static final double WORLD_TRACK_VEL_ALPHA = 0.35;
+    public static final double WORLD_TRACK_MIN_DT_SEC = 0.05;
+    public static final double WORLD_TRACK_MAX_DT_SEC = 0.5;
+    public static final double WORLD_TRACK_STATIC_SPEED_IN_PER_SEC = 2.0;
+    public static final int WORLD_TRACK_STATIC_FRAMES = 5;
+    public static final double WORLD_TRACK_MOVING_SPEED_IN_PER_SEC = 4.0;
+    public static final int WORLD_TRACK_MAX_MISS_FRAMES = 8;
+
+    // --- Offensive lane helper (VidarOffensiveLaneAnalysis) ---
+    /** Max robot-frame range for foe lane counts (+X forward). */
+    public static final double OFFENSIVE_LANE_MAX_RANGE_IN = 48.0;
+    /** Half-width of forward cone; split into three equal lanes. */
+    public static final double OFFENSIVE_LANE_CONE_HALF_DEG = 35.0;
 
     // --- Element density map (VidarElementDensityMap) ---
     /** Grid cell size in robot frame (+X forward, +Y left). */

@@ -13,7 +13,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -262,7 +264,30 @@ public class VidarMultiVision {
             calibrationDiagnostics.recordObservationAge(
                     (updateTimeNanos - bestElement.captureTimeNanos) / 1_000_000.0);
         }
+        refreshFusedFieldPose();
         return latestFrame;
+    }
+
+    private void refreshFusedFieldPose() {
+        if (odomSupplier == null) {
+            fusedFieldPose = localization.lastFusedFieldPose();
+            return;
+        }
+        Pose2D odomNow = odomSupplier.get();
+        Pose2D odomAtCapture = null;
+        if (latestTag != null && latestTag.captureTimeNanos > 0) {
+            odomAtCapture = odomHistory.at(latestTag.captureTimeNanos);
+        }
+        if (odomAtCapture == null) {
+            odomAtCapture = odomNow;
+        }
+        Pose2D fused = localization.fusedFieldPoseNow(
+                latestTag, latestScoutObservation, odomAtCapture, odomNow);
+        if (fused != null) {
+            fusedFieldPose = fused;
+        } else {
+            fusedFieldPose = localization.lastFusedFieldPose();
+        }
     }
 
     /** Last snapshot from {@link #update()} — safe to read multiple times per cycle. */
@@ -564,6 +589,27 @@ public class VidarMultiVision {
             }
         }
         return best;
+    }
+
+    /** Best per-season-type element observations merged across cameras. */
+    public Map<String, VidarElementObservation> getGameElements() {
+        Map<String, VidarElementObservation> merged = new HashMap<>();
+        for (VidarVision camera : cameras) {
+            if (camera == null || camera.isFailed()) {
+                continue;
+            }
+            for (Map.Entry<String, VidarElementObservation> entry : camera.getGameElements().entrySet()) {
+                VidarElementObservation obs = temporalFilter.filterElement(entry.getValue());
+                if (obs == null) {
+                    continue;
+                }
+                VidarElementObservation existing = merged.get(entry.getKey());
+                if (existing == null || elementScore(obs) > elementScore(existing)) {
+                    merged.put(entry.getKey(), obs);
+                }
+            }
+        }
+        return merged;
     }
 
     public VidarPlateObservation getBestPlate() {

@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.vidar;
 import org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor;
 import org.opencv.core.RotatedRect;
 
+import java.util.List;
+
 /**
  * Shared helpers for logging and geometry — keeps OpModes short for teaching.
  */
@@ -91,18 +93,80 @@ public final class VidarBlobUtil {
                 plate.aspectRatio);
     }
 
-    public static String formatWorldTrack(VidarWorldModel.Track track) {
+    public static String formatWorldTrack(VidarSpatialTrack track) {
         if (track == null) {
             return "none";
         }
         return String.format(
-                "%s @ (%.0f, %.0f) in · %.0f° · conf=%.0f%% · age=%.1fs",
+                "#%d %s @ (%.0f, %.0f) in · %.0f° · v=%.1f,%.1f in/s · conf=%.0f%% · miss=%d",
+                track.trackId,
                 track.kind.name(),
                 track.robotX,
                 track.robotY,
                 track.bearingDeg(),
+                track.velFieldXInPerSec,
+                track.velFieldYInPerSec,
                 track.confidence * 100,
-                0.0);
+                track.missCount);
+    }
+
+    public static String formatSpatialPoint(VidarSpatialPoint point) {
+        if (point == null) {
+            return "none";
+        }
+        String trackTag = point.trackId >= 0 ? String.format(" #%d", point.trackId) : "";
+        String velTag = point.source == VidarSpatialPoint.Source.REMEMBERED
+                && point.speedFieldInPerSec() > 0.1
+                ? String.format(" · v=%.1f,%.1f", point.velFieldXInPerSec, point.velFieldYInPerSec)
+                : "";
+        return String.format(
+                "%s/%s%s%s fwd=%s left=%s · %.0f° · range=%s · conf=%.0f%% · %s%s",
+                point.kind.name(),
+                point.source.name(),
+                trackTag,
+                formatElementLabel(point),
+                fmtIn(point.robotX),
+                fmtIn(point.robotY),
+                point.bearingDeg(),
+                fmtIn(point.range),
+                point.confidence * 100,
+                point.cameraName.isEmpty() ? "—" : point.cameraName,
+                velTag);
+    }
+
+    private static String formatElementLabel(VidarSpatialPoint point) {
+        if (point.kind != VidarSpatialPoint.Kind.ELEMENT) {
+            return " ";
+        }
+        if (!point.elementId.isEmpty() && point.occurrenceRank >= 0) {
+            return " " + point.elementId + "#" + point.occurrenceRank + " ";
+        }
+        if (!point.elementId.isEmpty()) {
+            return " " + point.elementId + " ";
+        }
+        if (point.occurrenceRank >= 0) {
+            return " rank=" + point.occurrenceRank + " ";
+        }
+        return " ";
+    }
+
+    public static String formatSpatialPointList(List<VidarSpatialPoint> points, int maxShown) {
+        if (points == null || points.isEmpty()) {
+            return "none";
+        }
+        int limit = Math.max(1, maxShown);
+        StringBuilder sb = new StringBuilder();
+        int count = Math.min(limit, points.size());
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                sb.append(" | ");
+            }
+            sb.append(formatSpatialPoint(points.get(i)));
+        }
+        if (points.size() > count) {
+            sb.append(String.format(" (+ %d more)", points.size() - count));
+        }
+        return sb.toString();
     }
 
     public static String formatBlob(ColorBlobLocatorProcessor.Blob blob) {
@@ -122,12 +186,13 @@ public final class VidarBlobUtil {
         if (element == null) {
             return "none";
         }
+        String idTag = element.elementId.isEmpty() ? "" : element.elementId + " · ";
         if (Double.isNaN(element.range)) {
-            return String.format("(%.0f, %.0f) r=%.0f conf=%.0f%%",
-                    element.cx, element.cy, element.radiusPx, element.confidence * 100);
+            return String.format("%s(%.0f, %.0f) r=%.0f conf=%.0f%%",
+                    idTag, element.cx, element.cy, element.radiusPx, element.confidence * 100);
         }
-        return String.format("(%.0f, %.0f) r=%.0f range=%.1f in conf=%.0f%%",
-                element.cx, element.cy, element.radiusPx, element.range, element.confidence * 100);
+        return String.format("%s(%.0f, %.0f) r=%.0f range=%.1f in conf=%.0f%%",
+                idTag, element.cx, element.cy, element.radiusPx, element.range, element.confidence * 100);
     }
 
     public static String formatElementDetail(VidarElementObservation element) {
@@ -201,20 +266,5 @@ public final class VidarBlobUtil {
                 scout.apparentWidthPx,
                 scout.scoutConfidence * 100,
                 scout.cameraName);
-    }
-
-    /** Forward drive power from fused range (0 when at pickup distance). */
-    public static double rangeDrivePower(VidarElementObservation element) {
-        if (element == null || Double.isNaN(element.range)) {
-            return 0;
-        }
-        if (element.range <= VidarConfig.PICKUP_STOP) {
-            return 0;
-        }
-        if (element.range > VidarConfig.SEEK_MAX_RANGE_IN) {
-            return 0;
-        }
-        double raw = (element.range - VidarConfig.PICKUP_STOP) * VidarConfig.RANGE_DRIVE_GAIN;
-        return Math.min(VidarConfig.SEEK_DRIVE_POWER, raw);
     }
 }

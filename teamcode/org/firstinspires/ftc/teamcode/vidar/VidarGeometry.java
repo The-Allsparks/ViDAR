@@ -484,8 +484,10 @@ public final class VidarGeometry {
         double[] robotPoint = floorPointInRobot(cx, cy, rangeResult.distance, profile);
         double robotX = robotPoint[0];
         double robotY = robotPoint[1];
+        String elementId = activeElement.id == null ? "" : activeElement.id;
 
         return new VidarElementObservation(
+                elementId,
                 cameraName,
                 captureTimeNanos,
                 cx, cy,

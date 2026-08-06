@@ -16,20 +16,26 @@ export function bandForCx(cx, frameCols, cfg) {
   return "MIDDLE";
 }
 
-/** @param {number} frameCols @param {number} frameRows @param {HorizontalBand} band */
-export function tagDecodeCrop(frameCols, frameRows, band) {
-  const topH = Math.max(1, Math.floor(frameRows / 2));
+/** @param {number} frameCols @param {number} frameRows @param {import('./config.js').TagConfig} [cfg] */
+export function tagRoi(frameCols, frameRows, cfg) {
+  const upperFraction = cfg?.tagUpperFraction ?? 0.65;
+  const h = Math.max(1, Math.round(frameRows * upperFraction));
+  return { x: 0, y: 0, w: frameCols, h };
+}
+
+/** @param {number} frameCols @param {number} frameRows @param {HorizontalBand} band @param {import('./config.js').TagConfig} [cfg] */
+export function tagDecodeCrop(frameCols, frameRows, band, cfg) {
+  const tag = tagRoi(frameCols, frameRows, cfg);
   const cropW = Math.max(1, Math.floor(frameCols / 2));
   let x = 0;
   if (band === "RIGHT") x = frameCols - cropW;
   else if (band === "MIDDLE") x = Math.floor((frameCols - cropW) / 2);
-  return { x, y: 0, w: cropW, h: topH };
+  return { x, y: tag.y, w: cropW, h: tag.h };
 }
 
-/** @param {number} cx @param {number} cy @param {number} frameCols @param {number} frameRows @param {HorizontalBand} band */
-export function isInTagDecodeRegion(cx, cy, frameCols, frameRows, band) {
-  if (cy >= frameRows / 2) return false;
-  const r = tagDecodeCrop(frameCols, frameRows, band);
+/** @param {number} cx @param {number} cy @param {number} frameCols @param {number} frameRows @param {HorizontalBand} band @param {import('./config.js').TagConfig} [cfg] */
+export function isInTagDecodeRegion(cx, cy, frameCols, frameRows, band, cfg) {
+  const r = tagDecodeCrop(frameCols, frameRows, band, cfg);
   return cx >= r.x && cx < r.x + r.w && cy >= r.y && cy < r.y + r.h;
 }
 
@@ -39,9 +45,9 @@ export function isInTagDecodeRegion(cx, cy, frameCols, frameRows, band) {
  */
 export function runTagScout(fullFrame, cfg) {
   const { width, height, data } = fullFrame;
-  const topH = Math.floor(height / 2);
+  const tag = tagRoi(width, height, cfg);
   const scoutW = cfg.scoutWidth ?? 320;
-  const scoutH = Math.max(8, Math.round(topH * scoutW / width));
+  const scoutH = Math.max(8, Math.round(tag.h * scoutW / width));
 
   let best = null;
   let bestScore = -1;
@@ -49,7 +55,7 @@ export function runTagScout(fullFrame, cfg) {
   for (let sy = 2; sy < scoutH - 2; sy += 2) {
     for (let sx = 2; sx < scoutW - 2; sx += 2) {
       const fx = Math.floor(sx * width / scoutW);
-      const fy = Math.floor(sy * topH / scoutH);
+      const fy = Math.floor(tag.y + sy * tag.h / scoutH);
       const i = (fy * width + fx) * 4;
       const r = data[i];
       const g = data[i + 1];
@@ -213,7 +219,7 @@ export function updateTagPipeline(state, processFrame, cfg, nowMs, gate) {
   const dec = chooseDecimation(
     scout.widthPx, cfg.scoutWidth ?? 320, processFrame.width, cfg,
   );
-  const region = tagDecodeCrop(processFrame.width, processFrame.height, scout.band);
+  const region = tagDecodeCrop(processFrame.width, processFrame.height, scout.band, cfg);
   state.lastRegion = region;
   state.lastDecodeMs = nowMs;
 

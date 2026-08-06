@@ -6,6 +6,8 @@ package org.firstinspires.ftc.teamcode.vidar;
  */
 public final class VidarElementObservation {
 
+    /** Season element id from {@code season.json} (e.g. {@code artifact_purple}). */
+    public final String elementId;
     public final String cameraName;
     public final long captureTimeNanos;
     /** Image center in full-frame coordinates. */
@@ -51,13 +53,14 @@ public final class VidarElementObservation {
             double dSize, double dFloor,
             VidarRangeResult rangeResult,
             double robotX, double robotY) {
-        this(cameraName, captureTimeNanos, cx, cy, boundingWidthPx, boundingHeightPx,
+        this("", cameraName, captureTimeNanos, cx, cy, boundingWidthPx, boundingHeightPx,
                 fittedCx, fittedCy, radiusPx, areaPx, aspectRatio, circularity, fillRatio,
                 interiorValidationScore, detectorType, confidence, range, rangeUncertainty,
                 dSize, dFloor, Double.NaN, rangeResult, robotX, robotY, 0);
     }
 
     public VidarElementObservation(
+            String elementId,
             String cameraName,
             long captureTimeNanos,
             double cx, double cy,
@@ -72,6 +75,7 @@ public final class VidarElementObservation {
             VidarRangeResult rangeResult,
             double robotX, double robotY,
             int houghVotes) {
+        this.elementId = elementId == null ? "" : elementId;
         this.cameraName = cameraName;
         this.captureTimeNanos = captureTimeNanos;
         this.cx = cx;

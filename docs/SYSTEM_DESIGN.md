@@ -87,6 +87,22 @@ Component estimates exposed as `source0`, `source1`, and `sourceCount` (up to 3)
 
 `VidarWorldModel` motion-corrects tracks using odom delta (translation + rotation) or field-pose reprojection when available.
 
+## Spatial facade — **Implemented**, **Tested in simulation**
+
+`VidarSpatial` is the Pedro-style entry point: one `update()` per loop, no motor output.
+
+| Output | Role |
+|--------|------|
+| `fieldPose()` / `robotPose()` | Pose estimates (tag fusion + optional odom supplier) |
+| `elements()` | Season game elements (ranked live + remembered when motion tracking active) |
+| `allies()` | Friendly alliance plates |
+| `foes()` | Opponent plates |
+| `intakeBlocked()` | Spatial hint — foe in intake cone |
+
+Motion-corrected tracks run only when `isMotionTrackingActive()` (odom supplier + `WORLD_MOTION_TRACKING_ENABLED`). Without odom, queries return live detections only.
+
+**Track associator:** each cycle predicts field position (`pos + velocity × dt`), reprojects to robot frame, gates detections within `WORLD_TRACK_GATE_RADIUS_IN`, updates velocity with EMA, coasts on miss. Elements classify as `STATIC` after stable low velocity; foes/allies as `MOVING` when speed exceeds threshold.
+
 ## Multi-camera — **Implemented**, not **Hardware validated**
 
 Architecturally supports 1–4 cameras. Four simultaneous cameras require USB hub validation on the actual Control Hub — configuration success does not guarantee USB stability.

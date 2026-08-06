@@ -173,8 +173,20 @@
         </dl>
       </section>
       <section class="card">
+        <h2>Spatial preview</h2>
+        <p class="muted-line">Motion tracks use tag odom when available; dashed circles = remembered tracks.</p>
+        <label class="control checkbox detect-toggle">
+          <input type="checkbox" id="motion-tracks" checked>
+          <span>Motion tracks (predict / gate / associate)</span>
+        </label>
+        <dl class="metrics">
+          <div><dt>Tracks</dt><dd id="spatial-tracks">—</dd></div>
+          <div><dt>Offensive lane</dt><dd id="offensive-lane">—</dd></div>
+        </dl>
+      </section>
+      <section class="card">
         <h2>AprilTag (adaptive)</h2>
-        <p class="muted-line">Scout top half every frame; official decode on cropped ROI only (≤1 / 2s). Purple box = decode band (~25% of frame).</p>
+        <p class="muted-line">Scout profile tag ROI (upper 65% default); official decode on cropped ROI only (≤1 / 2s). Purple box = decode band.</p>
         <button id="tag-sample-btn" type="button">Request tag sample</button>
         <dl class="metrics">
           <div><dt>Tag scout</dt><dd id="tag-scout">—</dd></div>

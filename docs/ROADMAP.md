@@ -77,7 +77,9 @@ ViDAR **detects and remembers**; it does **not** own field pose. A separate loca
 | Camera scheduler (disable processors before stream stop) | **Done** |
 | Full checkerboard intrinsic calibration OpMode | **Closed — not planned** |
 | Runtime auto-switch element detector under CPU load | **Closed — not planned** (metrics only) |
-| Profile-aware tag scout ROI in `VidarTagScoutRunner` | **Open — low priority** |
+| Profile-aware tag scout ROI in `VidarTagScoutRunner` | **Done** |
+| Browser sim: `elementId`, motion tracks, offensive lane | **Done** — see [sim/README-SIM.md](../sim/README-SIM.md) |
+| Offensive lane helper on `VidarSpatial` | **Done** (`VidarOffensiveLaneAnalysis`) |
 | Four-camera USB stress validation | **Open — requires hardware** |
 
 ---
@@ -101,11 +103,12 @@ Pipeline: **HSV mask → contour → `minAreaRect` → white-digit ratio → wid
 
 | Behavior | Uses |
 |----------|------|
-| Auto element collection | `nearestElement()`, fused range, remembered bearing |
-| Defensive nudge | `intakeBlocked()`, foe tracks |
-| Offensive lane choice | foe density in forward cone (extend in your team code) |
+| Auto element collection | `elements()`, ranked live + `VidarSpatialTrack` memory (odom required) |
+| Defensive avoidance | `foes()`, `intakeBlocked()` |
+| Ally awareness | `allies()` |
+| Motion tracking | Predict → gate → associate (`VidarTrackAssociator`); field velocity on tracks |
 
-**Next:** expose `getTracks(Kind)` to Pedro `PathCommand` callbacks or a thin `VidarAssistedDrive` helper.
+**Next:** consume `spatial.elements()` / `allies()` / `foes()` in Pedro callbacks — team maps bearing/distance to motion.
 
 ---
 
@@ -229,7 +232,7 @@ Structured test plan before trusting ViDAR in auto.
 ### 4 — Integration
 
 - [ ] `VidarWorldModel` foe memory survives 1 s occlusion
-- [ ] Auto Seek stops at `PICKUP_STOP`
+- [ ] **ViDAR: Spatial Map** — `trackId` stable through 0.5 s occlusion; `elementId#0` nearest per type
 - [ ] Tag fix + odom backdating vs known field dimension
 
 ### 5 — Pedro auto routines

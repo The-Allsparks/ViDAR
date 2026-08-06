@@ -31,6 +31,8 @@ Wrong `focalLengthPx` skews SIZE (e.g. C920 defaults on SVPRO ≈ **38% error**)
 
 ## Required after copying a template
 
+See **[docs/CALIBRATION_CHECKLIST.md](../../docs/CALIBRATION_CHECKLIST.md)** for the one-page setup list. Summary:
+
 1. Match `webcamName` to Driver Station camera names (`Webcam 1` … `Webcam 4`).
 2. Set `cameraCount` to the number of physical cameras.
 3. **Re-run floor LUT** at 12 / 24 / 36 / 48 in (or your check distances) — templates mark `"floorLutStatus": "example-placeholder-recalibrate-on-robot"`.

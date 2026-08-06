@@ -71,10 +71,21 @@ Python: `from vidar.units import effective_distance_unit, format_distance, to_me
 
 ### Loading in an OpMode
 
+**Recommended** — Pedro-style spatial facade:
+
+```java
+VidarAllianceSelector alliance = new VidarAllianceSelector(hardwareMap);
+VidarSpatial spatial = VidarSpatial.create(hardwareMap, () -> odomPose, alliance::get);
+// each loop:
+spatial.update();
+VidarSpatialPoint ball = spatial.bestElement();  // robotX, robotY in inches
+```
+
+See [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md) before first match. Advanced / direct access:
+
 ```java
 VidarSeasonConfig season = VidarTeamConfig.loadSeason(hardwareMap);
 VidarRobotConfig robot = VidarTeamConfig.loadRobot(hardwareMap);
-VidarAllianceSelector alliance = new VidarAllianceSelector(hardwareMap, robot);
 VidarMultiVision vision = new VidarMultiVision(
         hardwareMap, robot, season, () -> odomPose, alliance::get);
 ```

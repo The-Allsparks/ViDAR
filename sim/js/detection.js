@@ -4,7 +4,7 @@ import { roiRect } from "./config.js";
 import { detectContourTarget } from "./contour-processor.js";
 
 /**
- * @typedef {{ category: string, name: string, label: string, color: string, shape: string, cx: number, cy: number, area: number, x: number, y: number, w: number, h: number, circularity?: number, radius?: number, aspectRatio?: number, interior?: number, detector?: string, range?: number | null, dSize?: number | null, dFloor?: number | null, confidence?: number, robotX?: number | null, robotY?: number | null, cameraName?: string, bearingDeg?: number }} Detection
+ * @typedef {{ category: string, name: string, elementId?: string, label: string, color: string, shape: string, cx: number, cy: number, area: number, x: number, y: number, w: number, h: number, circularity?: number, radius?: number, aspectRatio?: number, interior?: number, detector?: string, range?: number | null, dSize?: number | null, dFloor?: number | null, confidence?: number, robotX?: number | null, robotY?: number | null, cameraName?: string, bearingDeg?: number, trackId?: number, occurrenceRank?: number, trackSource?: string }} Detection
  */
 
 /**

@@ -103,6 +103,7 @@ export function applyElementGeometry(det, geometry, cameraIndex) {
 
   return {
     ...det,
+    elementId: det.elementId ?? det.name,
     dSize,
     dFloor,
     range: fused.distance,
@@ -116,14 +117,45 @@ export function applyElementGeometry(det, geometry, cameraIndex) {
   };
 }
 
+/** @param {import('./detection.js').Detection} det @param {import('./config.js').GeometryConfig} geometry @param {number} [cameraIndex] */
+export function applyPlateGeometry(det, geometry, cameraIndex) {
+  if (det.category !== "robot") return det;
+
+  const idx = cameraIndex ?? geometry.activeCameraIndex ?? 0;
+  const profile = geometry.cameras?.[idx] ?? geometry.cameras?.[0];
+  if (!profile) return det;
+
+  const plateWidthIn = 12;
+  const dSize = distanceFromWidth(plateWidthIn, profile.focalLengthPx, det.w);
+  const dFloor = distanceFromFloor(det.cy, profile);
+  const fused = fuseRangeWeighted(dSize, dFloor, { maxRangeMismatchRatio: geometry.maxRangeMismatchRatio });
+  const { x: robotX, y: robotY } = robotXYInches(fused.distance, profile.bearingDeg);
+
+  return {
+    ...det,
+    dSize,
+    dFloor,
+    range: fused.distance,
+    confidence: fused.confidence,
+    robotX,
+    robotY,
+    cameraName: profile.name,
+    bearingDeg: profile.bearingDeg,
+  };
+}
+
 /** @param {import('./detection.js').Detection[]} detections @param {import('./config.js').GeometryConfig | undefined} geometry */
 export function enrichElementGeometry(detections, geometry) {
   if (!geometry) return detections;
-  return detections.map((d) =>
-    d.category === "element" && (d.shape === "circle" || d.radius)
-      ? applyElementGeometry(d, geometry)
-      : d,
-  );
+  return detections.map((d) => {
+    if (d.category === "element" && (d.shape === "circle" || d.radius)) {
+      return applyElementGeometry(d, geometry);
+    }
+    if (d.category === "robot") {
+      return applyPlateGeometry(d, geometry);
+    }
+    return d;
+  });
 }
 
 /** @param {import('./detection.js').Detection | null | undefined} element @param {import('./config.js').GeometryConfig | undefined} geometry */
