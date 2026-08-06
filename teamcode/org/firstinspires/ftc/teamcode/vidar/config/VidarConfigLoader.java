@@ -99,24 +99,21 @@ public final class VidarConfigLoader {
         if (!root.has("distanceUnit")) {
             return VidarDistanceUnit.IN;
         }
-        return VidarDistanceUnit.fromJson(root.getString("distanceUnit"));
+        return VidarDistanceUnit.fromJson(root.optString("distanceUnit", "in"));
     }
 
     private static VidarDistanceUnit parseOptionalDistanceUnit(JSONObject root) {
         if (!root.has("distanceUnit")) {
             return null;
         }
-        return VidarDistanceUnit.fromJson(root.getString("distanceUnit"));
+        return VidarDistanceUnit.fromJson(root.optString("distanceUnit", "in"));
     }
 
     private static double parseMinElementConfidence(JSONObject fusion) {
         if (fusion == null) {
             return 0.35;
         }
-        if (fusion.has("minElementConfidence")) {
-            return fusion.getDouble("minElementConfidence");
-        }
-        return 0.35;
+        return fusion.optDouble("minElementConfidence", 0.35);
     }
 
     private static VidarElementSpec[] parseElements(JSONObject root) throws JSONException {
