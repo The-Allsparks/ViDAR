@@ -15,8 +15,8 @@ flowchart TB
 
   subgraph vidar [ViDAR per camera]
     VP[VisionPortal]
-    CP[VidarContourProcessor — elements + plates]
-    Tags[Adaptive tags + non-localizing scout]
+    CP["VidarContourProcessor: elements and plates"]
+    Tags["Adaptive tags and non-localizing scout"]
   end
 
   subgraph fuse [Fusion layer]

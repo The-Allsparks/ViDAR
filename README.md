@@ -219,13 +219,13 @@ ViDAR **detects and remembers**. It does **not** own field pose or drive your ro
 
 ```mermaid
 flowchart LR
-  Cam[1ΓÇô4 USB webcams] --> Hub[Control Hub]
-  Hub --> MV[VidarMultiVision]
-  MV --> WM[VidarWorldModel]
-  MV --> Op[Your OpMode / auto stack]
+  Cam["1-4 USB webcams"] --> Hub["Control Hub"]
+  Hub --> MV["VidarMultiVision"]
+  MV --> WM["VidarWorldModel"]
+  MV --> Op["OpMode or auto stack"]
   WM --> Op
-  Op -.->|optional| PED[Pedro / Road Runner / custom auto]
-  Sim[Browser sim] -.->|same tuning| MV
+  Op -.-> PED["Optional pathing library"]
+  Sim["Browser sim"] -.-> MV
 ```
 
 Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
