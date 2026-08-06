@@ -496,7 +496,8 @@ public final class VidarGeometry {
                 rangeResult.distance, rangeResult.uncertainty,
                 dSize, dFloor, dGround,
                 rangeResult,
-                robotX, robotY);
+                robotX, robotY,
+                0);
     }
 
     /**

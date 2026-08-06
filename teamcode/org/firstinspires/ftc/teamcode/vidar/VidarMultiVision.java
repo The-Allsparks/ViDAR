@@ -257,7 +257,7 @@ public class VidarMultiVision {
                 rankedByCamera,
                 tagsByCamera);
         calibrationDiagnostics.updateFromRegistry(
-                transformRegistry, robotConfig.activeCameraIndex());
+                transformRegistry, robotConfig.activeCameraIndex);
         if (bestElement != null && bestElement.captureTimeNanos > 0) {
             calibrationDiagnostics.recordObservationAge(
                     (updateTimeNanos - bestElement.captureTimeNanos) / 1_000_000.0);
