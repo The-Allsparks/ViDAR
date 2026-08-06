@@ -26,9 +26,9 @@
     "cameraBearingDeg": 0
   },
   "geometry": {
-    "ballDiameterIn": 5.0,
+    "elementDiameter": 2.8,
     "maxRangeMismatchRatio": 0.28,
-    "minBallConfidence": 0.35,
+    "minElementConfidence": 0.35,
     "pickupStopIn": 14,
     "seekMaxRangeIn": 72,
     "activeCameraIndex": 0,
@@ -39,10 +39,10 @@
         "horizonRowPx": 12,
         "focalLengthPx": 340,
         "floorLut": [
-          { "cy": 95, "distIn": 12 },
-          { "cy": 75, "distIn": 24 },
-          { "cy": 55, "distIn": 36 },
-          { "cy": 40, "distIn": 48 }
+          { "cy": 95, "dist": 12 },
+          { "cy": 75, "dist": 24 },
+          { "cy": 55, "dist": 36 },
+          { "cy": 40, "dist": 48 }
         ]
       },
       {
@@ -51,10 +51,10 @@
         "horizonRowPx": 12,
         "focalLengthPx": 340,
         "floorLut": [
-          { "cy": 95, "distIn": 12 },
-          { "cy": 75, "distIn": 24 },
-          { "cy": 55, "distIn": 36 },
-          { "cy": 40, "distIn": 48 }
+          { "cy": 95, "dist": 12 },
+          { "cy": 75, "dist": 24 },
+          { "cy": 55, "dist": 36 },
+          { "cy": 40, "dist": 48 }
         ]
       },
       {
@@ -63,10 +63,10 @@
         "horizonRowPx": 12,
         "focalLengthPx": 340,
         "floorLut": [
-          { "cy": 95, "distIn": 12 },
-          { "cy": 75, "distIn": 24 },
-          { "cy": 55, "distIn": 36 },
-          { "cy": 40, "distIn": 48 }
+          { "cy": 95, "dist": 12 },
+          { "cy": 75, "dist": 24 },
+          { "cy": 55, "dist": 36 },
+          { "cy": 40, "dist": 48 }
         ]
       },
       {
@@ -75,43 +75,31 @@
         "horizonRowPx": 12,
         "focalLengthPx": 340,
         "floorLut": [
-          { "cy": 95, "distIn": 12 },
-          { "cy": 75, "distIn": 24 },
-          { "cy": 55, "distIn": 36 },
-          { "cy": 40, "distIn": 48 }
+          { "cy": 95, "dist": 12 },
+          { "cy": 75, "dist": 24 },
+          { "cy": 55, "dist": 36 },
+          { "cy": 40, "dist": 48 }
         ]
       }
     ]
   },
   "elements": [
     {
-      "name": "ball",
-      "label": "Ball",
-      "color": "#e8e8f0",
+      "name": "pollen",
+      "label": "Pollen",
+      "color": "#f0d020",
       "shape": "circle",
-      "detector": "color_blob",
-      "minArea": 12,
-      "houghMinArea": 45,
-      "houghMinRadius": 8,
-      "houghMaxRadius": 36,
-      "houghAccumulator": 11,
-      "houghEdgeThresh": 38,
-      "houghMinDist": 24,
-      "houghMinVotesScale": 0.45,
-      "houghMinInterior": 0.14,
-      "houghMaxResults": 4,
-      "houghInteriorBright": 90,
-      "houghInteriorSpread": 60,
-      "requireCircularity": false,
-      "minCircularity": 0.1,
-      "maxAspectRatio": 2.5,
-      "morphClosePasses": 8,
-      "hsvLow": [0, 0, 55],
-      "hsvHigh": [179, 85, 255],
-      "brightnessMin": 58,
+      "minArea": 14,
+      "minCircularity": 0.50,
+      "maxAspectRatio": 2.0,
+      "minInteriorScore": 0.10,
+      "morphClosePasses": 2,
+      "hsvLow": [15, 140, 110],
+      "hsvHigh": [45, 255, 255],
+      "brightnessMin": 90,
       "brightnessSpread": 65,
-      "maxSaturation": 85,
-      "rejectGreen": true
+      "maxSaturation": 255,
+      "rejectGreen": false
     }
   ],
   "robots": [

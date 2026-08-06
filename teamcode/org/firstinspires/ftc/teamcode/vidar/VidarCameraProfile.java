@@ -21,15 +21,17 @@ public final class VidarCameraProfile {
     public final double verticalFovDeg;
     /** Floor distance LUT: row cy in process frame → slant range in inches. */
     public final double[] floorCyPx;
-    public final double[] floorDistIn;
-    /** Camera lens position in robot frame (inches): +X forward, +Y left from robot center. */
-    public final double mountXIn;
-    public final double mountYIn;
+    public final double[] floorDist;
+    /** Camera lens position in robot frame (inches): +X forward, +Y left, +Z up from floor. */
+    public final double mountX;
+    public final double mountY;
+    public final double mountZ;
+    /** Mount orientation: yaw about optical axis, pitch (negative = inclined down), roll. */
     public final double mountYawDeg;
     public final double mountPitchDeg;
     public final double mountRollDeg;
     /** Known physical plate width for size-based ranging (inches). */
-    public final double plateWidthIn;
+    public final double plateWidth;
     public final VidarCameraRoiConfig roiConfig;
 
     public VidarCameraProfile(
@@ -38,8 +40,8 @@ public final class VidarCameraProfile {
             int horizonRowPx,
             double focalLengthPx,
             double[] floorCyPx,
-            double[] floorDistIn) {
-        this(name, bearingDeg, horizonRowPx, focalLengthPx, floorCyPx, floorDistIn, 0, 0);
+            double[] floorDist) {
+        this(name, bearingDeg, horizonRowPx, focalLengthPx, floorCyPx, floorDist, 0, 0);
     }
 
     public VidarCameraProfile(
@@ -48,12 +50,12 @@ public final class VidarCameraProfile {
             int horizonRowPx,
             double focalLengthPx,
             double[] floorCyPx,
-            double[] floorDistIn,
-            double mountXIn,
-            double mountYIn) {
+            double[] floorDist,
+            double mountX,
+            double mountY) {
         this(name, bearingDeg, horizonRowPx, focalLengthPx, focalLengthPx,
-                320, 240, 70, 55, floorCyPx, floorDistIn,
-                mountXIn, mountYIn, 0, 0, 0, 12.0, VidarCameraRoiConfig.DEFAULT);
+                320, 240, 70, 55, floorCyPx, floorDist,
+                mountX, mountY, 0, 0, 0, 0, 12.0, VidarCameraRoiConfig.DEFAULT);
     }
 
     public VidarCameraProfile(
@@ -67,13 +69,14 @@ public final class VidarCameraProfile {
             double horizontalFovDeg,
             double verticalFovDeg,
             double[] floorCyPx,
-            double[] floorDistIn,
-            double mountXIn,
-            double mountYIn,
+            double[] floorDist,
+            double mountX,
+            double mountY,
+            double mountZ,
             double mountYawDeg,
             double mountPitchDeg,
             double mountRollDeg,
-            double plateWidthIn,
+            double plateWidth,
             VidarCameraRoiConfig roiConfig) {
         this.name = name;
         this.bearingDeg = bearingDeg;
@@ -85,18 +88,19 @@ public final class VidarCameraProfile {
         this.horizontalFovDeg = horizontalFovDeg;
         this.verticalFovDeg = verticalFovDeg;
         this.floorCyPx = floorCyPx;
-        this.floorDistIn = floorDistIn;
-        this.mountXIn = mountXIn;
-        this.mountYIn = mountYIn;
+        this.floorDist = floorDist;
+        this.mountX = mountX;
+        this.mountY = mountY;
+        this.mountZ = mountZ;
         this.mountYawDeg = mountYawDeg;
         this.mountPitchDeg = mountPitchDeg;
         this.mountRollDeg = mountRollDeg;
-        this.plateWidthIn = plateWidthIn;
+        this.plateWidth = plateWidth;
         this.roiConfig = roiConfig == null ? VidarCameraRoiConfig.DEFAULT : roiConfig;
     }
 
     /** Single-camera teaching default — front-facing, matches sim/vidar-tuning.json. */
-    public static final VidarCameraProfile FRONT = FOUR_SIDES[0];
+    public static final VidarCameraProfile FRONT;
 
     /**
      * Four side cameras with identical tilt; calibrate each LUT on the field.
@@ -109,12 +113,16 @@ public final class VidarCameraProfile {
             buildSide("left", 270, 0, 6.5),
     };
 
+    static {
+        FRONT = FOUR_SIDES[0];
+    }
+
     private static VidarCameraProfile buildSide(String name, double bearing, double mountX, double mountY) {
         return new VidarCameraProfile(
                 name, bearing, 12, 340, 340, 320, 240, 70, 55,
                 new double[] {95, 75, 55, 40},
                 new double[] {12, 24, 36, 48},
-                mountX, mountY, 0, 0, 0, 12.0,
+                mountX, mountY, 9.0, 0, -12, 0, 12.0,
                 VidarCameraRoiConfig.DEFAULT);
     }
 
@@ -131,21 +139,21 @@ public final class VidarCameraProfile {
         if (focalLengthPx <= 0) {
             warnings.add(name + ": focalLengthPx must be positive");
         }
-        if (floorCyPx == null || floorDistIn == null || floorCyPx.length == 0) {
+        if (floorCyPx == null || floorDist == null || floorCyPx.length == 0) {
             warnings.add(name + ": floor LUT missing");
         }
-        if (plateWidthIn <= 0) {
-            warnings.add(name + ": plateWidthIn not configured");
+        if (plateWidth <= 0) {
+            warnings.add(name + ": plateWidth not configured");
         }
-        VidarRoiRect ball = roiConfig.ballRoi(frameW, frameH);
-        if (ball.width <= 0 || ball.height <= 0) {
-            warnings.add(name + ": invalid ball ROI");
+        VidarRoiRect element = roiConfig.elementRoi(frameW, frameH);
+        if (element.width <= 0 || element.height <= 0) {
+            warnings.add(name + ": invalid element ROI");
         }
         return warnings;
     }
 
     public int horizonRowFullFrame(int frameH) {
-        VidarRoiRect ball = roiConfig.ballRoi((int) Math.round(frameH * 4.0 / 3.0), frameH);
-        return ball.y + horizonRowPx;
+        VidarRoiRect element = roiConfig.elementRoi((int) Math.round(frameH * 4.0 / 3.0), frameH);
+        return element.y + horizonRowPx;
     }
 }

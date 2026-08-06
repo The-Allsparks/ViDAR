@@ -28,7 +28,7 @@ class TelemetryPublisher:
                     "cx": round(det.cx, 1),
                     "cy": round(det.cy, 1),
                     "area": round(det.area, 1),
-                    "range_in": None if det.range_in is None else round(det.range_in, 1),
+                    "range": None if det.range is None else round(det.range, 1),
                     "confidence": None if det.confidence is None else round(det.confidence, 2),
                 }
                 for det in detections

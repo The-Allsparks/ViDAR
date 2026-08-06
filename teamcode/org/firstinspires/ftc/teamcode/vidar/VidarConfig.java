@@ -5,6 +5,13 @@ import android.util.Size;
 /**
  * ViDAR tuning constants — change these in one place when calibrating on the field.
  *
+ * <p><b>Preferred:</b> teams load JSON via {@link org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader}
+ * and pass {@link org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig} /
+ * {@link org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig} to
+ * {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}. See {@link org.firstinspires.ftc.teamcode.VidarTeamConfig}.
+ *
+ * <p>Constants below remain for backward compatibility and library defaults.
+ *
  * Robot config (Driver Station → Configure Robot) must include a USB webcam named
  * {@link #CAMERA_NAME} on the Control Hub.
  */
@@ -26,12 +33,6 @@ public final class VidarConfig {
     /** Fallback when gamepad and color sensor do not resolve alliance. */
     public static final VidarAlliance DEFAULT_ALLIANCE = VidarAlliance.RED;
 
-    /**
-     * @deprecated Use {@link #DEFAULT_ALLIANCE} and {@link VidarAllianceSelector}.
-     */
-    @Deprecated
-    public static VidarAlliance OUR_ALLIANCE = DEFAULT_ALLIANCE;
-
     // --- Alliance selection (friend/foe plates) ---
     /** Configure REV Color Sensor V3 on your own ROBOT SIGN background. */
     public static final String ALLIANCE_COLOR_SENSOR = "alliance_color";
@@ -52,8 +53,23 @@ public final class VidarConfig {
     /** All USB webcams stream at 640×480 for CPU/USB budget. */
     public static final Size PORTAL_RESOLUTION = new Size(640, 480);
 
-    /** Downscale bottom-half ROI before ball/plate OpenCV (0.5 → half size). */
+    /** Downscale bottom-half ROI before element/plate OpenCV (0.5 → half size). */
     public static final double PROCESS_ROI_SCALE = 0.5;
+
+    /** Lower ROI scale applied when {@link VidarResourceBudget} requests reduced resolution. */
+    public static final double DEGRADED_PROCESS_ROI_SCALE = 0.35;
+
+    /** Intermediate ROI scale under moderate frame-age pressure. */
+    public static final double MEDIUM_PROCESS_ROI_SCALE = 0.42;
+
+    /** Default ranked detections per camera when not overridden. */
+    public static final int DEFAULT_MAX_RANKED_ELEMENTS = 5;
+
+    /** Hard cap for per-camera or fusion ranked lists. */
+    public static final int MAX_RANKED_ELEMENTS_CAP = 32;
+
+    /** Max ranked elements retained after multi-camera fusion. */
+    public static final int FUSION_MAX_RANKED_ELEMENTS = 16;
 
     /** Disable RC LiveView during matches to save CPU. */
     public static final boolean LIVE_VIEW_ENABLED = false;
@@ -61,8 +77,26 @@ public final class VidarConfig {
     /** Use MJPEG when more than one camera is active (USB hub bandwidth). */
     public static final boolean MJPEG_MULTI_CAMERA = true;
 
-    // --- Direction-based camera tiers (optional) ---
-    public static final boolean DIRECTION_SCHEDULER_ENABLED = true;
+    /** Serialize heavy OpenCV across cameras on a background worker (round-robin). */
+    public static final boolean GLOBAL_VISION_WORKER_ENABLED = true;
+
+    /** Minimum active cameras before the global worker replaces synchronous processing. */
+    public static final int GLOBAL_VISION_WORKER_MIN_CAMERAS = 1;
+
+    /** When true, resource budget may auto-idle rear-facing cameras under extreme CPU load. */
+    public static final boolean RESOURCE_BUDGET_AUTO_IDLE_REAR = false;
+
+    /** Run full AprilTag decode on a background thread so scan round-robin is not blocked. */
+    public static final boolean ASYNC_TAG_DECODE_ENABLED = true;
+
+    public static boolean useGlobalVisionWorker(int activeCameraCount) {
+        return GLOBAL_VISION_WORKER_ENABLED
+                && activeCameraCount >= GLOBAL_VISION_WORKER_MIN_CAMERAS;
+    }
+
+    // --- Direction-based camera tiers (opt-in only; never auto-idle) ---
+    /** When true, {@link VidarVision#applyDirectionTier} may adjust PRIMARY/SECONDARY by travel heading. */
+    public static final boolean DIRECTION_SCHEDULER_ENABLED = false;
 
     public static final double DIRECTION_MIN_SPEED_IN_PER_SEC = 4.0;
 
@@ -87,58 +121,59 @@ public final class VidarConfig {
     public static final double MIN_BLOB_AREA = 25;
 
     /** Minimum Hough circle area (px²) in the process crop. */
-    public static final double MIN_BALL_AREA_PX = 45;
+    public static final double MIN_ELEMENT_AREA_PX = 45;
 
-    // --- Ball detection pipeline ---
-    public static final VidarBallDetectorType BALL_DETECTOR_TYPE =
-            VidarBallDetectorType.COLOR_BLOB_WITH_LOCAL_HOUGH;
+    // --- Element detection pipeline (legacy defaults when JSON not loaded) ---
+    public static final VidarElementDetectorType DEFAULT_ELEMENT_DETECTOR =
+            VidarElementDetectorType.COLOR_BLOB_WITH_LOCAL_HOUGH;
 
-    /** Pollen ball HSV range (calibrate on field). */
-    public static final int BALL_HSV_H_MIN = 0;
-    public static final int BALL_HSV_H_MAX = 179;
-    public static final int BALL_HSV_S_MIN = 0;
-    public static final int BALL_HSV_S_MAX = 85;
-    public static final int BALL_HSV_V_MIN = 55;
-    public static final int BALL_HSV_V_MAX = 255;
+    /** Default element HSV range (calibrate on field). */
+    public static final int DEFAULT_ELEMENT_HSV_H_MIN = 0;
+    public static final int DEFAULT_ELEMENT_HSV_H_MAX = 179;
+    public static final int DEFAULT_ELEMENT_HSV_S_MIN = 0;
+    public static final int DEFAULT_ELEMENT_HSV_S_MAX = 85;
+    public static final int DEFAULT_ELEMENT_HSV_V_MIN = 55;
+    public static final int DEFAULT_ELEMENT_HSV_V_MAX = 255;
 
-    public static final double BALL_MIN_AREA_PX = 45;
-    public static final double BALL_MAX_AREA_PX = 12000;
-    public static final double BALL_MIN_WIDTH_PX = 8;
-    public static final double BALL_MAX_WIDTH_PX = 80;
-    public static final double BALL_MIN_HEIGHT_PX = 8;
-    public static final double BALL_MAX_HEIGHT_PX = 80;
-    public static final double BALL_MAX_ASPECT_RATIO = 2.0;
-    public static final double BALL_MIN_CIRCULARITY = 0.55;
-    public static final double BALL_MIN_FILL_RATIO = 0.55;
-    public static final double BALL_MIN_INTERIOR_SCORE = 0.12;
-    public static final int BALL_INTERIOR_BRIGHT = 90;
-    public static final int BALL_INTERIOR_SPREAD = 60;
-    public static final int BALL_HOLE_DARK_MAX = 45;
+    public static final double DEFAULT_ELEMENT_MIN_AREA_PX = 45;
+    public static final double DEFAULT_ELEMENT_MAX_AREA_PX = 12000;
+    public static final double DEFAULT_ELEMENT_MIN_WIDTH_PX = 8;
+    public static final double DEFAULT_ELEMENT_MAX_WIDTH_PX = 80;
+    public static final double DEFAULT_ELEMENT_MIN_HEIGHT_PX = 8;
+    public static final double DEFAULT_ELEMENT_MAX_HEIGHT_PX = 80;
+    public static final double DEFAULT_ELEMENT_MAX_ASPECT_RATIO = 2.0;
+    public static final double DEFAULT_ELEMENT_MIN_CIRCULARITY = 0.55;
+    public static final double DEFAULT_ELEMENT_MIN_FILL_RATIO = 0.55;
+    public static final double DEFAULT_ELEMENT_MIN_INTERIOR_SCORE = 0.12;
+    public static final int DEFAULT_ELEMENT_INTERIOR_BRIGHT = 90;
+    public static final int DEFAULT_ELEMENT_INTERIOR_SPREAD = 60;
+    public static final int DEFAULT_ELEMENT_HOLE_DARK_MAX = 45;
 
-    public static final int BALL_MORPH_ERODE_PASSES = 0;
-    public static final int BALL_MORPH_DILATE_PASSES = 0;
-    public static final int BALL_MORPH_OPEN_PASSES = 1;
-    public static final int BALL_MORPH_CLOSE_PASSES = 2;
+    public static final int DEFAULT_ELEMENT_MORPH_ERODE_PASSES = 0;
+    public static final int DEFAULT_ELEMENT_MORPH_DILATE_PASSES = 0;
+    public static final int DEFAULT_ELEMENT_MORPH_OPEN_PASSES = 1;
+    public static final int DEFAULT_ELEMENT_MORPH_CLOSE_PASSES = 2;
 
     // --- Camera scheduling ---
     public static final long DEEP_IDLE_DELAY_MS = 2500;
     public static final long STATE_TRANSITION_DEBOUNCE_MS = 500;
 
     // --- Temporal tracking ---
-    public static final int TEMPORAL_CONFIRM_FRAMES = 2;
+    /** Single-frame confirmation — observations publish on first qualifying frame. */
+    public static final int TEMPORAL_CONFIRM_FRAMES = 1;
     public static final double TEMPORAL_STRONG_CONFIDENCE = 0.85;
-    public static final double TEMPORAL_MAX_JUMP_IN = 24.0;
+    public static final double TEMPORAL_MAX_JUMP = 24.0;
 
     // --- Resource degradation ---
     public static final boolean RESOURCE_BUDGET_ENABLED = true;
     public static final double DEGRADATION_LOOP_BUDGET_MS = 45.0;
 
-    // --- Known ball geometry (calibrate on field) ---
-    /** Game ball outer diameter in inches — measure your game piece. */
-    public static final double BALL_DIAMETER_IN = 5.0;
+    // --- Default element geometry (calibrate on field) ---
+    /** Primary ranging diameter in the active distance unit. */
+    public static final double DEFAULT_ELEMENT_DIAMETER = 5.0;
 
     /** Reject fused observations below this confidence (0–1). */
-    public static final double MIN_BALL_CONFIDENCE = 0.35;
+    public static final double MIN_ELEMENT_CONFIDENCE = 0.35;
 
     /** Size vs floor range disagreement above this ratio lowers confidence sharply. */
     public static final double MAX_RANGE_MISMATCH_RATIO = 0.28;
@@ -194,7 +229,7 @@ public final class VidarConfig {
     public static final double SEARCH_TURN_POWER = 0.15;
 
     /** Stop forward motion when fused range is at or below this (inches). */
-    public static final double PICKUP_STOP_IN = 14.0;
+    public static final double PICKUP_STOP = 14.0;
 
     /** VisionPortal resolution — 480p on all cameras when tags are enabled. */
     public static Size portalCameraResolution() {
@@ -205,24 +240,29 @@ public final class VidarConfig {
     }
 
     public static org.firstinspires.ftc.vision.VisionPortal.StreamFormat portalStreamFormat() {
-        if (MJPEG_MULTI_CAMERA && activeCameraCount() > 1) {
+        return portalStreamFormat(activeCameraCount());
+    }
+
+    /** Uses robot JSON camera count when building multi-camera portals. */
+    public static org.firstinspires.ftc.vision.VisionPortal.StreamFormat portalStreamFormat(int activeCameraCount) {
+        if (MJPEG_MULTI_CAMERA && activeCameraCount > 1) {
             return org.firstinspires.ftc.vision.VisionPortal.StreamFormat.MJPEG;
         }
         return org.firstinspires.ftc.vision.VisionPortal.StreamFormat.YUY2;
     }
 
     /** Bottom-half ROI for plate locators at the portal resolution. */
-    public static org.firstinspires.ftc.vision.opencv.ImageRegion ballPlateRoi() {
+    public static org.firstinspires.ftc.vision.opencv.ImageRegion elementPlateRoi() {
         Size s = portalCameraResolution();
         int half = s.getHeight() / 2;
         return org.firstinspires.ftc.vision.opencv.ImageRegion.asImageCoordinates(
                 0, half, s.getWidth(), s.getHeight());
     }
 
-    /** Do not drive toward balls beyond this fused range (inches). */
+    /** Do not drive toward elements beyond this fused range. */
     public static final double SEEK_MAX_RANGE_IN = 72.0;
 
-    /** Forward power scale: (range - PICKUP_STOP_IN) * gain, clamped to SEEK_DRIVE_POWER. */
+    /** Forward power scale: (range - PICKUP_STOP) * gain, clamped to SEEK_DRIVE_POWER. */
     public static final double RANGE_DRIVE_GAIN = 0.025;
 
     // --- Alliance plate detection (rotated rect + white digits) ---
@@ -245,12 +285,20 @@ public final class VidarConfig {
     public static final double MIN_PLATE_CONFIDENCE = 0.35;
 
     // --- Short-term world model (VidarWorldModel) ---
-    public static final double WORLD_BALL_TTL_SEC = 2.5;
+    public static final double WORLD_ELEMENT_TTL_SEC = 2.5;
     public static final double WORLD_FOE_TTL_SEC = 3.0;
     public static final double WORLD_ALLY_TTL_SEC = 4.0;
     public static final double WORLD_MERGE_RADIUS_IN = 8.0;
     public static final double WORLD_BLOCK_RANGE_IN = 36.0;
     public static final double WORLD_BLOCK_CONE_DEG = 35.0;
+
+    // --- Element density map (VidarElementDensityMap) ---
+    /** Grid cell size in robot frame (+X forward, +Y left). */
+    public static final double DENSITY_CELL_SIZE_IN = 6.0;
+    public static final double DENSITY_FORWARD_MAX_IN = 72.0;
+    public static final double DENSITY_LATERAL_MAX_IN = 48.0;
+    /** Gaussian splat sigma when accumulating element confidence into the grid. */
+    public static final double DENSITY_SPLAT_SIGMA_IN = 8.0;
 
     /** Pixel size of cropped+downscaled detection frame on the Control Hub. */
     public static Size processingResolution() {

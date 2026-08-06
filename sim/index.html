@@ -23,7 +23,7 @@
       <div class="canvas-wrap">
         <canvas id="display" width="640" height="480"></canvas>
         <div class="legend">
-          <span class="chip element">Ball</span>
+          <span class="chip element">Element</span>
           <span class="chip robot">Alliance plate</span>
           <span class="chip crop">Crop band</span>
           <span class="chip roi">Avoid zone</span>
@@ -59,7 +59,7 @@
         </label>
         <label class="control checkbox">
           <input type="checkbox" id="show-mask">
-          <span id="show-mask-label">Show ball debug overlay</span>
+          <span id="show-mask-label">Show element debug overlay</span>
         </label>
         <button id="start-btn" type="button">Start</button>
         <button id="stop-btn" type="button" disabled>Stop</button>
@@ -71,18 +71,10 @@
       <section class="card">
         <h2>Detection logic</h2>
         <p class="muted-line">Toggle each pipeline live — no JSON edits needed.</p>
-        <fieldset class="toggle-fieldset">
-          <legend>Ball algorithm</legend>
-          <div class="toggle-group" id="ball-detector-group" role="radiogroup" aria-label="Ball detector">
-            <label class="toggle-btn"><input type="radio" name="ball-detector" value="hsv"><span>HSV blob</span></label>
-            <label class="toggle-btn"><input type="radio" name="ball-detector" value="hough" checked><span>Hough circle</span></label>
-            <label class="toggle-btn"><input type="radio" name="ball-detector" value="both"><span>Both</span></label>
-          </div>
-        </fieldset>
         <div class="detect-toggles">
           <label class="control checkbox detect-toggle">
-            <input type="checkbox" id="detect-ball" checked>
-            <span>Detect ball</span>
+            <input type="checkbox" id="detect-element" checked>
+            <span>Detect element</span>
           </label>
           <label class="control checkbox detect-toggle">
             <input type="checkbox" id="detect-red" checked>
@@ -101,10 +93,10 @@
         <p id="detector-active-label" class="process-size-label">Active: —</p>
       </section>
       <section class="card">
-        <h2>Ball metrics</h2>
+        <h2>Element metrics</h2>
         <p class="muted-line">Live tuning — updates each frame while running.</p>
         <details class="metric-group" open>
-          <summary>HSV blob</summary>
+          <summary>Contour element</summary>
           <div class="metric-grid">
             <label class="proc-field">
               <span>Brightness min</span>
@@ -132,43 +124,6 @@
             </label>
           </div>
         </details>
-        <details class="metric-group" open>
-          <summary>Hough circle</summary>
-          <div class="metric-grid">
-            <label class="proc-field">
-              <span>Edge threshold</span>
-              <input id="hough-edge-thresh" type="number" min="8" max="200" step="1" value="38">
-            </label>
-            <label class="proc-field">
-              <span>Accumulator min</span>
-              <input id="hough-accumulator" type="number" min="4" max="80" step="1" value="11">
-            </label>
-            <label class="proc-field">
-              <span>Min radius (px)</span>
-              <input id="hough-min-radius" type="number" min="3" max="80" step="1" value="8">
-            </label>
-            <label class="proc-field">
-              <span>Max radius (px)</span>
-              <input id="hough-max-radius" type="number" min="4" max="120" step="1" value="36">
-            </label>
-            <label class="proc-field">
-              <span>Min interior fill (%)</span>
-              <input id="hough-min-interior" type="number" min="0" max="100" step="1" value="14">
-            </label>
-            <label class="proc-field">
-              <span>Interior brightness</span>
-              <input id="hough-interior-bright" type="number" min="0" max="255" step="1" value="90">
-            </label>
-            <label class="proc-field">
-              <span>Min center distance</span>
-              <input id="hough-min-dist" type="number" min="8" max="120" step="1" value="24">
-            </label>
-            <label class="proc-field">
-              <span>Max circles</span>
-              <input id="hough-max-results" type="number" min="1" max="12" step="1" value="4">
-            </label>
-          </div>
-        </details>
       </section>
       <section class="card">
         <h2>Processing</h2>
@@ -190,7 +145,7 @@
         <p id="process-size-label" class="process-size-label">Process size: —</p>
         <label class="control checkbox detect-toggle">
           <input type="checkbox" id="grayscale-process">
-          <span>Grayscale process frame (ball only; plates use color)</span>
+          <span>Grayscale process frame (element only; plates use color)</span>
         </label>
       </section>
       <section class="card">
@@ -201,15 +156,15 @@
       </section>
       <section class="card">
         <h2>Robot logic preview</h2>
-        <p class="muted-line">Range fuses known ball diameter (Hough radius) with floor-row LUT. Cross-check lowers confidence when they disagree.</p>
+        <p class="muted-line">Range fuses known element diameter (Hough radius) with floor-row LUT. Cross-check lowers confidence when they disagree.</p>
         <p id="logic-state" class="logic-state">—</p>
         <dl class="metrics">
           <div><dt>Element X err</dt><dd id="element-error">—</dd></div>
-          <div><dt>Fused range</dt><dd id="ball-range">—</dd></div>
-          <div><dt>Size range</dt><dd id="ball-size-range">—</dd></div>
-          <div><dt>Floor range</dt><dd id="ball-floor-range">—</dd></div>
-          <div><dt>Confidence</dt><dd id="ball-confidence">—</dd></div>
-          <div><dt>Robot XY</dt><dd id="ball-robot-xy">—</dd></div>
+          <div><dt>Fused range</dt><dd id="element-range">—</dd></div>
+          <div><dt>Size range</dt><dd id="element-size-range">—</dd></div>
+          <div><dt>Floor range</dt><dd id="element-floor-range">—</dd></div>
+          <div><dt>Confidence</dt><dd id="element-confidence">—</dd></div>
+          <div><dt>Robot XY</dt><dd id="element-robot-xy">—</dd></div>
           <div><dt>Robot dist (px)</dt><dd id="robot-dist">—</dd></div>
         </dl>
       </section>
@@ -225,7 +180,7 @@
       </section>
       <section class="card">
         <h2>Capture</h2>
-        <p class="muted-line">With the ball in view, click <strong>Capture still</strong>. Saves to <code>captures/</code> for tuning review.</p>
+        <p class="muted-line">With the element in view, click <strong>Capture still</strong>. Saves to <code>captures/</code> for tuning review.</p>
         <p id="capture-status" class="capture-status"></p>
       </section>
       <section class="card muted">

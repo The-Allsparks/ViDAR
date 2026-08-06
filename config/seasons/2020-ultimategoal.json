@@ -1,0 +1,165 @@
+{
+  "seasonId": "2020-ultimategoal",
+  "seasonName": "ULTIMATE GOAL 2020-21 — RINGS (5 in OD × 3 in ID × 0.75 in tall, ± 0.25 in OD tolerance)",
+  "fusion": {
+    "minElementConfidence": 0.35,
+    "minPlateConfidence": 0.35,
+    "maxRangeMismatchRatio": 0.28
+  },
+  "elements": [
+    {
+      "id": "ring_red",
+      "label": "Red ring",
+      "diameter": 5.0,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 40,
+        "maxAreaPx": 12000,
+        "minWidthPx": 10,
+        "maxWidthPx": 85,
+        "minHeightPx": 10,
+        "maxHeightPx": 85,
+        "maxAspectRatio": 2.0,
+        "minCircularity": 0.55,
+        "minFillRatio": 0.40,
+        "minInteriorScore": 0.08
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 24,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 8,
+        "maxRadius": 38,
+        "minInterior": 0.10,
+        "minAreaPx": 40
+      }
+    },
+    {
+      "id": "ring_blue",
+      "label": "Blue ring",
+      "diameter": 5.0,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 40,
+        "maxAreaPx": 12000,
+        "minWidthPx": 10,
+        "maxWidthPx": 85,
+        "minHeightPx": 10,
+        "maxHeightPx": 85,
+        "maxAspectRatio": 2.0,
+        "minCircularity": 0.55,
+        "minFillRatio": 0.40,
+        "minInteriorScore": 0.08
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 24,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 8,
+        "maxRadius": 38,
+        "minInterior": 0.10,
+        "minAreaPx": 40
+      }
+    }
+  ],
+  "plates": [
+    {
+      "alliance": "red",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "hsvWrap": {
+        "hMin": 168,
+        "hMax": 179,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    },
+    {
+      "alliance": "blue",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    }
+  ]
+}

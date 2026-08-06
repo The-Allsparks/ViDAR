@@ -1,0 +1,165 @@
+{
+  "seasonId": "2022-powerplay",
+  "seasonName": "POWERPLAY 2022-23 — red and blue CONES (4 in base diameter × 5 in tall)",
+  "fusion": {
+    "minElementConfidence": 0.35,
+    "minPlateConfidence": 0.35,
+    "maxRangeMismatchRatio": 0.28
+  },
+  "elements": [
+    {
+      "id": "cone_red",
+      "label": "Red cone",
+      "diameter": 4.0,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 35,
+        "maxAreaPx": 10000,
+        "minWidthPx": 8,
+        "maxWidthPx": 75,
+        "minHeightPx": 8,
+        "maxHeightPx": 75,
+        "maxAspectRatio": 2.2,
+        "minCircularity": 0.45,
+        "minFillRatio": 0.45,
+        "minInteriorScore": 0.08
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 20,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 7,
+        "maxRadius": 32,
+        "minInterior": 0.10,
+        "minAreaPx": 35
+      }
+    },
+    {
+      "id": "cone_blue",
+      "label": "Blue cone",
+      "diameter": 4.0,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 35,
+        "maxAreaPx": 10000,
+        "minWidthPx": 8,
+        "maxWidthPx": 75,
+        "minHeightPx": 8,
+        "maxHeightPx": 75,
+        "maxAspectRatio": 2.2,
+        "minCircularity": 0.45,
+        "minFillRatio": 0.45,
+        "minInteriorScore": 0.08
+      },
+      "interior": {
+        "brightMin": 80,
+        "spreadMax": 70,
+        "holeDarkMax": 55
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 20,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 7,
+        "maxRadius": 32,
+        "minInterior": 0.10,
+        "minAreaPx": 35
+      }
+    }
+  ],
+  "plates": [
+    {
+      "alliance": "red",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "hsvWrap": {
+        "hMin": 168,
+        "hMax": 179,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    },
+    {
+      "alliance": "blue",
+      "width": 12.0,
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 120,
+        "maxAreaPx": 12000,
+        "minAspect": 1.15,
+        "maxAspect": 4.5,
+        "minRectangularity": 0.45,
+        "minWhiteRatio": 0.12
+      },
+      "whiteDigit": {
+        "sampleGrid": 5,
+        "brightMin": 175,
+        "spreadMax": 55
+      }
+    }
+  ]
+}

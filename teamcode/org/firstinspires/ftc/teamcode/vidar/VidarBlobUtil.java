@@ -24,12 +24,12 @@ public final class VidarBlobUtil {
         return box == null ? Double.NaN : box.center.y;
     }
 
-    public static double centerX(VidarBallObservation ball) {
-        return ball == null ? Double.NaN : ball.cx;
+    public static double centerX(VidarElementObservation element) {
+        return element == null ? Double.NaN : element.cx;
     }
 
-    public static double centerY(VidarBallObservation ball) {
-        return ball == null ? Double.NaN : ball.cy;
+    public static double centerY(VidarElementObservation element) {
+        return element == null ? Double.NaN : element.cy;
     }
 
     /** Horizontal error from frame center (positive = target is to the right). */
@@ -48,8 +48,8 @@ public final class VidarBlobUtil {
         return plate.cx - (frameWidth / 2.0);
     }
 
-    public static double errorFromCenter(VidarBallObservation ball, double frameWidth) {
-        double cx = centerX(ball);
+    public static double errorFromCenter(VidarElementObservation element, double frameWidth) {
+        double cx = centerX(element);
         if (Double.isNaN(cx)) {
             return 0;
         }
@@ -81,9 +81,9 @@ public final class VidarBlobUtil {
         }
         return String.format(
                 "range=%s in · robot (%s, %s) · cam=%s · aspect=%.2f",
-                fmtIn(plate.rangeIn),
-                fmtIn(plate.robotXIn),
-                fmtIn(plate.robotYIn),
+                fmtIn(plate.range),
+                fmtIn(plate.robotX),
+                fmtIn(plate.robotY),
                 plate.cameraName,
                 plate.aspectRatio);
     }
@@ -95,8 +95,8 @@ public final class VidarBlobUtil {
         return String.format(
                 "%s @ (%.0f, %.0f) in · %.0f° · conf=%.0f%% · age=%.1fs",
                 track.kind.name(),
-                track.robotXIn,
-                track.robotYIn,
+                track.robotX,
+                track.robotY,
                 track.bearingDeg(),
                 track.confidence * 100,
                 0.0);
@@ -115,29 +115,29 @@ public final class VidarBlobUtil {
                 box.center.x, box.center.y, blob.getContourArea());
     }
 
-    public static String formatBall(VidarBallObservation ball) {
-        if (ball == null) {
+    public static String formatElement(VidarElementObservation element) {
+        if (element == null) {
             return "none";
         }
-        if (Double.isNaN(ball.rangeIn)) {
+        if (Double.isNaN(element.range)) {
             return String.format("(%.0f, %.0f) r=%.0f conf=%.0f%%",
-                    ball.cx, ball.cy, ball.radiusPx, ball.confidence * 100);
+                    element.cx, element.cy, element.radiusPx, element.confidence * 100);
         }
         return String.format("(%.0f, %.0f) r=%.0f range=%.1f in conf=%.0f%%",
-                ball.cx, ball.cy, ball.radiusPx, ball.rangeIn, ball.confidence * 100);
+                element.cx, element.cy, element.radiusPx, element.range, element.confidence * 100);
     }
 
-    public static String formatBallDetail(VidarBallObservation ball) {
-        if (ball == null) {
+    public static String formatElementDetail(VidarElementObservation element) {
+        if (element == null) {
             return "none";
         }
         return String.format(
                 "size=%s floor=%s in · robot (%s, %s) · votes=%d",
-                fmtIn(ball.dSizeIn),
-                fmtIn(ball.dFloorIn),
-                fmtIn(ball.robotXIn),
-                fmtIn(ball.robotYIn),
-                ball.houghVotes);
+                fmtIn(element.dSize),
+                fmtIn(element.dFloor),
+                fmtIn(element.robotX),
+                fmtIn(element.robotY),
+                element.houghVotes);
     }
 
     private static String fmtIn(double v) {
@@ -180,24 +180,18 @@ public final class VidarBlobUtil {
                 scout.cameraName);
     }
 
-    /** @deprecated Scouts no longer produce localization fixes. */
-    @Deprecated
-    public static String formatScoutLandmark(VidarScoutLandmarkObservation scout) {
-        return formatScoutObservation(null);
-    }
-
     /** Forward drive power from fused range (0 when at pickup distance). */
-    public static double rangeDrivePower(VidarBallObservation ball) {
-        if (ball == null || Double.isNaN(ball.rangeIn)) {
+    public static double rangeDrivePower(VidarElementObservation element) {
+        if (element == null || Double.isNaN(element.range)) {
             return 0;
         }
-        if (ball.rangeIn <= VidarConfig.PICKUP_STOP_IN) {
+        if (element.range <= VidarConfig.PICKUP_STOP) {
             return 0;
         }
-        if (ball.rangeIn > VidarConfig.SEEK_MAX_RANGE_IN) {
+        if (element.range > VidarConfig.SEEK_MAX_RANGE_IN) {
             return 0;
         }
-        double raw = (ball.rangeIn - VidarConfig.PICKUP_STOP_IN) * VidarConfig.RANGE_DRIVE_GAIN;
+        double raw = (element.range - VidarConfig.PICKUP_STOP) * VidarConfig.RANGE_DRIVE_GAIN;
         return Math.min(VidarConfig.SEEK_DRIVE_POWER, raw);
     }
 }

@@ -210,7 +210,7 @@ export function renderFrame(ctx, sourceCanvas, detections, roiProcess, tuning, o
       const tag =
         temporal === "potential" ? " ?" :
         temporal === "coasting" ? " hold" : "";
-      const rangeTag = det.rangeIn != null ? ` ${det.rangeIn.toFixed(0)}in` : "";
+      const rangeTag = det.range != null ? ` ${det.range.toFixed(0)}in` : "";
       const confTag = det.confidence != null ? ` ${(det.confidence * 100).toFixed(0)}%` : "";
       ctx.fillText(
         `${det.label}${tag} (${Math.round(det.area)}px${extra})${rangeTag}${confTag}`,
@@ -305,8 +305,8 @@ export function describeLogic(best, tuning) {
   const frameW = tuning.processWidth ?? 1;
   const cx = frameW / 2;
   const geometry = tuning.geometry;
-  const pickupStop = geometry?.pickupStopIn ?? 14;
-  const minConf = geometry?.minBallConfidence ?? 0.35;
+  const pickupStop = geometry?.pickupStop ?? geometry?.pickupStop ?? 14;
+  const minConf = geometry?.minElementConfidence ?? 0.35;
 
   if (best.robot) {
     const dx = best.robot.cx - cx;
@@ -317,10 +317,10 @@ export function describeLogic(best, tuning) {
         state: "BLOCKED — robot in avoid zone",
         elementError: null,
         robotDist: dist,
-        ballRangeIn: best.element?.rangeIn ?? null,
-        dSizeIn: best.element?.dSizeIn ?? null,
-        dFloorIn: best.element?.dFloorIn ?? null,
-        ballConfidence: best.element?.confidence ?? null,
+        elementRange: best.element?.range ?? null,
+        dSize: best.element?.dSize ?? null,
+        dFloor: best.element?.dFloor ?? null,
+        elementConfidence: best.element?.confidence ?? null,
         robotXY: formatRobotXY(best.element),
       };
     }
@@ -328,7 +328,7 @@ export function describeLogic(best, tuning) {
 
   if (best.element) {
     const err = best.element.cx - cx;
-    const range = best.element.rangeIn;
+    const range = best.element.range;
     const conf = best.element.confidence ?? 0;
     const robotDist = best.robot
       ? Math.hypot(best.robot.cx - cx, best.robot.cy - (tuning.processHeight ?? 1) / 2)
@@ -339,10 +339,10 @@ export function describeLogic(best, tuning) {
         state: "LOW CONF — size/floor mismatch",
         elementError: err,
         robotDist,
-        ballRangeIn: range ?? null,
-        dSizeIn: best.element.dSizeIn ?? null,
-        dFloorIn: best.element.dFloorIn ?? null,
-        ballConfidence: conf,
+        elementRange: range ?? null,
+        dSize: best.element.dSize ?? null,
+        dFloor: best.element.dFloor ?? null,
+        elementConfidence: conf,
         robotXY: formatRobotXY(best.element),
       };
     }
@@ -352,35 +352,35 @@ export function describeLogic(best, tuning) {
         state: "AT PICKUP RANGE — stop",
         elementError: err,
         robotDist,
-        ballRangeIn: range,
-        dSizeIn: best.element.dSizeIn ?? null,
-        dFloorIn: best.element.dFloorIn ?? null,
-        ballConfidence: conf,
+        elementRange: range,
+        dSize: best.element.dSize ?? null,
+        dFloor: best.element.dFloor ?? null,
+        elementConfidence: conf,
         robotXY: formatRobotXY(best.element),
       };
     }
 
     if (Math.abs(err) < 25) {
       return {
-        state: range != null ? `DRIVE — ${range.toFixed(0)} in` : "DRIVE — ball centered",
+        state: range != null ? `DRIVE — ${range.toFixed(0)} in` : "DRIVE — element centered",
         elementError: err,
         robotDist,
-        ballRangeIn: range ?? null,
-        dSizeIn: best.element.dSizeIn ?? null,
-        dFloorIn: best.element.dFloorIn ?? null,
-        ballConfidence: conf,
+        elementRange: range ?? null,
+        dSize: best.element.dSize ?? null,
+        dFloor: best.element.dFloor ?? null,
+        elementConfidence: conf,
         robotXY: formatRobotXY(best.element),
       };
     }
 
     return {
-      state: "TURN — seeking ball",
+      state: "TURN — seeking element",
       elementError: err,
       robotDist,
-      ballRangeIn: range ?? null,
-      dSizeIn: best.element.dSizeIn ?? null,
-      dFloorIn: best.element.dFloorIn ?? null,
-      ballConfidence: conf,
+      elementRange: range ?? null,
+      dSize: best.element.dSize ?? null,
+      dFloor: best.element.dFloor ?? null,
+      elementConfidence: conf,
       robotXY: formatRobotXY(best.element),
     };
   }
@@ -391,16 +391,16 @@ export function describeLogic(best, tuning) {
     robotDist: best.robot
       ? Math.hypot(best.robot.cx - cx, best.robot.cy - (tuning.processHeight ?? 1) / 2)
       : null,
-    ballRangeIn: null,
-    dSizeIn: null,
-    dFloorIn: null,
-    ballConfidence: null,
+    elementRange: null,
+    dSize: null,
+    dFloor: null,
+    elementConfidence: null,
     robotXY: null,
   };
 }
 
-/** @param {import('./detection.js').Detection | null | undefined} ball */
-function formatRobotXY(ball) {
-  if (!ball || ball.robotXIn == null || ball.robotYIn == null) return null;
-  return { x: ball.robotXIn, y: ball.robotYIn };
+/** @param {import('./detection.js').Detection | null | undefined} element */
+function formatRobotXY(element) {
+  if (!element || element.robotX == null || element.robotY == null) return null;
+  return { x: element.robotX, y: element.robotY };
 }

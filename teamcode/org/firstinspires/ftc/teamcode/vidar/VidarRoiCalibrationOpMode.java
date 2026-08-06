@@ -21,13 +21,13 @@ public class VidarRoiCalibrationOpMode extends LinearOpMode {
 
         telemetry.addLine("ViDAR ROI calibration — tune VidarCameraProfile / VidarCameraRoiConfig");
         telemetry.addData("Frame", "%d x %d", frameW, frameH);
-        telemetry.addData("Ball ROI", roiSummary(profile.roiConfig.ballRoi(frameW, frameH)));
+        telemetry.addData("Element ROI", roiSummary(profile.roiConfig.elementRoi(frameW, frameH)));
         telemetry.addData("Plate ROI", roiSummary(profile.roiConfig.plateRoi(frameW, frameH)));
         telemetry.addData("Tag ROI", roiSummary(profile.roiConfig.tagRoi(frameW, frameH)));
         telemetry.addData("Horizon row (full frame)", profile.horizonRowFullFrame(frameH));
         telemetry.addData("Focal length px", profile.focalLengthPx);
-        telemetry.addData("Plate width in", profile.plateWidthIn);
-        telemetry.addData("Ball detector", VidarConfig.BALL_DETECTOR_TYPE.name());
+        telemetry.addData("Plate width in", profile.plateWidth);
+        telemetry.addData("Element detector", VidarConfig.DEFAULT_ELEMENT_DETECTOR.name());
 
         for (String warning : profile.validate(frameW, frameH)) {
             telemetry.addLine("WARN: " + warning);
@@ -40,7 +40,7 @@ public class VidarRoiCalibrationOpMode extends LinearOpMode {
             vision.update();
             telemetry.addData("FPS", vision.portalFps());
             telemetry.addData("Camera state", vision.directionState().name());
-            telemetry.addData("Ball", vision.getBestElement() != null ? "yes" : "no");
+            telemetry.addData("Element", vision.getBestElement() != null ? "yes" : "no");
             telemetry.addData("Metrics", vision.metrics().toTelemetryMap().toString());
             telemetry.update();
         }

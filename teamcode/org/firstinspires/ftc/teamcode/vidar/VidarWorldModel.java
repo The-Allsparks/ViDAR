@@ -16,33 +16,33 @@ import java.util.function.Supplier;
 public class VidarWorldModel {
 
     public enum Kind {
-        BALL,
+        ELEMENT,
         ALLY,
         FOE
     }
 
     public static final class Track {
         public final Kind kind;
-        public final double robotXIn;
-        public final double robotYIn;
+        public final double robotX;
+        public final double robotY;
         public final Double fieldXIn;
         public final Double fieldYIn;
-        public final double rangeIn;
+        public final double range;
         public final double confidence;
         public final String cameraName;
         public final long lastSeenNanos;
         public final long captureTimeNanos;
         public final Pose2D captureRobotPose;
 
-        Track(Kind kind, double robotXIn, double robotYIn, Double fieldXIn, Double fieldYIn,
-              double rangeIn, double confidence, String cameraName,
+        Track(Kind kind, double robotX, double robotY, Double fieldXIn, Double fieldYIn,
+              double range, double confidence, String cameraName,
               long lastSeenNanos, long captureTimeNanos, Pose2D captureRobotPose) {
             this.kind = kind;
-            this.robotXIn = robotXIn;
-            this.robotYIn = robotYIn;
+            this.robotX = robotX;
+            this.robotY = robotY;
             this.fieldXIn = fieldXIn;
             this.fieldYIn = fieldYIn;
-            this.rangeIn = rangeIn;
+            this.range = range;
             this.confidence = confidence;
             this.cameraName = cameraName;
             this.lastSeenNanos = lastSeenNanos;
@@ -51,21 +51,21 @@ public class VidarWorldModel {
         }
 
         public double bearingDeg() {
-            return Math.toDegrees(Math.atan2(robotYIn, robotXIn));
+            return Math.toDegrees(Math.atan2(robotY, robotX));
         }
 
-        public double distanceIn() {
-            return Math.hypot(robotXIn, robotYIn);
+        public double distance() {
+            return Math.hypot(robotX, robotY);
         }
 
         Track withRobotPosition(double x, double y, double confidence, long nowNanos) {
-            return new Track(kind, x, y, fieldXIn, fieldYIn, rangeIn,
+            return new Track(kind, x, y, fieldXIn, fieldYIn, range,
                     confidence, cameraName, nowNanos, captureTimeNanos, captureRobotPose);
         }
 
         Track withFieldPosition(double fieldX, double fieldY, double robotX, double robotY,
                                 double confidence, long nowNanos) {
-            return new Track(kind, robotX, robotY, fieldX, fieldY, rangeIn,
+            return new Track(kind, robotX, robotY, fieldX, fieldY, range,
                     confidence, cameraName, nowNanos, captureTimeNanos, captureRobotPose);
         }
     }
@@ -93,21 +93,21 @@ public class VidarWorldModel {
             return;
         }
 
-        VidarBallObservation ball = vision.getBestElement();
-        if (ball != null && ball.confidence >= VidarConfig.MIN_BALL_CONFIDENCE) {
-            upsert(Kind.BALL, ball.robotXIn, ball.robotYIn, ball.rangeIn,
-                    ball.confidence, ball.cameraName, ball.captureTimeNanos, nowNanos);
+        VidarElementObservation element = vision.getBestElement();
+        if (element != null && element.confidence >= VidarConfig.MIN_ELEMENT_CONFIDENCE) {
+            upsert(Kind.ELEMENT, element.robotX, element.robotY, element.range,
+                    element.confidence, element.cameraName, element.captureTimeNanos, nowNanos);
         }
 
         VidarPlateObservation foe = vision.getBestFoe();
         if (foe != null && foe.confidence >= VidarConfig.MIN_PLATE_CONFIDENCE) {
-            upsert(Kind.FOE, foe.robotXIn, foe.robotYIn, foe.rangeIn,
+            upsert(Kind.FOE, foe.robotX, foe.robotY, foe.range,
                     foe.confidence, foe.cameraName, foe.captureTimeNanos, nowNanos);
         }
 
         VidarPlateObservation ally = vision.getBestAlly();
         if (ally != null && ally.confidence >= VidarConfig.MIN_PLATE_CONFIDENCE) {
-            upsert(Kind.ALLY, ally.robotXIn, ally.robotYIn, ally.rangeIn,
+            upsert(Kind.ALLY, ally.robotX, ally.robotY, ally.range,
                     ally.confidence, ally.cameraName, ally.captureTimeNanos, nowNanos);
         }
     }
@@ -132,7 +132,7 @@ public class VidarWorldModel {
                     updated.add(track.withRobotPosition(robot[0], robot[1],
                             track.confidence * 0.98, nowNanos));
                 } else {
-                    double[] pt = delta.transformPoint(track.robotXIn, track.robotYIn);
+                    double[] pt = delta.transformPoint(track.robotX, track.robotY);
                     updated.add(track.withRobotPosition(pt[0], pt[1],
                             track.confidence * 0.97, nowNanos));
                 }
@@ -159,7 +159,7 @@ public class VidarWorldModel {
         };
     }
 
-    private void upsert(Kind kind, double x, double y, double rangeIn,
+    private void upsert(Kind kind, double x, double y, double range,
                         double confidence, String cameraName, long captureNanos, long nowNanos) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return;
@@ -172,13 +172,13 @@ public class VidarWorldModel {
             if (captureNanos > 0 && track.captureTimeNanos > captureNanos) {
                 return;
             }
-            double dist = Math.hypot(track.robotXIn - x, track.robotYIn - y);
+            double dist = Math.hypot(track.robotX - x, track.robotY - y);
             if (dist <= VidarConfig.WORLD_MERGE_RADIUS_IN) {
                 tracks.remove(track);
                 double mergedConf = Math.max(track.confidence, confidence);
-                double mergedX = 0.5 * (track.robotXIn + x);
-                double mergedY = 0.5 * (track.robotYIn + y);
-                double mergedRange = Double.isNaN(rangeIn) ? track.rangeIn : rangeIn;
+                double mergedX = 0.5 * (track.robotX + x);
+                double mergedY = 0.5 * (track.robotY + y);
+                double mergedRange = Double.isNaN(range) ? track.range : range;
                 Double fieldX = track.fieldXIn;
                 Double fieldY = track.fieldYIn;
                 if (lastFieldPose != null) {
@@ -197,7 +197,7 @@ public class VidarWorldModel {
             fieldX = lastFieldPose.getX(DistanceUnit.INCH) + x;
             fieldY = lastFieldPose.getY(DistanceUnit.INCH) + y;
         }
-        tracks.add(new Track(kind, x, y, fieldX, fieldY, rangeIn, confidence,
+        tracks.add(new Track(kind, x, y, fieldX, fieldY, range, confidence,
                 cameraName, nowNanos, captureNanos, lastRobotPose));
     }
 
@@ -214,8 +214,8 @@ public class VidarWorldModel {
 
     private static double ttlSeconds(Kind kind) {
         switch (kind) {
-            case BALL:
-                return VidarConfig.WORLD_BALL_TTL_SEC;
+            case ELEMENT:
+                return VidarConfig.WORLD_ELEMENT_TTL_SEC;
             case FOE:
                 return VidarConfig.WORLD_FOE_TTL_SEC;
             case ALLY:
@@ -238,8 +238,8 @@ public class VidarWorldModel {
         return out;
     }
 
-    public Track nearestBall() {
-        return nearest(Kind.BALL);
+    public Track nearestElement() {
+        return nearest(Kind.ELEMENT);
     }
 
     public Track nearestFoe() {
@@ -253,7 +253,7 @@ public class VidarWorldModel {
             if (track.kind != kind) {
                 continue;
             }
-            double dist = track.distanceIn();
+            double dist = track.distance();
             if (dist < bestDist) {
                 bestDist = dist;
                 best = track;
@@ -267,7 +267,7 @@ public class VidarWorldModel {
             if (track.kind != Kind.FOE) {
                 continue;
             }
-            if (track.distanceIn() > VidarConfig.WORLD_BLOCK_RANGE_IN) {
+            if (track.distance() > VidarConfig.WORLD_BLOCK_RANGE_IN) {
                 continue;
             }
             if (Math.abs(track.bearingDeg()) <= VidarConfig.WORLD_BLOCK_CONE_DEG) {

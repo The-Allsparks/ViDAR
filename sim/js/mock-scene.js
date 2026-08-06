@@ -1,5 +1,5 @@
 /**
- * Synthetic scene: white ball + robot with alliance plates (in lower crop band).
+ * Synthetic scene: white element + robot with alliance plates (in lower crop band).
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} width
  * @param {number} height
@@ -62,26 +62,26 @@ export function drawMockScene(ctx, width, height, tick) {
   ctx.fillStyle = "#2266dd";
   ctx.fillRect(width * 0.55, botY + 10, 26, 20);
 
-  // Moving white ball
-  const ballX = ((tick * 3) % (width - 120)) + 70;
-  const ballY = height * 0.72;
-  const ballR = 28;
-  ctx.fillStyle = "#ececf4";
+  // Moving yellow pollen element
+  const elemX = ((tick * 3) % (width - 120)) + 70;
+  const elemY = height * 0.72;
+  const elemR = 18;
+  ctx.fillStyle = "#f0d020";
   ctx.beginPath();
-  ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
+  ctx.arc(elemX, elemY, elemR, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#b0b0c0";
+  ctx.strokeStyle = "#c8a810";
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Partially occluded ball
+  // Partially occluded element
   const occX = width * 0.72;
   const occY = height * 0.68;
   ctx.fillStyle = "#2a2a35";
   ctx.fillRect(occX - 10, occY - 35, 50, 70);
-  ctx.fillStyle = "#ececf4";
+  ctx.fillStyle = "#f0d020";
   ctx.beginPath();
-  ctx.arc(occX + 15, occY, 24, 0, Math.PI * 2);
+  ctx.arc(occX + 15, occY, 16, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = "#2a2a35";
   ctx.fillRect(occX + 5, occY - 30, 35, 60);

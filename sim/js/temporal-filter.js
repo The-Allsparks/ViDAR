@@ -101,9 +101,9 @@ export function applyTemporalFilter(state, raw, opts) {
 }
 
 /** @param {Track[]} tracks @param {import('./detection.js').Detection} det @param {Set<number>} used */
-function findBestTrack(tracks, det, maxDist, used) {
+function findBestTrack(tracks, det, max, used) {
   let best = null;
-  let bestD = maxDist;
+  let bestD = max;
   for (const track of tracks) {
     if (used.has(track.id)) continue;
     if (track.category !== det.category) continue;

@@ -15,3 +15,25 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest tests/ -v
+
+  java-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Compile ViDAR Java against FTC SDK
+        run: |
+          git clone --depth 1 https://github.com/FIRST-Tech-Challenge/FtcRobotController.git /tmp/ftc
+          mkdir -p /tmp/ftc/TeamCode/src/main/java/org/firstinspires/ftc/teamcode
+          cp -r teamcode/org/firstinspires/ftc/teamcode/vidar \
+            /tmp/ftc/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
+          if [ -f teamcode/org/firstinspires/ftc/teamcode/VidarTeamConfig.java ]; then
+            cp teamcode/org/firstinspires/ftc/teamcode/VidarTeamConfig.java \
+              /tmp/ftc/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
+          fi
+          cd /tmp/ftc
+          chmod +x gradlew
+          ./gradlew :TeamCode:compileDebugJavaWithJavac --no-daemon

@@ -1,9 +1,17 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -13,18 +21,26 @@ public class VidarMultiVision {
 
     private final VidarVision[] cameras;
     private final int cameraCount;
+    private final VidarRobotConfig robotConfig;
+    private final VidarSeasonConfig season;
     private final Supplier<VidarAlliance> ourAlliance;
     private final Supplier<Pose2D> odomSupplier;
     private final VidarLocalizationFusion localization = new VidarLocalizationFusion();
-    private final VidarTemporalFilter temporalFilter = new VidarTemporalFilter();
+    private final VidarRuntimeConfig runtimeConfig = new VidarRuntimeConfig();
+    private final VidarTemporalFilter temporalFilter = new VidarTemporalFilter(runtimeConfig);
+    private final VidarMetricsLogger metricsLogger = new VidarMetricsLogger();
     private final VidarResourceBudget resourceBudget = new VidarResourceBudget();
+    private final VidarOdomHistory odomHistory = new VidarOdomHistory();
+    private VidarGlobalVisionWorker globalWorker;
 
     private Pose2D lastOdomSample;
     private long lastOdomNanos;
     private double travelHeadingDeg;
     private double speedInPerSec;
 
-    private VidarBallObservation bestBall;
+    private VidarElementObservation bestElement;
+    private VidarRankedElementFrame fusedRankedElements =
+            VidarRankedElementFrame.empty("fused", VidarConfig.FUSION_MAX_RANKED_ELEMENTS);
     private VidarPlateObservation bestPlate;
     private VidarPlateObservation bestFoe;
     private VidarPlateObservation bestAlly;
@@ -32,6 +48,7 @@ public class VidarMultiVision {
     private VidarTagScoutObservation latestScoutObservation;
     private VidarTagScoutResult lastTagScout;
     private Pose2D fusedFieldPose;
+    private volatile VidarObservationFrame latestFrame = VidarObservationFrame.empty();
 
     public VidarMultiVision(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
         this(hardwareMap, null, () -> VidarConfig.DEFAULT_ALLIANCE);
@@ -47,24 +64,66 @@ public class VidarMultiVision {
             com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> ourAlliance) {
-        this.ourAlliance = ourAlliance == null ? () -> VidarConfig.DEFAULT_ALLIANCE : ourAlliance;
+        this(hardwareMap, VidarConfigLoader.defaultRobot(), VidarConfigLoader.defaultSeason(),
+                odomSupplier, ourAlliance);
+    }
+
+    /**
+     * Preferred entry point — team-supplied JSON configs for robot layout and season game pieces.
+     */
+    public VidarMultiVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            VidarRobotConfig robot,
+            VidarSeasonConfig season) {
+        this(hardwareMap, robot, season, null, () -> robot.defaultAlliance);
+    }
+
+    public VidarMultiVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            VidarRobotConfig robot,
+            VidarSeasonConfig season,
+            Supplier<Pose2D> odomSupplier) {
+        this(hardwareMap, robot, season, odomSupplier, () -> robot.defaultAlliance);
+    }
+
+    public VidarMultiVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            VidarRobotConfig robot,
+            VidarSeasonConfig season,
+            Supplier<Pose2D> odomSupplier,
+            Supplier<VidarAlliance> ourAlliance) {
+        this.season = season != null ? season : VidarConfigLoader.defaultSeason();
+        VidarRobotConfig activeRobot = robot != null ? robot : VidarConfigLoader.defaultRobot();
+        this.robotConfig = activeRobot;
+        this.ourAlliance = ourAlliance == null ? () -> activeRobot.defaultAlliance : ourAlliance;
         this.odomSupplier = odomSupplier;
-        cameraCount = VidarConfig.activeCameraCount();
+        cameraCount = activeRobot.activeCameraCount();
         VidarDecodeArbiter.reset();
         cameras = new VidarVision[cameraCount];
         for (int i = 0; i < cameraCount; i++) {
             try {
-                VidarCameraMount mount = VidarConfig.cameraMount(i);
+                VidarCameraMount mount = activeRobot.cameraMount(i);
                 cameras[i] = new VidarVision(
                         hardwareMap,
                         mount.webcamName,
                         mount.profile,
                         odomSupplier,
                         mount.webcamName,
-                        localization::fieldPosePrior);
+                        null,
+                        this.season,
+                        resourceBudget,
+                        cameraCount,
+                        i);
             } catch (RuntimeException ex) {
                 cameras[i] = null;
             }
+        }
+        if (VidarConfig.useGlobalVisionWorker(cameraCount)) {
+            globalWorker = new VidarGlobalVisionWorker(cameras);
+            globalWorker.start();
+        }
+        if (VidarTagConfig.ENABLED && VidarConfig.ASYNC_TAG_DECODE_ENABLED) {
+            VidarTagDecodeWorker.ensureStarted();
         }
     }
 
@@ -72,9 +131,16 @@ public class VidarMultiVision {
         localization.setFieldPosePrior(prior);
     }
 
-    public void update() {
+    /**
+     * Poll all cameras, fuse observations, and return an immutable snapshot for this cycle.
+     * Also available via {@link #getLatestFrame()} if you prefer a two-call pattern.
+     */
+    public VidarObservationFrame update() {
         long loopStart = System.nanoTime();
-        sampleOdomMotion();
+        long updateTimeNanos = System.nanoTime();
+
+        VidarRankedElementFrame[] rankedByCamera = new VidarRankedElementFrame[cameraCount];
+        VidarTagObservation[] tagsByCamera = new VidarTagObservation[cameraCount];
 
         int connected = 0;
         for (VidarVision camera : cameras) {
@@ -82,8 +148,8 @@ public class VidarMultiVision {
                 continue;
             }
             connected++;
+            camera.metrics().beginCycle();
             try {
-                camera.applyDirectionTier(travelHeadingDeg, speedInPerSec);
                 camera.update();
                 camera.metrics().recordLoopCpu((System.nanoTime() - loopStart) / 1_000_000.0);
             } catch (RuntimeException ex) {
@@ -93,8 +159,14 @@ public class VidarMultiVision {
         }
 
         resourceBudget.update(collectMetrics(), connected);
+        applyResourceBudgetActions();
+        metricsLogger.recordCycle(collectMetrics());
 
-        bestBall = null;
+        bestElement = null;
+        fusedRankedElements = fuseRankedElements();
+        if (fusedRankedElements.best() != null) {
+            bestElement = fusedRankedElements.best();
+        }
         bestPlate = null;
         bestFoe = null;
         bestAlly = null;
@@ -102,7 +174,6 @@ public class VidarMultiVision {
         latestScoutObservation = null;
         lastTagScout = null;
 
-        double bestBallScore = -1;
         double bestPlateScore = -1;
         double bestFoeScore = -1;
         double bestAllyScore = -1;
@@ -110,22 +181,14 @@ public class VidarMultiVision {
         int bestDecodePixels = -1;
         double bestScoutScore = -1;
 
-        for (VidarVision camera : cameras) {
-            if (camera == null || camera.isFailed()) {
+        for (int i = 0; i < cameraCount; i++) {
+            VidarVision camera = cameras[i];
+            if (camera == null || camera.isFailed() || camera.isExcludedFromRotation()) {
                 continue;
             }
 
-            VidarBallObservation ball = camera.getBestElement();
-            if (ball != null) {
-                ball = temporalFilter.filterBall(ball);
-                if (ball != null) {
-                    double score = ballScore(ball);
-                    if (score > bestBallScore) {
-                        bestBallScore = score;
-                        bestBall = ball;
-                    }
-                }
-            }
+            rankedByCamera[i] = camera.getRankedElements();
+            tagsByCamera[i] = camera.getLatestTag();
 
             VidarPlateObservation plate = camera.getBestPlate();
             if (plate != null) {
@@ -173,8 +236,38 @@ public class VidarMultiVision {
             }
         }
 
-        Pose2D odomNow = odomSupplier == null ? null : odomSupplier.get();
-        fusedFieldPose = localization.fusedFieldPoseNow(latestTag, latestScoutObservation, odomNow);
+        latestFrame = new VidarObservationFrame(
+                updateTimeNanos,
+                fusedRankedElements,
+                bestElement,
+                bestPlate,
+                bestFoe,
+                bestAlly,
+                latestTag,
+                latestScoutObservation,
+                lastTagScout,
+                rankedByCamera,
+                tagsByCamera);
+        return latestFrame;
+    }
+
+    /** Last snapshot from {@link #update()} — safe to read multiple times per cycle. */
+    public VidarObservationFrame getLatestFrame() {
+        return latestFrame;
+    }
+
+    private void applyResourceBudgetActions() {
+        if (!resourceBudget.shouldIdleRearCameras()) {
+            return;
+        }
+        for (VidarVision camera : cameras) {
+            if (camera == null || camera.isExcludedFromRotation()) {
+                continue;
+            }
+            if (Math.abs(camera.getProfile().bearingDeg) > 90.0) {
+                camera.setIdle(true);
+            }
+        }
     }
 
     private VidarMetrics[] collectMetrics() {
@@ -191,6 +284,43 @@ public class VidarMultiVision {
             return;
         }
         Pose2D now = odomSupplier.get();
+        recordOdom(now);
+    }
+
+    /** Ring buffer for latency compensation — record each loop before {@link #update()}. */
+    public VidarOdomHistory odomHistory() {
+        return odomHistory;
+    }
+
+    /** Append an odometry sample (uses {@link System#nanoTime()}). */
+    public void recordOdom(Pose2D odom) {
+        odomHistory.record(odom);
+        sampleOdomMotionFromPose(odom);
+    }
+
+    /**
+     * {@link #update()} then batch backdate all observations to robot-now.
+     * When an odom supplier is configured, records odom before vision and uses a fresh sample for {@code odomNow}.
+     */
+    public VidarCorrectedFrame updateCorrected() {
+        Pose2D odomNow = null;
+        if (odomSupplier != null) {
+            odomNow = odomSupplier.get();
+            recordOdom(odomNow);
+        }
+        VidarObservationFrame frame = update();
+        if (odomSupplier != null) {
+            odomNow = odomSupplier.get();
+            odomHistory.record(odomNow);
+        }
+        return frame.toRobotNow(odomHistory, odomNow);
+    }
+
+    private void sampleOdomMotionFromPose(Pose2D now) {
+        if (now == null) {
+            speedInPerSec = 0;
+            return;
+        }
         long t = System.nanoTime();
         if (lastOdomSample != null && lastOdomNanos > 0) {
             double dt = (t - lastOdomNanos) / 1e9;
@@ -207,17 +337,101 @@ public class VidarMultiVision {
         lastOdomNanos = t;
     }
 
-    private static double ballScore(VidarBallObservation ball) {
-        if (ball.confidence < VidarConfig.MIN_BALL_CONFIDENCE) {
+    private VidarRankedElementFrame fuseRankedElements() {
+        List<ScoredElement> candidates = new ArrayList<>();
+        for (VidarVision camera : cameras) {
+            if (camera == null || camera.isFailed() || camera.isExcludedFromRotation()) {
+                continue;
+            }
+            VidarRankedElementFrame frame = camera.getRankedElements();
+            for (int i = 0; i < frame.count(); i++) {
+                VidarElementObservation obs = frame.at(i);
+                if (obs == null) {
+                    continue;
+                }
+                obs = temporalFilter.filterElement(obs);
+                if (obs == null) {
+                    continue;
+                }
+                candidates.add(new ScoredElement(obs, elementRankScore(obs)));
+            }
+        }
+
+        candidates.sort(Comparator.comparingDouble((ScoredElement s) -> s.score).reversed());
+        List<VidarElementObservation> deduped = new ArrayList<>();
+        int fusionCap = runtimeConfig.fusionMaxRankedElements();
+        int overflow = 0;
+        for (ScoredElement candidate : candidates) {
+            if (isDuplicateRobot(candidate.observation, deduped)) {
+                continue;
+            }
+            if (deduped.size() < fusionCap) {
+                deduped.add(candidate.observation);
+            } else {
+                overflow++;
+            }
+        }
+
+        VidarElementObservation[] ranked = new VidarElementObservation[fusionCap];
+        for (int i = 0; i < deduped.size(); i++) {
+            ranked[i] = deduped.get(i);
+        }
+        long newestCapture = 0;
+        for (VidarElementObservation obs : deduped) {
+            newestCapture = Math.max(newestCapture, obs.captureTimeNanos);
+        }
+        return new VidarRankedElementFrame(ranked, deduped.size(), overflow, newestCapture, "fused", fusionCap);
+    }
+
+    private static double elementRankScore(VidarElementObservation obs) {
+        double rangeWeight = Double.isNaN(obs.range) ? 0.5 : 1.0 / Math.max(6.0, obs.range);
+        return obs.confidence * obs.areaPx * rangeWeight;
+    }
+
+    private static boolean isDuplicateRobot(VidarElementObservation obs, List<VidarElementObservation> kept) {
+        for (VidarElementObservation other : kept) {
+            if (Math.hypot(obs.robotX - other.robotX, obs.robotY - other.robotY)
+                    < VidarConfig.WORLD_MERGE_RADIUS_IN) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static final class ScoredElement {
+        final VidarElementObservation observation;
+        final double score;
+
+        ScoredElement(VidarElementObservation observation, double score) {
+            this.observation = observation;
+            this.score = score;
+        }
+    }
+
+    private double elementScore(VidarElementObservation element) {
+        if (element.confidence < season.minElementConfidence) {
             return -1;
         }
-        double rangeWeight = Double.isNaN(ball.rangeIn) ? 0.5 : 1.0 / Math.max(6.0, ball.rangeIn);
-        return ball.confidence * ball.radiusPx * ball.radiusPx * rangeWeight;
+        double rangeWeight = Double.isNaN(element.range) ? 0.5 : 1.0 / Math.max(6.0, element.range);
+        return element.confidence * element.radiusPx * element.radiusPx * rangeWeight;
     }
 
     private static double plateScore(VidarPlateObservation plate) {
-        double rangeWeight = Double.isNaN(plate.rangeIn) ? 0.5 : 1.0 / Math.max(8.0, plate.rangeIn);
+        double rangeWeight = Double.isNaN(plate.range) ? 0.5 : 1.0 / Math.max(8.0, plate.range);
         return plate.confidence * plate.whiteRatio * rangeWeight;
+    }
+
+    public VidarSeasonConfig getSeasonConfig() {
+        return season;
+    }
+
+    public VidarRobotConfig getRobotConfig() {
+        return robotConfig;
+    }
+
+    /** Active linear unit for config distances and observation fields (robot overrides season). */
+    public VidarDistanceUnit distanceUnit() {
+        return VidarDistanceUnit.effective(robotConfig, season);
     }
 
     public int getCameraCount() {
@@ -231,8 +445,107 @@ public class VidarMultiVision {
         return cameras[index];
     }
 
-    public VidarBallObservation getBestElement() {
-        return bestBall;
+    /** Set processing state for one camera (PRIMARY, SECONDARY, IDLE, DEEP_IDLE). */
+    public void setCameraState(int index, VidarCameraScheduler.State state) {
+        VidarVision camera = camera(index);
+        if (camera != null) {
+            camera.setCameraState(state);
+        }
+    }
+
+    /** Idle one camera (processors off, stream stays on). Resumes PRIMARY when {@code idle} is false. */
+    public void setCameraIdle(int index, boolean idle) {
+        VidarVision camera = camera(index);
+        if (camera != null) {
+            camera.setIdle(idle);
+        }
+    }
+
+    /** Exclude a hung/errored camera from worker rotation and disable its processors. */
+    public void setCameraFailed(int index, boolean failed) {
+        VidarVision camera = camera(index);
+        if (camera != null) {
+            camera.setExcludedFromRotation(failed);
+        }
+    }
+
+    /** Per-camera ranked-element cap (e.g. front=8, side=2). */
+    public void setCameraMaxRankedElements(int index, int max) {
+        VidarVision camera = camera(index);
+        if (camera != null) {
+            camera.setMaxRankedElements(max);
+        }
+    }
+
+    public VidarRuntimeConfig runtimeConfig() {
+        return runtimeConfig;
+    }
+
+    public VidarMetricsLogger metricsLogger() {
+        return metricsLogger;
+    }
+
+    /**
+     * Optional tag fusion helper — ViDAR does not consume odometry during vision processing.
+     * Team supplies {@code odomNow} when fusing.
+     */
+    public VidarLocalizationFusion localizationFusion() {
+        return localization;
+    }
+
+    /**
+     * Opt-in direction-based PRIMARY/SECONDARY for all cameras — never auto-idles.
+     * Requires {@link VidarConfig#DIRECTION_SCHEDULER_ENABLED} and a motion sample source.
+     */
+    public void applyDirectionTier(double travelHeadingDeg, double speedInPerSec) {
+        for (VidarVision camera : cameras) {
+            if (camera == null || camera.isFailed()) {
+                continue;
+            }
+            camera.applyDirectionTier(travelHeadingDeg, speedInPerSec);
+        }
+    }
+
+    public VidarElementObservation getBestElement() {
+        return bestElement;
+    }
+
+    /**
+     * Fused 360° element ranks 0 … fusion cap−1 in robot frame.
+     * {@link VidarRankedElementFrame#overflowCount()} is the overflow bucket across all cameras.
+     */
+    public VidarRankedElementFrame getRankedElements() {
+        return fusedRankedElements;
+    }
+
+    /** Fused rank {@code 0} (best) … {@code 4}, or null. */
+    public VidarElementObservation getRankedElement(int rank) {
+        return fusedRankedElements.at(rank);
+    }
+
+    /** Best fused observation for a specific season element id (e.g. {@code artifact_purple}). */
+    public VidarElementObservation getGameElement(String elementId) {
+        VidarElementObservation best = null;
+        double bestScore = -1;
+        for (VidarVision camera : cameras) {
+            if (camera == null || camera.isFailed()) {
+                continue;
+            }
+            VidarElementObservation obs = camera.getGameElement(elementId);
+            if (obs == null) {
+                continue;
+            }
+            obs = temporalFilter.filterElement(obs);
+            if (obs == null) {
+                continue;
+            }
+            double score = elementScore(obs);
+            if (score > bestScore) {
+                bestScore = score;
+                best = obs;
+            }
+        }
+        return best;
     }
 
     public VidarPlateObservation getBestPlate() {
@@ -259,32 +572,20 @@ public class VidarMultiVision {
         return latestScoutObservation;
     }
 
-    /** @deprecated Scouts no longer localize. */
-    @Deprecated
-    public VidarScoutLandmarkObservation getLatestScoutLandmark() {
-        return null;
-    }
-
+    /** Latest localization fusion result (tag + team odom). */
     public Pose2D getFusedFieldPose() {
         return fusedFieldPose;
     }
 
-    public Pose2D getBackdatedFieldPose(Pose2D odomNow) {
-        if (latestTag != null) {
-            for (VidarVision camera : cameras) {
-                if (camera == null) continue;
-                VidarTagObservation tag = camera.getLatestTag();
-                if (tag == latestTag) {
-                    return camera.getBackdatedFieldPose(odomNow);
-                }
-            }
-            return VidarPoseBackdate.fieldPoseNow(
-                    latestTag,
-                    odomNow,
-                    DistanceUnit.INCH,
-                    AngleUnit.DEGREES);
+    /**
+     * Backdate the best tag to {@code odomNow} using odometry at tag capture time.
+     */
+    public Pose2D getBackdatedFieldPose(Pose2D odomAtCapture, Pose2D odomNow) {
+        VidarTagObservation tag = latestTag;
+        if (tag == null) {
+            return null;
         }
-        return fusedFieldPose;
+        return VidarMotionCorrection.tagFieldNow(tag, odomAtCapture, odomNow);
     }
 
     public double travelSpeedInPerSec() {
@@ -296,6 +597,11 @@ public class VidarMultiVision {
     }
 
     public void close() {
+        if (globalWorker != null) {
+            globalWorker.shutdownAndJoin();
+            globalWorker = null;
+        }
+        VidarTagDecodeWorker.shutdownAndJoin();
         for (VidarVision camera : cameras) {
             if (camera != null) {
                 camera.close();

@@ -2,35 +2,35 @@ package org.firstinspires.ftc.teamcode.vidar;
 
 /**
  * Per-camera regions of interest and calibration. ROIs may overlap.
- * Defaults: ball lower 65%, plate middle 40%, tag upper 65%.
+ * Defaults: element lower 65%, plate middle 40%, tag upper 65%.
  */
 public final class VidarCameraRoiConfig {
 
-    /** Lower fraction of frame for ball search (from bottom). */
-    public final double ballLowerFraction;
+    /** Lower fraction of frame for season element search (from bottom). */
+    public final double elementLowerFraction;
     /** Middle band start (fraction from top) and height for plate search. */
     public final double plateStartFraction;
     public final double plateBandFraction;
     /** Upper fraction of frame for AprilTag search (from top). */
     public final double tagUpperFraction;
 
-    public final boolean ballEnabled;
+    public final boolean elementEnabled;
     public final boolean plateEnabled;
     public final boolean tagEnabled;
 
     public VidarCameraRoiConfig(
-            double ballLowerFraction,
+            double elementLowerFraction,
             double plateStartFraction,
             double plateBandFraction,
             double tagUpperFraction,
-            boolean ballEnabled,
+            boolean elementEnabled,
             boolean plateEnabled,
             boolean tagEnabled) {
-        this.ballLowerFraction = ballLowerFraction;
+        this.elementLowerFraction = elementLowerFraction;
         this.plateStartFraction = plateStartFraction;
         this.plateBandFraction = plateBandFraction;
         this.tagUpperFraction = tagUpperFraction;
-        this.ballEnabled = ballEnabled;
+        this.elementEnabled = elementEnabled;
         this.plateEnabled = plateEnabled;
         this.tagEnabled = tagEnabled;
     }
@@ -38,9 +38,9 @@ public final class VidarCameraRoiConfig {
     public static final VidarCameraRoiConfig DEFAULT = new VidarCameraRoiConfig(
             0.65, 0.30, 0.40, 0.65, true, true, true);
 
-    public VidarRoiRect ballRoi(int frameW, int frameH) {
-        VidarRoiRect roi = VidarRoiRect.lowerFraction(frameW, frameH, ballLowerFraction);
-        return ballEnabled ? roi : roi.withEnabled(false);
+    public VidarRoiRect elementRoi(int frameW, int frameH) {
+        VidarRoiRect roi = VidarRoiRect.lowerFraction(frameW, frameH, elementLowerFraction);
+        return elementEnabled ? roi : roi.withEnabled(false);
     }
 
     public VidarRoiRect plateRoi(int frameW, int frameH) {
@@ -55,11 +55,11 @@ public final class VidarCameraRoiConfig {
 
     /** Horizon row in full-frame coordinates (smaller y = farther). */
     public int horizonRowFullFrame(int frameH, int processHorizonRowPx) {
-        VidarRoiRect ball = ballRoi(frameW(frameH), frameH);
-        if (!ball.enabled) {
-            return (int) Math.round(frameH * (1.0 - ballLowerFraction));
+        VidarRoiRect element = elementRoi(frameW(frameH), frameH);
+        if (!element.enabled) {
+            return (int) Math.round(frameH * (1.0 - elementLowerFraction));
         }
-        return ball.y + processHorizonRowPx;
+        return element.y + processHorizonRowPx;
     }
 
     private static int frameW(int frameH) {

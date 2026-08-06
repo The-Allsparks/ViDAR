@@ -1,0 +1,98 @@
+{
+  "robotName": "example-robot",
+  "activeCameraIndex": 0,
+  "cameraCount": 4,
+  "dimensions": {
+    "length": 13.0,
+    "width": 13.0,
+    "height": 18.0
+  },
+  "alliance": {
+    "defaultAlliance": "red",
+    "colorSensorName": "alliance_color",
+    "useColorSensor": true,
+    "allowRuntimeToggle": true
+  },
+  "cameraDefaults": {
+    "horizonRowPx": 12,
+    "focalLengthPx": 340,
+    "focalLengthYPx": 340,
+    "principalPointX": 320,
+    "principalPointY": 240,
+    "horizontalFovDeg": 70,
+    "verticalFovDeg": 55,
+    "plateWidth": 12.0,
+    "floorLut": [
+      { "cy": 95, "dist": 12 },
+      { "cy": 75, "dist": 24 },
+      { "cy": 55, "dist": 36 },
+      { "cy": 40, "dist": 48 }
+    ],
+    "roi": {
+      "element": {
+        "lowerFraction": 0.65,
+        "enabled": true
+      },
+      "plate": {
+        "startFraction": 0.30,
+        "bandFraction": 0.40,
+        "enabled": true
+      },
+      "tag": {
+        "upperFraction": 0.65,
+        "enabled": true
+      }
+    }
+  },
+  "mountDefaults": {
+    "yawDeg": 0,
+    "pitchDeg": -12,
+    "rollDeg": 0
+  },
+  "cameras": [
+    {
+      "index": 0,
+      "webcamName": "Webcam 1",
+      "name": "front",
+      "mount": {
+        "bearingDeg": 0,
+        "x": 6.5,
+        "y": 0,
+        "z": 9.0
+      }
+    },
+    {
+      "index": 1,
+      "webcamName": "Webcam 2",
+      "name": "right",
+      "mount": {
+        "bearingDeg": 90,
+        "x": 0,
+        "y": -6.5,
+        "z": 9.0
+      }
+    },
+    {
+      "index": 2,
+      "webcamName": "Webcam 3",
+      "name": "back",
+      "mount": {
+        "bearingDeg": 180,
+        "x": -6.5,
+        "y": 0,
+        "z": 9.0
+      }
+    },
+    {
+      "index": 3,
+      "webcamName": "Webcam 4",
+      "name": "left",
+      "mount": {
+        "bearingDeg": 270,
+        "x": 0,
+        "y": 6.5,
+        "z": 9.0
+      }
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
 /**
- * Rejection telemetry for ball-detection pipeline stages (student-debuggable).
+ * Rejection telemetry for element-detection pipeline stages (student-debuggable).
  */
-public final class VidarBallRejectionStats {
+public final class VidarElementRejectionStats {
 
     public int maskPixels;
     public int contourCount;

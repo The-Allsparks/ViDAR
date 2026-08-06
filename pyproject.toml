@@ -1,10 +1,10 @@
 [project]
 name = "vidar"
-version = "0.1.0"
-description = "FTC vision library — off-robot Python experiments"
+version = "0.2.0"
+description = "FTC vision library — off-robot Python companion for ViDAR Java"
 readme = "README.md"
 requires-python = ">=3.11"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["tests/pure"]
+pythonpath = ["src", "tests/pure"]

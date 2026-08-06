@@ -1,8 +1,8 @@
-/** @typedef {{ name: string, label: string, color: string, shape?: string, detector?: string, hsvLow: number[], hsvHigh: number[], hsvLowWrap?: number[], hsvHighWrap?: number[], minArea?: number, requireCircularity?: boolean, minCircularity?: number, maxAspectRatio?: number, morphClosePasses?: number, brightnessMin?: number, brightnessSpread?: number, maxSaturation?: number, rejectGreen?: boolean, houghMinRadius?: number, houghMaxRadius?: number, houghAccumulator?: number, houghEdgeThresh?: number, houghMinDist?: number, houghMinInterior?: number, houghInteriorBright?: number, houghMaxResults?: number }} ColorTarget */
+/** @typedef {{ name: string, label: string, color: string, shape?: string, hsvLow: number[], hsvHigh: number[], hsvLowWrap?: number[], hsvHighWrap?: number[], minArea?: number, requireCircularity?: boolean, minCircularity?: number, maxAspectRatio?: number, morphClosePasses?: number, brightnessMin?: number, brightnessSpread?: number, maxSaturation?: number, rejectGreen?: boolean, minInteriorScore?: number, minWhiteRatio?: number }} ColorTarget */
 
-/** @typedef {{ name: string, bearingDeg: number, horizonRowPx: number, focalLengthPx: number, floorLut: { cy: number, distIn: number }[] }} CameraProfile */
+/** @typedef {{ name: string, bearingDeg: number, horizonRowPx: number, focalLengthPx: number, floorLut: { cy: number, dist: number }[] }} CameraProfile */
 
-/** @typedef {{ ballDiameterIn: number, maxRangeMismatchRatio?: number, minBallConfidence?: number, pickupStopIn?: number, seekMaxRangeIn?: number, activeCameraIndex?: number, cameras: CameraProfile[] }} GeometryConfig */
+/** @typedef {{ elementDiameter?: number, maxRangeMismatchRatio?: number, minElementConfidence?: number, pickupStop?: number, seekMaxRange?: number, activeCameraIndex?: number, cameras: CameraProfile[] }} GeometryConfig */
 
 /** @typedef {{ enabled?: boolean, minSampleIntervalMs?: number, scoutWidth?: number, bandLeftMax?: number, bandRightMin?: number, scoutMinWidthPx?: number, decodeMinTagWidthPx?: number, poseGateDeg?: number, tagSizeIn?: number, desiredTagId?: number, decimationMin?: number, decimationMax?: number, expectedBearingDeg?: number | null, cameraBearingDeg?: number }} TagConfig */
 
@@ -50,7 +50,7 @@ export function resolveProcessing(tuning) {
   };
 }
 
-/** @param {VidarTuning} base @param {{ downscaleRatio: number, verticalCropOffset: number, verticalCropHeight: number, ball?: Record<string, number> }} ui */
+/** @param {VidarTuning} base @param {{ downscaleRatio: number, verticalCropOffset: number, verticalCropHeight: number, element?: Record<string, number> }} ui */
 export function tuningFromUi(base, ui) {
   let tuning = resolveProcessing({
     ...base,
@@ -59,18 +59,18 @@ export function tuningFromUi(base, ui) {
     verticalCropHeight: ui.verticalCropHeight,
   });
 
-  if (ui.ball && tuning.elements[0]) {
+  if (ui.element && tuning.elements[0]) {
     const src = tuning.elements[0];
     const hsvLow = [...src.hsvLow];
     const hsvHigh = [...src.hsvHigh];
-    const { hsvMinValue, ...ballPatch } = ui.ball;
+    const { hsvMinValue, ...elementPatch } = ui.element;
     if (hsvMinValue != null) hsvLow[2] = hsvMinValue;
 
     tuning = {
       ...tuning,
       elements: [{
         ...src,
-        ...ballPatch,
+        ...elementPatch,
         hsvLow,
         hsvHigh,
       }],

@@ -1,26 +1,32 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import java.util.function.Supplier;
 
 /**
- * One camera: tic-toc ball / plate / tag at 640×480 with shared scheduler per portal.
+ * One camera: tic-toc element / plate / tag at 640×480 with shared scheduler per portal.
  */
 public class VidarVision {
 
     private final VidarProcessScheduler scheduler;
-    private final VidarBallProcessor ballProcessor;
+    private final VidarContourProcessor contourProcessor;
     private final VidarAdaptiveTagProcessor tagProcessor;
-    private final VidarPlateProcessor plateProcessor;
     private final VidarCameraScheduler cameraScheduler;
     private final VidarMetrics metrics;
     private final org.firstinspires.ftc.vision.VisionPortal portal;
     private final VidarCameraProfile profile;
     private final String cameraName;
+    private final VidarSeasonConfig season;
+    private final VidarFrameMailbox frameMailbox;
+    private final boolean asyncWorkerEnabled;
+    private volatile boolean excludedFromRotation;
     private boolean failed;
 
-    private VidarBallObservation bestElement;
+    private VidarElementObservation bestElement;
     private VidarPlateObservation bestPlate;
 
     public VidarVision(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
@@ -64,24 +70,72 @@ public class VidarVision {
             Supplier<Pose2D> odomSupplier,
             String portalLabel,
             Supplier<Pose2D> fieldPosePriorSupplier) {
+        this(hardwareMap, cameraName, profile, odomSupplier, portalLabel, fieldPosePriorSupplier, null);
+    }
+
+    public VidarVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            String cameraName,
+            VidarCameraProfile profile,
+            Supplier<Pose2D> odomSupplier,
+            String portalLabel,
+            Supplier<Pose2D> fieldPosePriorSupplier,
+            VidarSeasonConfig season) {
+        this(hardwareMap, cameraName, profile, odomSupplier, portalLabel, fieldPosePriorSupplier, season, null, 1, 0);
+    }
+
+    public VidarVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            String cameraName,
+            VidarCameraProfile profile,
+            Supplier<Pose2D> odomSupplier,
+            String portalLabel,
+            Supplier<Pose2D> fieldPosePriorSupplier,
+            VidarSeasonConfig season,
+            VidarResourceBudget resourceBudget,
+            int robotCameraCount) {
+        this(hardwareMap, cameraName, profile, odomSupplier, portalLabel, fieldPosePriorSupplier,
+                season, resourceBudget, robotCameraCount, 0);
+    }
+
+    public VidarVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            String cameraName,
+            VidarCameraProfile profile,
+            Supplier<Pose2D> odomSupplier,
+            String portalLabel,
+            Supplier<Pose2D> fieldPosePriorSupplier,
+            VidarSeasonConfig season,
+            VidarResourceBudget resourceBudget,
+            int robotCameraCount,
+            int cameraIndex) {
         this.profile = profile;
         this.cameraName = portalLabel;
+        this.season = season != null ? season : VidarConfigLoader.defaultSeason();
         metrics = new VidarMetrics(portalLabel);
 
-        scheduler = new VidarProcessScheduler();
+        asyncWorkerEnabled = VidarConfig.useGlobalVisionWorker(robotCameraCount);
+        scheduler = new VidarProcessScheduler(asyncWorkerEnabled ? (cameraIndex % 2) : 0);
         cameraScheduler = new VidarCameraScheduler();
 
-        ballProcessor = new VidarBallProcessor(profile, portalLabel, scheduler,
-                VidarConfig.BALL_DETECTOR_TYPE, metrics);
+        contourProcessor = new VidarContourProcessor(
+                profile, portalLabel, scheduler, metrics, this.season, resourceBudget);
         tagProcessor = new VidarAdaptiveTagProcessor(
-                scheduler, profile, portalLabel, odomSupplier, fieldPosePriorSupplier, metrics);
-        plateProcessor = new VidarPlateProcessor(profile, portalLabel, scheduler);
+                scheduler, profile, portalLabel, metrics, this.season, resourceBudget);
+
+        if (asyncWorkerEnabled) {
+            frameMailbox = new VidarFrameMailbox(metrics);
+            contourProcessor.setFrameMailbox(frameMailbox);
+            tagProcessor.setFrameMailbox(frameMailbox);
+        } else {
+            frameMailbox = null;
+        }
 
         org.firstinspires.ftc.vision.VisionPortal.Builder builder =
                 new org.firstinspires.ftc.vision.VisionPortal.Builder()
-                        .addProcessor(ballProcessor)
+                        .addProcessor(contourProcessor)
                         .setCameraResolution(VidarConfig.portalCameraResolution())
-                        .setStreamFormat(VidarConfig.portalStreamFormat())
+                        .setStreamFormat(VidarConfig.portalStreamFormat(robotCameraCount))
                         .enableLiveView(VidarConfig.LIVE_VIEW_ENABLED)
                         .setCamera(hardwareMap.get(
                                 org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName.class,
@@ -90,7 +144,6 @@ public class VidarVision {
         if (VidarTagConfig.ENABLED) {
             builder.addProcessor(tagProcessor);
         }
-        builder.addProcessor(plateProcessor);
 
         portal = builder.build();
         VidarTagGate.setCameraBearingDeg(profile.bearingDeg);
@@ -99,8 +152,8 @@ public class VidarVision {
 
     public void update() {
         try {
-            bestElement = ballProcessor.getBestBall();
-            bestPlate = plateProcessor.getBestPlate();
+            bestElement = contourProcessor.getBestElement();
+            bestPlate = contourProcessor.getBestPlate();
             metrics.setPortalFps(portal.getFps());
             if (!failed) {
                 metrics.setHealth(VidarMetrics.CameraHealth.HEALTHY);
@@ -112,27 +165,66 @@ public class VidarVision {
         }
     }
 
+    /** Drop this camera from worker rotation and disable processors (e.g. hang/error). */
+    public void setExcludedFromRotation(boolean excluded) {
+        excludedFromRotation = excluded;
+        if (excluded) {
+            setIdle(true);
+            metrics.setHealth(VidarMetrics.CameraHealth.FAILED);
+        } else {
+            setIdle(false);
+        }
+    }
+
+    public boolean isExcludedFromRotation() {
+        return excludedFromRotation;
+    }
+
+    public void setMaxRankedElements(int max) {
+        contourProcessor.setMaxRankedElements(max);
+    }
+
+    /** Apply camera processing state (PRIMARY, SECONDARY, IDLE, DEEP_IDLE). Default is PRIMARY. */
+    public void setCameraState(VidarCameraScheduler.State state) {
+        if (state == null) {
+            state = VidarCameraScheduler.State.PRIMARY;
+        }
+        cameraScheduler.apply(portal, contourProcessor, tagProcessor, state, metrics);
+    }
+
+    /** Enable or disable vision processing on this camera while keeping the stream alive. */
+    public void setIdle(boolean idle) {
+        setCameraState(idle ? VidarCameraScheduler.State.IDLE : VidarCameraScheduler.State.PRIMARY);
+    }
+
+    /**
+     * Opt-in direction-based PRIMARY/SECONDARY only — never sets IDLE.
+     * Prefer {@link #setCameraState(VidarCameraScheduler.State)} for explicit control.
+     */
     public void applyDirectionTier(double travelHeadingDeg, double speedInPerSec) {
         VidarCameraScheduler.State state =
                 cameraScheduler.tierForCamera(profile.bearingDeg, travelHeadingDeg, speedInPerSec);
-        if (state == VidarCameraScheduler.State.IDLE && speedInPerSec < VidarConfig.DIRECTION_MIN_SPEED_IN_PER_SEC) {
-            state = VidarCameraScheduler.State.PRIMARY;
-        }
-        cameraScheduler.apply(portal, ballProcessor, plateProcessor, tagProcessor, state, metrics);
+        cameraScheduler.apply(portal, contourProcessor, tagProcessor, state, metrics);
     }
 
-    public VidarBallObservation getBestElement() {
+    public VidarElementObservation getGameElement(String id) {
+        return contourProcessor.getGameElement(id);
+    }
+
+    public java.util.Map<String, VidarElementObservation> getGameElements() {
+        return contourProcessor.getGameElements();
+    }
+
+    public VidarElementObservation getBestElement() {
         return bestElement;
+    }
+
+    public VidarRankedElementFrame getRankedElements() {
+        return contourProcessor.getRankedElements();
     }
 
     public VidarPlateObservation getBestPlate() {
         return bestPlate;
-    }
-
-    /** @deprecated Use {@link #getBestPlate()} — plates replace crude color blobs. */
-    @Deprecated
-    public org.firstinspires.ftc.vision.opencv.ColorBlobLocatorProcessor.Blob getBestRobot() {
-        return null;
     }
 
     public VidarTagScoutResult getLastTagScout() {
@@ -147,26 +239,14 @@ public class VidarVision {
         return tagProcessor.getLatestScoutObservation();
     }
 
-    /** @deprecated Scouts no longer localize. */
-    @Deprecated
-    public VidarScoutLandmarkObservation getLatestScoutLandmark() {
-        return null;
-    }
-
     public org.firstinspires.ftc.robotcore.external.navigation.Pose2D getBackdatedFieldPose(
+            org.firstinspires.ftc.robotcore.external.navigation.Pose2D odomAtCapture,
             org.firstinspires.ftc.robotcore.external.navigation.Pose2D odomNow) {
-        return VidarPoseBackdate.fieldPoseNow(
-                getLatestTag(),
-                odomNow,
-                org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.INCH,
-                org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES);
+        return VidarMotionCorrection.tagFieldNow(getLatestTag(), odomAtCapture, odomNow);
     }
 
-    /** @deprecated Scouts no longer localize. */
-    @Deprecated
-    public org.firstinspires.ftc.robotcore.external.navigation.Pose2D getBackdatedScoutLandmarkPose(
-            org.firstinspires.ftc.robotcore.external.navigation.Pose2D odomNow) {
-        return null;
+    public VidarSeasonConfig getSeasonConfig() {
+        return season;
     }
 
     public VidarCameraProfile getProfile() {
@@ -185,22 +265,53 @@ public class VidarVision {
         return cameraScheduler.currentState();
     }
 
-    /** @deprecated Use {@link #directionState()}. */
-    @Deprecated
-    public VidarCameraScheduler.Tier directionTier() {
-        return cameraScheduler.currentTier();
-    }
-
     public VidarMetrics metrics() {
         return metrics;
     }
 
-    public VidarBallRejectionStats ballRejectionStats() {
-        return ballProcessor.getRejectionStats();
+    public VidarElementRejectionStats elementRejectionStats() {
+        return contourProcessor.getRejectionStats();
     }
 
     public boolean isFailed() {
         return failed;
+    }
+
+    boolean hasAsyncWorker() {
+        return asyncWorkerEnabled;
+    }
+
+    VidarFrameMailbox frameMailbox() {
+        return frameMailbox;
+    }
+
+    boolean isWorkerProcessingAllowed() {
+        if (excludedFromRotation || failed) {
+            return false;
+        }
+        VidarCameraScheduler.State state = cameraScheduler.currentState();
+        return state != VidarCameraScheduler.State.IDLE
+                && state != VidarCameraScheduler.State.DEEP_IDLE;
+    }
+
+    void processSnapshot(VidarFrameMailbox.Snapshot snap) {
+        if (snap == null || snap.frame == null || snap.frame.empty()) {
+            return;
+        }
+        VidarCameraScheduler.State state = cameraScheduler.currentState();
+        if (state == VidarCameraScheduler.State.IDLE
+                || state == VidarCameraScheduler.State.DEEP_IDLE) {
+            return;
+        }
+
+        VidarProcessScheduler.Slot slot = scheduler.beginFrame(snap.captureTimeNanos);
+        if (slot == VidarProcessScheduler.Slot.ELEMENT) {
+            contourProcessor.processElementPass(snap.frame, snap.captureTimeNanos);
+        } else if (state == VidarCameraScheduler.State.PRIMARY) {
+            tagProcessor.processTagPass(snap.frame, snap.captureTimeNanos);
+        } else if (metrics != null) {
+            metrics.incrementSkippedSlots();
+        }
     }
 
     public float portalFps() {
@@ -208,6 +319,9 @@ public class VidarVision {
     }
 
     public void close() {
+        if (frameMailbox != null) {
+            frameMailbox.release();
+        }
         portal.close();
     }
 }

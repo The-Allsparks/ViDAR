@@ -3,15 +3,14 @@ package org.firstinspires.ftc.teamcode.vidar;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 /**
- * AprilTag fix at image capture time. Use {@link VidarPoseBackdate} before applying to odometry.
+ * AprilTag fix at image capture time in field coordinates.
+ * Use {@link VidarCoordinateFrames} and team odometry to relate to the robot.
  */
 public final class VidarTagObservation {
 
     public final int tagId;
     /** Robot pose on the field from SDK AprilTagProcessor at capture time. */
     public final Pose2D fieldPoseAtCapture;
-    /** Dead-reckoning pose recorded at the same instant (optional). */
-    public final Pose2D odomPoseAtCapture;
     public final long captureTimeNanos;
     public final double centerX;
     public final double centerY;
@@ -23,7 +22,6 @@ public final class VidarTagObservation {
     public VidarTagObservation(
             int tagId,
             Pose2D fieldPoseAtCapture,
-            Pose2D odomPoseAtCapture,
             long captureTimeNanos,
             double centerX,
             double centerY,
@@ -32,7 +30,6 @@ public final class VidarTagObservation {
             int decodePixels) {
         this.tagId = tagId;
         this.fieldPoseAtCapture = fieldPoseAtCapture;
-        this.odomPoseAtCapture = odomPoseAtCapture;
         this.captureTimeNanos = captureTimeNanos;
         this.centerX = centerX;
         this.centerY = centerY;

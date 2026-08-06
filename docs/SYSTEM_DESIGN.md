@@ -21,18 +21,17 @@ Per-camera detection → Multi-camera fusion → Short-term world model
                     Pedro Pathing via external pose provider
 ```
 
-## Ball detection — **Implemented**, **Tested in simulation**
+## Element detection — **Implemented**, **Tested in simulation**
 
-Default pipeline: `COLOR_BLOB_WITH_LOCAL_HOUGH` (`VidarBallProcessor`).
+Unified pipeline: `VidarContourProcessor` (season `elements[]` + `plates[]` in one scaled ROI pass).
 
-1. Crop to per-camera ball ROI (default: lower 65% of frame)
-2. HSV threshold for pollen color
-3. Configurable morphology (open/close)
-4. Contour filtering: area, aspect, circularity, fill ratio, interior validation
-5. Optional local Hough validation inside candidate patches
-6. Legacy full-ROI Hough available via `VidarConfig.BALL_DETECTOR_TYPE = LEGACY_HOUGH`
+1. Crop to per-camera element ROI (default: lower 65% of frame)
+2. HSV threshold per configured element or plate
+3. Configurable morphology (open/close/erode/dilate)
+4. Circle elements: contour filter → `minEnclosingCircle` → interior validation → optional local Hough
+5. Plate elements: `minAreaRect` → white-digit ratio gate → width-based range
 
-Rejection telemetry: `VidarBallRejectionStats` exposed in Discover OpMode.
+Detector mode per element: `COLOR_BLOB` or `COLOR_BLOB_WITH_LOCAL_HOUGH` (see season JSON / `VidarElementSpec`).
 
 ## Regions of interest — **Implemented**, **Tested in simulation**
 
@@ -40,7 +39,7 @@ Per-camera via `VidarCameraProfile.roiConfig` (`VidarCameraRoiConfig`):
 
 | ROI | Default | Overlaps |
 |-----|---------|----------|
-| Ball | Lower 65% | Yes |
+| Element | Lower 65% | Yes |
 | Plate | Middle 40% starting at 30% | Yes |
 | AprilTag | Upper 65% | Yes |
 
@@ -52,8 +51,8 @@ States (`VidarCameraScheduler.State`):
 
 | State | Streaming | Processors |
 |-------|-----------|------------|
-| PRIMARY | On | Ball + plate + tag schedule |
-| SECONDARY | On | Lightweight ball only |
+| PRIMARY | On | Element + plate + tag schedule |
+| SECONDARY | On | Lightweight element only |
 | IDLE | On | All disabled |
 | DEEP_IDLE | Off after 2.5 s debounced | All disabled |
 
@@ -64,24 +63,25 @@ Health tracking: `VidarMetrics.CameraHealth` (CONFIGURED → CONNECTED → STREA
 ## AprilTag — **Implemented**, **Tested in simulation**
 
 - Official FTC `AprilTagProcessor` via `VidarTagCropDecoder`
-- Scout (`VidarTagScout`) identifies probable tag regions
+- Scout (`VidarTagScoutRunner`) identifies probable tag regions on a dedicated worker thread
 - Scout observations (`VidarTagScoutObservation`) **never alter absolute pose**
+- Async crop decode via `VidarTagDecodeWorker` + `VidarFrameMailbox` buffer swap
 - Decode budget: `VidarDecodeArbiter` (1 decode / second global)
 - Pose gates in `VidarLocalizationFusion`
 
 ## Plate ranging — **Implemented**, **Tested in simulation**
 
-Primary: `distance = plateWidthIn × focalLengthPx / observedPixelWidth`
+Primary: `distance = plateWidth × focalLengthPx / observedPixelWidth`
 
 Floor LUT used only as secondary consistency check when geometry supports it.
 
 ## Range fusion — **Implemented**, **Tested in simulation**
 
-`VidarRangeResult` with uncertainty-weighted fusion:
+`VidarRangeResult` with uncertainty-weighted fusion (up to two contributing estimates, no list allocation):
 
 `fusedDistance = Σ(weight × distance) / Σ(weight)`
 
-Component estimates and weights exposed in telemetry.
+Component estimates exposed as `source0`, `source1`, and `sourceCount` for telemetry.
 
 ## World model — **Implemented**, **Tested in simulation**
 
@@ -97,7 +97,7 @@ Architecturally supports 1–4 cameras. Four simultaneous cameras require USB hu
 
 ## Simulator parity — **Tested in simulation**
 
-Browser sim (`sim/`) mirrors Java logic for ROIs, color-blob detection, weighted range fusion, and non-localizing scout observations. Intentional differences documented in `sim/README-SIM.md`.
+Browser sim (`sim/`) mirrors Java logic for ROIs, color-blob detection, weighted range fusion, and non-localizing scout observations. Cross-language field names and method contracts are defined in [API.md](API.md). Intentional differences documented in `sim/README-SIM.md`.
 
 ## Competition legality
 

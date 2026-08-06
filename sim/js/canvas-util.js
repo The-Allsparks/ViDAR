@@ -45,7 +45,7 @@ export function setElementAspectRatio(el, w, h) {
   }
 }
 
-/** Luminance grayscale — R=G=B so HSV ball + Hough still work; plates should use color frame. */
+/** Luminance grayscale — R=G=B so HSV element + Hough still work; plates should use color frame. */
 export function toGrayscaleImageData(source) {
   const { width, height, data } = source;
   const out = new ImageData(width, height);

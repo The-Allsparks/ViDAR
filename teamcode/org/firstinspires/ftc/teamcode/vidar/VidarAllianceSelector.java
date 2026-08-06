@@ -5,6 +5,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
+import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
+
 /**
  * Runtime alliance for friend/foe plate logic.
  *
@@ -34,17 +37,26 @@ public class VidarAllianceSelector {
     private boolean lastToggle;
 
     public VidarAllianceSelector(HardwareMap hardwareMap) {
-        alliance = VidarConfig.DEFAULT_ALLIANCE;
+        this(hardwareMap, VidarConfigLoader.defaultRobot());
+    }
+
+    public VidarAllianceSelector(HardwareMap hardwareMap, VidarRobotConfig robot) {
+        VidarRobotConfig active = robot != null ? robot : VidarConfigLoader.defaultRobot();
+        alliance = active.defaultAlliance;
         source = Source.CONFIG_DEFAULT;
-        tryInitColorSensor(hardwareMap);
+        tryInitColorSensor(hardwareMap, active);
     }
 
     private void tryInitColorSensor(HardwareMap hardwareMap) {
-        if (!VidarConfig.ALLIANCE_USE_COLOR_SENSOR) {
+        tryInitColorSensor(hardwareMap, VidarConfigLoader.defaultRobot());
+    }
+
+    private void tryInitColorSensor(HardwareMap hardwareMap, VidarRobotConfig robot) {
+        if (!robot.allianceUseColorSensor) {
             return;
         }
         try {
-            colorSensor = hardwareMap.get(NormalizedColorSensor.class, VidarConfig.ALLIANCE_COLOR_SENSOR);
+            colorSensor = hardwareMap.get(NormalizedColorSensor.class, robot.allianceColorSensor);
         } catch (Exception ignored) {
             colorSensor = null;
         }

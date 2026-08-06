@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+
 /**
  * When to run an AprilTag decode pass (driver trigger and/or pose cone).
  */
@@ -41,6 +44,19 @@ public final class VidarTagGate {
     /** Mount bearing of this camera on the robot (degrees). */
     public static void setCameraBearingDeg(double bearingDeg) {
         cameraBearingDeg = bearingDeg;
+    }
+
+    /** Set pose-gate bearing from season tag map and a field pose prior. */
+    public static void updateExpectedBearingFromFieldPose(
+            Pose2D fieldPose,
+            VidarSeasonConfig season) {
+        if (season == null || season.aprilTags.length == 0) {
+            return;
+        }
+        double bearing = season.nearestLocalizationTagFieldBearing(fieldPose);
+        if (!Double.isNaN(bearing)) {
+            setExpectedTagBearingDeg(bearing);
+        }
     }
 
     public static boolean shouldSample(VidarTagScoutResult scout, int frameCols) {

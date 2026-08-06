@@ -28,11 +28,11 @@ const detectionList = document.getElementById("detection-list");
 const logicState = document.getElementById("logic-state");
 const elementErrorEl = document.getElementById("element-error");
 const robotDistEl = document.getElementById("robot-dist");
-const ballRangeEl = document.getElementById("ball-range");
-const ballSizeRangeEl = document.getElementById("ball-size-range");
-const ballFloorRangeEl = document.getElementById("ball-floor-range");
-const ballConfidenceEl = document.getElementById("ball-confidence");
-const ballRobotXYEl = document.getElementById("ball-robot-xy");
+const elementRangeEl = document.getElementById("element-range");
+const elementSizeRangeEl = document.getElementById("element-size-range");
+const elementFloorRangeEl = document.getElementById("element-floor-range");
+const elementConfidenceEl = document.getElementById("element-confidence");
+const elementRobotXYEl = document.getElementById("element-robot-xy");
 const tagScoutEl = document.getElementById("tag-scout");
 const tagFixEl = document.getElementById("tag-fix");
 const tagPoseNowEl = document.getElementById("tag-pose-now");
@@ -51,16 +51,13 @@ const cropOffsetInput = /** @type {HTMLInputElement} */ (document.getElementById
 const startBtn = /** @type {HTMLButtonElement} */ (document.getElementById("start-btn"));
 const stopBtn = /** @type {HTMLButtonElement} */ (document.getElementById("stop-btn"));
 const captureBtn = /** @type {HTMLButtonElement} */ (document.getElementById("capture-btn"));
-const detectBallCheck = /** @type {HTMLInputElement} */ (document.getElementById("detect-ball"));
+const detectElementCheck = /** @type {HTMLInputElement} */ (document.getElementById("detect-element"));
 const detectRedCheck = /** @type {HTMLInputElement} */ (document.getElementById("detect-red"));
 const detectBlueCheck = /** @type {HTMLInputElement} */ (document.getElementById("detect-blue"));
 const grayscaleProcessCheck = /** @type {HTMLInputElement} */ (document.getElementById("grayscale-process"));
 const temporalFilterCheck = /** @type {HTMLInputElement} */ (document.getElementById("temporal-filter"));
 const detectorActiveLabel = document.getElementById("detector-active-label");
 const showMaskLabel = document.getElementById("show-mask-label");
-const ballDetectorRadios = /** @type {NodeListOf<HTMLInputElement>} */ (
-  document.querySelectorAll('input[name="ball-detector"]')
-);
 
 const hsvBrightnessMinInput = /** @type {HTMLInputElement} */ (document.getElementById("hsv-brightness-min"));
 const hsvBrightnessSpreadInput = /** @type {HTMLInputElement} */ (document.getElementById("hsv-brightness-spread"));
@@ -68,14 +65,6 @@ const hsvMaxSaturationInput = /** @type {HTMLInputElement} */ (document.getEleme
 const hsvMinValueInput = /** @type {HTMLInputElement} */ (document.getElementById("hsv-min-value"));
 const hsvMinAreaInput = /** @type {HTMLInputElement} */ (document.getElementById("hsv-min-area"));
 const hsvMorphPassesInput = /** @type {HTMLInputElement} */ (document.getElementById("hsv-morph-passes"));
-const houghEdgeThreshInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-edge-thresh"));
-const houghAccumulatorInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-accumulator"));
-const houghMinRadiusInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-min-radius"));
-const houghMaxRadiusInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-max-radius"));
-const houghMinInteriorInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-min-interior"));
-const houghInteriorBrightInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-interior-bright"));
-const houghMinDistInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-min-dist"));
-const houghMaxResultsInput = /** @type {HTMLInputElement} */ (document.getElementById("hough-max-results"));
 
 const displayCtx = display.getContext("2d", { willReadFrequently: true });
 const captureCtx = capture.getContext("2d", { willReadFrequently: true });
@@ -95,16 +84,12 @@ let tagState = createTagState();
 /** @type {import('./temporal-filter.js').TemporalFilterState} */
 let temporalState = createTemporalFilterState();
 
-/** @type {{ detections: import('./temporal-filter.js').StableDetection[], rawDetections: import('./detection.js').Detection[], roi: {x:number,y:number,w:number,h:number}, ballMask: Uint8Array | null, maskPixels: number, tuning: import('./config.js').VidarTuning, detectOpts: ReturnType<typeof readDetectOptions>, activeDetectors: string } | null} */
+/** @type {{ detections: import('./temporal-filter.js').StableDetection[], rawDetections: import('./detection.js').Detection[], roi: {x:number,y:number,w:number,h:number}, elementMask: Uint8Array | null, maskPixels: number, tuning: import('./config.js').VidarTuning, detectOpts: ReturnType<typeof readDetectOptions>, activeDetectors: string } | null} */
 let lastFrame = null;
 
 function readDetectOptions() {
-  const ballDetector = /** @type {'hsv'|'hough'|'both'} */ (
-    [...ballDetectorRadios].find((r) => r.checked)?.value ?? "hough"
-  );
   return {
-    ballDetector,
-    detectBall: detectBallCheck.checked,
+    detectElement: detectElementCheck.checked,
     detectRedPlate: detectRedCheck.checked,
     detectBluePlate: detectBlueCheck.checked,
     grayscaleProcess: grayscaleProcessCheck.checked,
@@ -113,12 +98,9 @@ function readDetectOptions() {
 
 function syncDetectorUiLabels() {
   const opts = readDetectOptions();
-  const ballMode =
-    opts.ballDetector === "both" ? "HSV + Hough" :
-    opts.ballDetector === "hsv" ? "HSV blob" : "Hough circle";
   if (detectorActiveLabel) {
     const targets = [
-      opts.detectBall ? `ball (${ballMode})` : null,
+      opts.detectElement ? "element (contour)" : null,
       opts.detectRedPlate ? "red plate" : null,
       opts.detectBluePlate ? "blue plate" : null,
     ].filter(Boolean);
@@ -126,19 +108,13 @@ function syncDetectorUiLabels() {
       targets.length ? `Active: ${targets.join(" · ")}` : "Active: none — enable a detector";
   }
   if (showMaskLabel) {
-    if (!opts.detectBall) {
-      showMaskLabel.textContent = "Show ball debug overlay (ball off)";
-    } else if (opts.ballDetector === "hough") {
-      showMaskLabel.textContent = "Show ball debug overlay (Hough edges)";
-    } else if (opts.ballDetector === "hsv") {
-      showMaskLabel.textContent = "Show ball debug overlay (HSV mask)";
-    } else {
-      showMaskLabel.textContent = "Show ball debug overlay (HSV mask; Hough = circles only)";
-    }
+    showMaskLabel.textContent = opts.detectElement
+      ? "Show element debug overlay (contour mask)"
+      : "Show element debug overlay (element off)";
   }
 }
 
-function readBallMetricsUi() {
+function readElementMetricsUi() {
   return {
     brightnessMin: Number(hsvBrightnessMinInput.value),
     brightnessSpread: Number(hsvBrightnessSpreadInput.value),
@@ -146,33 +122,17 @@ function readBallMetricsUi() {
     hsvMinValue: Number(hsvMinValueInput.value),
     minArea: Number(hsvMinAreaInput.value),
     morphClosePasses: Number(hsvMorphPassesInput.value),
-    houghEdgeThresh: Number(houghEdgeThreshInput.value),
-    houghAccumulator: Number(houghAccumulatorInput.value),
-    houghMinRadius: Number(houghMinRadiusInput.value),
-    houghMaxRadius: Number(houghMaxRadiusInput.value),
-    houghMinInterior: Number(houghMinInteriorInput.value) / 100,
-    houghInteriorBright: Number(houghInteriorBrightInput.value),
-    houghMinDist: Number(houghMinDistInput.value),
-    houghMaxResults: Number(houghMaxResultsInput.value),
   };
 }
 
-/** @param {import('./config.js').ColorTarget} ball */
-function applyBallMetricsToUi(ball) {
-  hsvBrightnessMinInput.value = String(ball.brightnessMin ?? 58);
-  hsvBrightnessSpreadInput.value = String(ball.brightnessSpread ?? 65);
-  hsvMaxSaturationInput.value = String(ball.maxSaturation ?? 85);
-  hsvMinValueInput.value = String(ball.hsvLow?.[2] ?? 55);
-  hsvMinAreaInput.value = String(ball.minArea ?? 12);
-  hsvMorphPassesInput.value = String(ball.morphClosePasses ?? 8);
-  houghEdgeThreshInput.value = String(ball.houghEdgeThresh ?? 38);
-  houghAccumulatorInput.value = String(ball.houghAccumulator ?? 11);
-  houghMinRadiusInput.value = String(ball.houghMinRadius ?? 8);
-  houghMaxRadiusInput.value = String(ball.houghMaxRadius ?? 36);
-  houghMinInteriorInput.value = String(Math.round((ball.houghMinInterior ?? 0.14) * 100));
-  houghInteriorBrightInput.value = String(ball.houghInteriorBright ?? 90);
-  houghMinDistInput.value = String(ball.houghMinDist ?? 24);
-  houghMaxResultsInput.value = String(ball.houghMaxResults ?? 4);
+/** @param {import('./config.js').ColorTarget} target */
+function applyElementMetricsToUi(target) {
+  hsvBrightnessMinInput.value = String(target.brightnessMin ?? target.interiorBright ?? 58);
+  hsvBrightnessSpreadInput.value = String(target.brightnessSpread ?? target.interiorSpread ?? 65);
+  hsvMaxSaturationInput.value = String(target.maxSaturation ?? 85);
+  hsvMinValueInput.value = String(target.hsvLow?.[2] ?? 55);
+  hsvMinAreaInput.value = String(target.minArea ?? 12);
+  hsvMorphPassesInput.value = String(target.morphClosePasses ?? 8);
 }
 
 function readUiTuning() {
@@ -183,7 +143,7 @@ function readUiTuning() {
       downscaleRatio: Number(downscaleInput.value),
       verticalCropOffset: Number(cropOffsetInput.value),
       verticalCropHeight: Number(cropHeightInput.value),
-      ball: readBallMetricsUi(),
+      element: readElementMetricsUi(),
     },
   );
 }
@@ -247,12 +207,8 @@ async function init() {
     cropHeightInput.value = String(baseTuning.verticalCropHeight);
     cropOffsetInput.value = String(baseTuning.verticalCropOffset);
 
-    const ballEl = baseTuning.elements[0];
-    if (ballEl) applyBallMetricsToUi(ballEl);
-    const defaultDetector = ballEl?.detector === "hsv" ? "hsv" : ballEl?.detector === "hough" ? "hough" : "both";
-    for (const radio of ballDetectorRadios) {
-      radio.checked = radio.value === defaultDetector;
-    }
+    const elementEl = baseTuning.elements[0];
+    if (elementEl) applyElementMetricsToUi(elementEl);
     syncDetectorUiLabels();
 
     const t = readUiTuning();
@@ -276,10 +232,7 @@ cropOffsetInput.addEventListener("input", () => {
   if (t) syncProcessCanvasSize(t);
 });
 
-for (const radio of ballDetectorRadios) {
-  radio.addEventListener("change", syncDetectorUiLabels);
-}
-[detectBallCheck, detectRedCheck, detectBlueCheck].forEach((el) => {
+[detectElementCheck, detectRedCheck, detectBlueCheck].forEach((el) => {
   el.addEventListener("change", syncDetectorUiLabels);
 });
 temporalFilterCheck.addEventListener("change", () => {
@@ -384,7 +337,7 @@ function loop() {
     processCtx.putImageData(toGrayscaleImageData(colorImageData), 0, 0);
   }
 
-  const { detections: rawDetections, ballMask, activeDetectors } = detectBlobs(
+  const { detections: rawDetections, elementMask, activeDetectors } = detectBlobs(
     colorImageData, tuning, roi, detectOpts,
   );
 
@@ -411,20 +364,20 @@ function loop() {
   const best = bestByCategory(logicDetections, tuning.processHeight, tuning.geometry);
   const logic = describeLogic(best, tuning);
 
-  const maskPixels = ballMask ? ballMask.reduce((n, v) => n + v, 0) : 0;
+  const maskPixels = elementMask ? elementMask.reduce((n, v) => n + v, 0) : 0;
   lastFrame = {
     detections,
     rawDetections,
     roi,
-    ballMask,
+    elementMask,
     maskPixels,
     tuning,
     detectOpts,
     activeDetectors,
   };
 
-  const maskCanvas = ballMask
-    ? maskToCanvas(ballMask, tuning.processWidth, tuning.processHeight)
+  const maskCanvas = elementMask
+    ? maskToCanvas(elementMask, tuning.processWidth, tuning.processHeight)
     : null;
 
   renderFrame(displayCtx, capture, detections, roi, tuning, {
@@ -454,8 +407,8 @@ async function captureStill() {
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const frameUrl = canvasToDataUrl(capture);
   const processUrl = canvasToDataUrl(processCanvas);
-  const maskCanvas = lastFrame.ballMask
-    ? maskToCanvas(lastFrame.ballMask, tuning.processWidth, tuning.processHeight)
+  const maskCanvas = lastFrame.elementMask
+    ? maskToCanvas(lastFrame.elementMask, tuning.processWidth, tuning.processHeight)
     : null;
   const maskUrl = maskCanvas ? canvasToDataUrl(maskCanvas) : null;
 
@@ -464,7 +417,7 @@ async function captureStill() {
     source: sourceSelect.value,
     detectOptions: lastFrame.detectOpts,
     grayscaleProcess: lastFrame.detectOpts?.grayscaleProcess ?? false,
-    ballMetrics: readBallMetricsUi(),
+    elementMetrics: readElementMetricsUi(),
     activeDetectors: lastFrame.activeDetectors,
     tuning,
     crop: tuning.crop,
@@ -507,11 +460,11 @@ async function captureStill() {
 function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, activeDetectors) {
   const temporalOn = temporalFilterCheck.checked;
   if (detections.length === 0) {
-    const hint = activeDetectors?.includes("ball")
+    const hint = activeDetectors?.includes("element")
       ? temporalOn
         ? `raw ${rawDetections.length} this frame · mask/edges <strong>${maskPixels}</strong> px`
-        : `mask/edges <strong>${maskPixels}</strong> px — try the other ball algorithm or adjust crop`
-      : "ball detection off — enable under Detection logic";
+        : `mask/edges <strong>${maskPixels}</strong> px — try the other element algorithm or adjust crop`
+      : "element detection off — enable under Detection logic";
     detectionList.innerHTML = `<li class="empty">No blobs — ${hint}</li>`;
   } else {
     detectionList.innerHTML = detections
@@ -521,10 +474,10 @@ function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, act
           d.temporal === "coasting" ? "hold" :
           d.temporal === "potential" ? "potential" : "";
         const geom =
-          d.rangeIn != null
-            ? ` · ${d.rangeIn.toFixed(0)}in (size ${d.dSizeIn?.toFixed(0) ?? "—"}/floor ${d.dFloorIn?.toFixed(0) ?? "—"}) conf ${((d.confidence ?? 0) * 100).toFixed(0)}%`
+          d.range != null
+            ? ` · ${d.range.toFixed(0)}in (size ${d.dSize?.toFixed(0) ?? "—"}/floor ${d.dFloor?.toFixed(0) ?? "—"}) conf ${((d.confidence ?? 0) * 100).toFixed(0)}%`
             : "";
-        return `<li><span class="tag" style="color:${d.color}">${d.label}</span> (${d.cx.toFixed(0)}, ${d.cy.toFixed(0)}) · ${Math.round(d.area)} px${geom}${status ? ` · <em>${status}</em>` : ""}${d.circularity != null && d.detector !== "hough" ? ` · circ ${d.circularity.toFixed(2)}` : ""}${d.votes != null ? ` · hough ${d.votes}` : ""}${d.interior != null ? ` · fill ${(d.interior * 100).toFixed(0)}%` : ""}${d.detector === "hsv" ? " · hsv" : ""}</li>`;
+        return `<li><span class="tag" style="color:${d.color}">${d.label}</span> (${d.cx.toFixed(0)}, ${d.cy.toFixed(0)}) · ${Math.round(d.area)} px${geom}${status ? ` · <em>${status}</em>` : ""}${d.circularity != null ? ` · circ ${d.circularity.toFixed(2)}` : ""}${d.interior != null ? ` · fill ${(d.interior * 100).toFixed(0)}%` : ""}</li>`;
       })
       .join("");
     if (temporalOn && rawDetections.length > detections.length) {
@@ -534,36 +487,34 @@ function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, act
   }
 
   const detectOpts = readDetectOptions();
-  const logicNote = !detectOpts.detectBall
-    ? " (ball off)"
+  const logicNote = !detectOpts.detectElement
+    ? " (element off)"
     : temporalOn
       ? ` · logic uses 3/${TEMPORAL_WINDOW} confirmed`
-      : detectOpts.ballDetector === "both"
-        ? " · ball = best HSV or Hough"
-        : "";
+      : "";
   logicState.textContent = logic.state + logicNote;
   elementErrorEl.textContent =
     logic.elementError == null ? "—" : `${logic.elementError.toFixed(1)} px`;
   robotDistEl.textContent =
     logic.robotDist == null ? "—" : `${logic.robotDist.toFixed(1)} px`;
-  if (ballRangeEl) {
-    ballRangeEl.textContent =
-      logic.ballRangeIn == null ? "—" : `${logic.ballRangeIn.toFixed(1)} in`;
+  if (elementRangeEl) {
+    elementRangeEl.textContent =
+      logic.elementRange == null ? "—" : `${logic.elementRange.toFixed(1)} in`;
   }
-  if (ballSizeRangeEl) {
-    ballSizeRangeEl.textContent =
-      logic.dSizeIn == null ? "—" : `${logic.dSizeIn.toFixed(1)} in`;
+  if (elementSizeRangeEl) {
+    elementSizeRangeEl.textContent =
+      logic.dSize == null ? "—" : `${logic.dSize.toFixed(1)} in`;
   }
-  if (ballFloorRangeEl) {
-    ballFloorRangeEl.textContent =
-      logic.dFloorIn == null ? "—" : `${logic.dFloorIn.toFixed(1)} in`;
+  if (elementFloorRangeEl) {
+    elementFloorRangeEl.textContent =
+      logic.dFloor == null ? "—" : `${logic.dFloor.toFixed(1)} in`;
   }
-  if (ballConfidenceEl) {
-    ballConfidenceEl.textContent =
-      logic.ballConfidence == null ? "—" : `${(logic.ballConfidence * 100).toFixed(0)}%`;
+  if (elementConfidenceEl) {
+    elementConfidenceEl.textContent =
+      logic.elementConfidence == null ? "—" : `${(logic.elementConfidence * 100).toFixed(0)}%`;
   }
-  if (ballRobotXYEl) {
-    ballRobotXYEl.textContent = logic.robotXY
+  if (elementRobotXYEl) {
+    elementRobotXYEl.textContent = logic.robotXY
       ? `(${logic.robotXY.x.toFixed(1)}, ${logic.robotXY.y.toFixed(1)}) in`
       : "—";
   }
