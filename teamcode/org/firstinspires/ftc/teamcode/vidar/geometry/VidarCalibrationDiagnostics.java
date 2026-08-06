@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTransformRegistry;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
