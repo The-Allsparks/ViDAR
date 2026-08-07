@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
 
@@ -60,7 +61,7 @@ public final class VidarTagGate {
         }
     }
 
-    public static boolean shouldSample(VidarTagScoutResult scout, int frameCols) {
+    public static boolean shouldSample(VidarTagScoutObservation scout, int frameCols) {
         if (!VidarTagConfig.ENABLED || scout == null) {
             return false;
         }
@@ -71,18 +72,13 @@ public final class VidarTagGate {
             return false;
         }
         if (Double.isNaN(expectedTagBearingDeg) || VidarTagConfig.POSE_GATE_DEG <= 0) {
-            return scout.widthPx >= VidarTagConfig.SCOUT_MIN_WIDTH_PX;
+            return scout.apparentWidthPx >= VidarTagConfig.SCOUT_MIN_WIDTH_PX;
         }
         double centerErrPx = scout.cx - frameCols / 2.0;
         double halfFovDeg = 35;
         double bearingErr = centerErrPx / Math.max(1, frameCols) * halfFovDeg * 2;
-        double robotToTag = normalizeDegrees(expectedTagBearingDeg - cameraBearingDeg);
-        return Math.abs(normalizeDegrees(robotToTag - bearingErr)) <= VidarTagConfig.POSE_GATE_DEG;
+        double robotToTag = VidarCoordinateFrames.normalizeDeg(expectedTagBearingDeg - cameraBearingDeg);
+        return Math.abs(VidarCoordinateFrames.normalizeDeg(robotToTag - bearingErr)) <= VidarTagConfig.POSE_GATE_DEG;
     }
 
-    private static double normalizeDegrees(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
-    }
 }

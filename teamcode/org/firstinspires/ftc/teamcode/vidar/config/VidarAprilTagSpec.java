@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.config;
 
+
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
 
@@ -55,7 +56,7 @@ public final class VidarAprilTagSpec {
             return Double.NaN;
         }
         double fieldBearing = Math.toDegrees(Math.atan2(yIn - robotY, xIn - robotX));
-        return normalizeDeg(fieldBearing - robotHeadingDeg);
+        return org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames.normalizeDeg(fieldBearing - robotHeadingDeg);
     }
 
     /**
@@ -67,9 +68,4 @@ public final class VidarAprilTagSpec {
         return new AprilTagMetadata(id, name, size, DistanceUnit.INCH);
     }
 
-    private static double normalizeDeg(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
-    }
 }

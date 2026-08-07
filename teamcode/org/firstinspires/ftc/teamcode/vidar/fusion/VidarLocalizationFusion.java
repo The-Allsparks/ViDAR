@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.fusion;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
+
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
@@ -77,7 +79,7 @@ public final class VidarLocalizationFusion {
             if (trans > VidarTagConfig.MAX_TRANSLATION_RESIDUAL_IN) {
                 return false;
             }
-            double dHeading = Math.abs(normalizeDeg(
+            double dHeading = Math.abs(VidarCoordinateFrames.normalizeDeg(
                     candidate.getHeading(AngleUnit.DEGREES) - lastFusedFieldPose.getHeading(AngleUnit.DEGREES)));
             if (dHeading > VidarTagConfig.MAX_HEADING_RESIDUAL_DEG) {
                 return false;
@@ -100,7 +102,7 @@ public final class VidarLocalizationFusion {
         double scale = VidarTagConfig.MAX_CORRECTION_MAGNITUDE_IN / trans;
         double newX = lastFusedFieldPose.getX(DistanceUnit.INCH) + dx * scale;
         double newY = lastFusedFieldPose.getY(DistanceUnit.INCH) + dy * scale;
-        double dHeading = normalizeDeg(
+        double dHeading = VidarCoordinateFrames.normalizeDeg(
                 candidate.getHeading(AngleUnit.DEGREES) - lastFusedFieldPose.getHeading(AngleUnit.DEGREES));
         if (Math.abs(dHeading) > VidarTagConfig.MAX_HEADING_RESIDUAL_DEG) {
             dHeading = Math.signum(dHeading) * VidarTagConfig.MAX_HEADING_RESIDUAL_DEG;
@@ -116,9 +118,4 @@ public final class VidarLocalizationFusion {
         return false;
     }
 
-    private static double normalizeDeg(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
-    }
 }

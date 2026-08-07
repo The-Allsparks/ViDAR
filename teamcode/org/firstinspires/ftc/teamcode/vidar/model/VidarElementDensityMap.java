@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.model;
 
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedPoint;
 /**
  * Robot-frame density grid of corrected element detections — peaks indicate cluster targets.
@@ -23,11 +24,11 @@ public final class VidarElementDensityMap {
         }
 
         public double bearingDeg() {
-            return Math.toDegrees(Math.atan2(robotY, robotX));
+            return VidarRobotPose2D.bearingDeg(robotX, robotY);
         }
 
         public double range() {
-            return Math.hypot(robotX, robotY);
+            return VidarRobotPose2D.distance(robotX, robotY);
         }
     }
 

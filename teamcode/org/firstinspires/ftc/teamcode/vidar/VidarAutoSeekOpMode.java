@@ -5,7 +5,6 @@ import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -22,7 +21,7 @@ import java.util.List;
  * <p>INIT: color sensor on own sign auto-sets alliance; hold Y/B to override.
  */
 @TeleOp(name = "ViDAR: Spatial Map", group = "ViDAR")
-public class VidarAutoSeekOpMode extends LinearOpMode {
+public class VidarAutoSeekOpMode extends VidarSpatialOpModeBase {
 
     private static final int TELEMETRY_CAP = 4;
 
@@ -38,11 +37,7 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
         telemetry.addLine("Calibrate robot.json — docs/CALIBRATION_CHECKLIST.md");
         telemetry.update();
 
-        while (!isStarted() && !isStopRequested()) {
-            alliance.pollInit(gamepad1);
-            telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.update();
-        }
+        pollAllianceInit(alliance, gamepad1);
 
         waitForStart();
 
@@ -57,11 +52,7 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
 
             telemetry.addData("Alliance", alliance.formatStatus());
             telemetry.addData("Motion tracks", spatial.isMotionTrackingActive());
-            telemetry.addData("Field pose", field == null ? "—"
-                    : String.format("(%.1f, %.1f) %.0f°",
-                    field.getX(DistanceUnit.INCH),
-                    field.getY(DistanceUnit.INCH),
-                    field.getHeading(AngleUnit.DEGREES)));
+            telemetry.addData("Field pose", formatFieldPose(field));
             telemetry.addData("Elements", VidarBlobUtil.formatSpatialPointList(elements, TELEMETRY_CAP));
             telemetry.addData("Allies", VidarBlobUtil.formatSpatialPointList(allies, TELEMETRY_CAP));
             telemetry.addData("Foes", VidarBlobUtil.formatSpatialPointList(foes, TELEMETRY_CAP));

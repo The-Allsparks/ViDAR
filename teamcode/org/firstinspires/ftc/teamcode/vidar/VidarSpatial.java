@@ -4,6 +4,7 @@ import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedFrame;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarRankedElementFrame;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarElementOccurrenceRank;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -291,10 +292,10 @@ public final class VidarSpatial {
             if (existing.kind != candidate.kind) {
                 continue;
             }
-            double separation = Math.hypot(
-                    existing.robotX - candidate.robotX,
-                    existing.robotY - candidate.robotY);
-            if (separation <= VidarConfig.WORLD_TRACK_GATE_RADIUS_IN) {
+            if (VidarRobotPose2D.withinRadius(
+                    existing.robotX, existing.robotY,
+                    candidate.robotX, candidate.robotY,
+                    VidarConfig.WORLD_TRACK_GATE_RADIUS_IN)) {
                 if (candidate.source == VidarSpatialPoint.Source.LIVE
                         && existing.source == VidarSpatialPoint.Source.REMEMBERED) {
                     list.set(i, candidate);

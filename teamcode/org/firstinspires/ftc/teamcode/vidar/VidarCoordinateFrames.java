@@ -64,6 +64,17 @@ public final class VidarCoordinateFrames {
                 AngleUnit.DEGREES, heading);
     }
 
+    /** Normalize heading to (-180, 180]. */
+    public static double normalizeDeg(double deg) {
+        while (deg > 180) {
+            deg -= 360;
+        }
+        while (deg < -180) {
+            deg += 360;
+        }
+        return deg;
+    }
+
     /** Age of an observation relative to {@link System#nanoTime()}. */
     public static double observationAgeMs(long captureTimeNanos) {
         if (captureTimeNanos <= 0) {

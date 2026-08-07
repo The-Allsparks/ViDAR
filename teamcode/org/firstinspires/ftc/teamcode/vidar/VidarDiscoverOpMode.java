@@ -2,10 +2,9 @@ package org.firstinspires.ftc.teamcode.vidar;
 
 import org.firstinspires.ftc.teamcode.vidar.detect.VidarBlobUtil;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagGate;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -22,7 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  * <p>Gamepad: {@code A} requests a tag sample.
  */
 @TeleOp(name = "ViDAR: Discover", group = "ViDAR")
-public class VidarDiscoverOpMode extends LinearOpMode {
+public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
 
     private boolean lastA;
 
@@ -39,12 +38,7 @@ public class VidarDiscoverOpMode extends LinearOpMode {
         telemetry.addLine("Run: Back toggles alliance · A = tag sample");
         telemetry.update();
 
-        while (!isStarted() && !isStopRequested()) {
-            alliance.pollInit(gamepad1);
-            telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.addData("Color sensor", alliance.hasColorSensor() ? "configured" : "none");
-            telemetry.update();
-        }
+        pollAllianceInit(alliance, gamepad1);
 
         waitForStart();
 
@@ -60,7 +54,7 @@ public class VidarDiscoverOpMode extends LinearOpMode {
 
             VidarElementObservation element = vision.getBestElement();
             VidarPlateObservation plate = vision.getBestPlate();
-            VidarTagScoutResult scout = vision.getLastTagScout();
+            VidarTagScoutObservation scout = vision.getLastTagScout();
             VidarTagObservation tag = vision.getLatestTag();
             Pose2D fieldNow = spatial.fieldPose();
             VidarAlliance ours = alliance.get();
@@ -81,7 +75,7 @@ public class VidarDiscoverOpMode extends LinearOpMode {
             telemetry.addData("World tracks", spatial.trackCount());
             telemetry.addData("Intake blocked", spatial.intakeBlocked());
             telemetry.addData("Tag scout", scout == null ? "none"
-                    : String.format("(%.0f,%.0f) w=%.0f %s", scout.cx, scout.cy, scout.widthPx, scout.band));
+                    : String.format("(%.0f,%.0f) w=%.0f %s", scout.cx, scout.cy, scout.apparentWidthPx, scout.band));
             telemetry.addData("Tag fix", VidarBlobUtil.formatTag(tag));
             telemetry.addData("Scout obs", VidarBlobUtil.formatScoutObservation(vision.getLatestScoutObservation()));
             if (vision.camera(0) != null) {
@@ -89,11 +83,7 @@ public class VidarDiscoverOpMode extends LinearOpMode {
                 telemetry.addData("Cam state", vision.camera(0).directionState().name());
             }
             telemetry.addData("Tag @capture", VidarBlobUtil.formatTagPose(tag));
-            telemetry.addData("Field fused", fieldNow == null ? "—"
-                    : String.format("(%.1f, %.1f) %.0f°",
-                    fieldNow.getX(DistanceUnit.INCH),
-                    fieldNow.getY(DistanceUnit.INCH),
-                    fieldNow.getHeading(AngleUnit.DEGREES)));
+            telemetry.addData("Field fused", formatFieldPose(fieldNow));
             telemetry.update();
         }
 

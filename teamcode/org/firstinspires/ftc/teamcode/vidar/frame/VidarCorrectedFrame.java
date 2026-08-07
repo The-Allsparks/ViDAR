@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.vidar.frame;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarMotionCorrection;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarOdomHistory;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarElementDensityMap;
@@ -209,14 +210,11 @@ public final class VidarCorrectedFrame {
             return;
         }
         double mergeR = VidarConfig.WORLD_MERGE_RADIUS_IN;
-        double mergeR2 = mergeR * mergeR;
         for (int i = 0; i < points.size(); i++) {
             VidarCorrectedPoint a = points.get(i);
             for (int j = points.size() - 1; j > i; j--) {
                 VidarCorrectedPoint b = points.get(j);
-                double dx = a.robotX - b.robotX;
-                double dy = a.robotY - b.robotY;
-                if (dx * dx + dy * dy <= mergeR2) {
+                if (VidarRobotPose2D.withinRadius(a.robotX, a.robotY, b.robotX, b.robotY, mergeR)) {
                     if (a.confidence >= b.confidence) {
                         points.remove(j);
                     } else {
