@@ -14,6 +14,8 @@ These stay at `org.firstinspires.ftc.teamcode.vidar` so existing OpModes keep wo
 | `VidarSpatialPoint`, `VidarElementObservation`, `VidarPlateObservation` | Public return types |
 | `VidarAlliance`, `VidarDistanceUnit`, `VidarElementDetectorType`, `VidarElementShape`, `VidarOffensiveLane` | Enums |
 | `VidarGeometry`, `VidarCoordinateFrames` | Range and field/robot transforms |
+| `VidarObservationMapper` | Maps detections to `VidarSpatialPoint` / track DTOs |
+| `VidarSpatialOpModeBase` | Shared OpMode helpers (alliance init, telemetry) |
 | `VidarTeleOp`, `VidarDiscoverOpMode`, `VidarAutoSeekOpMode`, `VidarRoiCalibrationOpMode` | Built-in OpModes |
 
 ## Subpackages
@@ -29,7 +31,7 @@ These stay at `org.firstinspires.ftc.teamcode.vidar` so existing OpModes keep wo
 | `vidar.model` | Shared DTOs and measurements | `VidarRangeResult`, `VidarTagObservation` |
 | `vidar.runtime` | Per-camera vision unit | `VidarVision`, `VidarCameraProfile` |
 | `vidar.config` | JSON season / robot specs | `VidarConfigLoader`, `VidarSeasonConfig`, bundled `default-*.json` |
-| `vidar.geometry` | 3D transforms, ground plane | `VidarTransformRegistry`, `VidarGroundPlane` |
+| `vidar.geometry` | 3D transforms, ground plane, range fusion | `VidarTransformRegistry`, `VidarGroundPlane`, `VidarRangeFusion` |
 
 ## Data flow
 

@@ -10,7 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_JAVA = ROOT / "teamcode/org/firstinspires/ftc/teamcode/vidar/VidarConfig.java"
 PROFILE_JAVA = ROOT / "teamcode/org/firstinspires/ftc/teamcode/vidar/runtime/VidarCameraProfile.java"
-OUT_DIR = ROOT / "teamcode/assets/vidar"
+ASSETS_DIR = ROOT / "teamcode/assets/vidar"
+BUNDLED_DIR = ROOT / "teamcode/org/firstinspires/ftc/teamcode/vidar/config/bundled"
 
 
 def java_number(name: str, text: str, default: float | None = None) -> float:
@@ -249,15 +250,16 @@ def build_robot(cfg: str, profile_text: str) -> dict:
 def main() -> None:
     cfg = CONFIG_JAVA.read_text(encoding="utf-8")
     profile = PROFILE_JAVA.read_text(encoding="utf-8")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    season_path = OUT_DIR / "default-season.json"
-    robot_path = OUT_DIR / "default-robot.json"
-    season_path.write_text(
-        json.dumps(build_season(cfg), indent=2) + "\n", encoding="utf-8")
-    robot_path.write_text(
-        json.dumps(build_robot(cfg, profile), indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {season_path}")
-    print(f"Wrote {robot_path}")
+    season = json.dumps(build_season(cfg), indent=2) + "\n"
+    robot = json.dumps(build_robot(cfg, profile), indent=2) + "\n"
+    for out_dir in (ASSETS_DIR, BUNDLED_DIR):
+        out_dir.mkdir(parents=True, exist_ok=True)
+        season_path = out_dir / "default-season.json"
+        robot_path = out_dir / "default-robot.json"
+        season_path.write_text(season, encoding="utf-8")
+        robot_path.write_text(robot, encoding="utf-8")
+        print(f"Wrote {season_path}")
+        print(f"Wrote {robot_path}")
 
 
 if __name__ == "__main__":

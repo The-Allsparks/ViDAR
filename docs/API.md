@@ -344,7 +344,8 @@ corrected = vision.updateCorrected()       // VidarCorrectedFrame
 
 frame.bestElement
 frame.bestPlate / bestFoe / bestAlly
-frame.bestTag / bestScout
+frame.bestTag
+frame.bestScoutObservation / bestScoutHit
 frame.rankedElements
 frame.rankedForCamera(index)
 ```
@@ -358,8 +359,8 @@ frame.rankedForCamera(index)
 | `bestElement` | `ElementObservation` |
 | `bestPlate`, `bestFoe`, `bestAlly` | `PlateObservation` |
 | `bestTag` | `VidarTagObservation` |
-| `bestScout` | `VidarTagScoutObservation` |
-| `bestScoutResult` | `VidarTagScoutResult` |
+| `bestScoutObservation` | `VidarTagScoutObservation` — enriched scout (bearing, confidence) |
+| `bestScoutHit` | `VidarTagScoutObservation` — raw scout hit before enrichment |
 | `rankedByCamera` | `RankedElementFrame[]` |
 | `tagsByCamera` | `VidarTagObservation[]` |
 
