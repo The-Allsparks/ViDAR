@@ -29,6 +29,23 @@ See [`config/robots/README.md`](../config/robots/README.md) for camera selection
 
 Copy the file for your active season to `TeamCode/src/main/assets/vidar/season.json`. HSV and filter values in older-season templates are **starting points** — tune on field before competition.
 
+## Bundled defaults (no team JSON required)
+
+When teams omit custom assets, `VidarConfigLoader.defaultSeason()` and `defaultRobot()` load built-in JSON:
+
+| Location | Used by |
+|----------|---------|
+| `vidar/config/bundled/default-*.json` (Java classpath) | On-robot `VidarConfigLoader` |
+| `teamcode/assets/vidar/default-*.json` | Python tests (`tests/test_config_defaults.py`) |
+
+Both copies must stay identical. Regenerate from `VidarConfig` constants:
+
+```bash
+python scripts/generate_default_config_assets.py
+```
+
+The script writes both paths. Run it after changing defaults in `VidarConfig.java` or `VidarCameraProfile.java`.
+
 ## Distance units
 
 ViDAR supports **inches (default)**, **meters (SI)**, and **centimeters** via JSON `"distanceUnit"`.

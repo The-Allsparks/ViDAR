@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameMailbox;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
@@ -19,14 +19,14 @@ public final class VidarTagDecodeWorker extends Thread {
         final Rect localRegion;
         final int decimation;
         final long captureTimeNanos;
-        final VidarTagScoutResult scout;
+        final VidarTagScoutObservation scout;
 
         DecodeRequest(
                 VidarAdaptiveTagProcessor processor,
                 Rect localRegion,
                 int decimation,
                 long captureTimeNanos,
-                VidarTagScoutResult scout) {
+                VidarTagScoutObservation scout) {
             this.processor = processor;
             this.localRegion = localRegion;
             this.decimation = decimation;
@@ -41,7 +41,7 @@ public final class VidarTagDecodeWorker extends Thread {
         final Rect decodeRegion;
         final int decimation;
         final long captureTimeNanos;
-        final VidarTagScoutResult scout;
+        final VidarTagScoutObservation scout;
 
         Job(
                 VidarAdaptiveTagProcessor processor,
@@ -49,7 +49,7 @@ public final class VidarTagDecodeWorker extends Thread {
                 Rect decodeRegion,
                 int decimation,
                 long captureTimeNanos,
-                VidarTagScoutResult scout) {
+                VidarTagScoutObservation scout) {
             this.processor = processor;
             this.crop = crop;
             this.decodeRegion = decodeRegion;
@@ -92,7 +92,7 @@ public final class VidarTagDecodeWorker extends Thread {
             Rect decodeRegion,
             int decimation,
             long captureTimeNanos,
-            VidarTagScoutResult scout,
+            VidarTagScoutObservation scout,
             VidarMetrics metrics) {
         if (!VidarConfig.ASYNC_TAG_DECODE_ENABLED || processor == null
                 || frame == null || frame.empty() || decodeRegion == null) {
@@ -140,7 +140,7 @@ public final class VidarTagDecodeWorker extends Thread {
             int h,
             int decimation,
             long captureTimeNanos,
-            VidarTagScoutResult scout,
+            VidarTagScoutObservation scout,
             VidarMetrics metrics) {
         synchronized (lock) {
             if (pendingRequest != null && metrics != null) {

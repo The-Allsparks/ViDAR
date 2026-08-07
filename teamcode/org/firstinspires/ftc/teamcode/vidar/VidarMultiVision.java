@@ -7,9 +7,9 @@ import org.firstinspires.ftc.teamcode.vidar.fusion.VidarLocalizationFusion;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarMotionCorrection;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarOdomHistory;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarTemporalFilter;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraMount;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetricsLogger;
@@ -74,7 +74,7 @@ public class VidarMultiVision {
     private VidarPlateObservation bestAlly;
     private VidarTagObservation latestTag;
     private VidarTagScoutObservation latestScoutObservation;
-    private VidarTagScoutResult lastTagScout;
+    private VidarTagScoutObservation lastTagScout;
     private Pose2D fusedFieldPose;
     private Pose2D odomAtLastFusedFieldPose;
     private volatile VidarObservationFrame latestFrame = VidarObservationFrame.empty();
@@ -262,8 +262,9 @@ public class VidarMultiVision {
                 }
             }
 
-            VidarTagScoutResult scoutResult = camera.getLastTagScout();
-            if (scoutResult != null && (lastTagScout == null || scoutResult.widthPx > lastTagScout.widthPx)) {
+            VidarTagScoutObservation scoutResult = camera.getLastTagScout();
+            if (scoutResult != null && (lastTagScout == null
+                    || scoutResult.apparentWidthPx > lastTagScout.apparentWidthPx)) {
                 lastTagScout = scoutResult;
             }
         }
@@ -485,8 +486,9 @@ public class VidarMultiVision {
 
     private static boolean isDuplicateRobot(VidarElementObservation obs, List<VidarElementObservation> kept) {
         for (VidarElementObservation other : kept) {
-            if (Math.hypot(obs.robotX - other.robotX, obs.robotY - other.robotY)
-                    < VidarConfig.WORLD_MERGE_RADIUS_IN) {
+            if (VidarRobotPose2D.withinRadius(
+                    obs.robotX, obs.robotY, other.robotX, other.robotY,
+                    VidarConfig.WORLD_MERGE_RADIUS_IN)) {
                 return true;
             }
         }
@@ -507,8 +509,7 @@ public class VidarMultiVision {
         if (element.confidence < season.minElementConfidence) {
             return -1;
         }
-        double rangeWeight = Double.isNaN(element.range) ? 0.5 : 1.0 / Math.max(6.0, element.range);
-        return element.confidence * element.radiusPx * element.radiusPx * rangeWeight;
+        return elementRankScore(element);
     }
 
     private static double plateScore(VidarPlateObservation plate) {
@@ -680,7 +681,7 @@ public class VidarMultiVision {
         return bestAlly;
     }
 
-    public VidarTagScoutResult getLastTagScout() {
+    public VidarTagScoutObservation getLastTagScout() {
         return lastTagScout;
     }
 

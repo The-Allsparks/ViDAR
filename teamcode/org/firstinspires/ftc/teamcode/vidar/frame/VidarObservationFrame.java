@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.frame;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarMotionCorrection;
@@ -12,7 +10,7 @@ import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 /**
- * Immutable snapshot of all fused ViDAR outputs from one {@link VidarMultiVision#update()} cycle.
+ * Immutable snapshot of all fused ViDAR outputs from one {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision#update()} cycle.
  *
  * <p>Every observation carries VisionPortal {@code frameCaptureNanos} as {@code captureTimeNanos}.
  * Prefer batch correction:
@@ -28,8 +26,8 @@ public final class VidarObservationFrame {
     public final VidarPlateObservation bestFoe;
     public final VidarPlateObservation bestAlly;
     public final VidarTagObservation bestTag;
-    public final VidarTagScoutObservation bestScout;
-    public final VidarTagScoutResult bestScoutResult;
+    public final VidarTagScoutObservation bestScoutObservation;
+    public final VidarTagScoutObservation bestScoutHit;
 
     /** Per-camera ranked elements (may differ in count/cap). Index matches robot config. */
     public final VidarRankedElementFrame[] rankedByCamera;
@@ -44,8 +42,8 @@ public final class VidarObservationFrame {
             VidarPlateObservation bestFoe,
             VidarPlateObservation bestAlly,
             VidarTagObservation bestTag,
-            VidarTagScoutObservation bestScout,
-            VidarTagScoutResult bestScoutResult,
+            VidarTagScoutObservation bestScoutObservation,
+            VidarTagScoutObservation bestScoutHit,
             VidarRankedElementFrame[] rankedByCamera,
             VidarTagObservation[] tagsByCamera) {
         this.updateTimeNanos = updateTimeNanos;
@@ -57,8 +55,8 @@ public final class VidarObservationFrame {
         this.bestFoe = bestFoe;
         this.bestAlly = bestAlly;
         this.bestTag = bestTag;
-        this.bestScout = bestScout;
-        this.bestScoutResult = bestScoutResult;
+        this.bestScoutObservation = bestScoutObservation;
+        this.bestScoutHit = bestScoutHit;
         this.rankedByCamera = rankedByCamera != null ? rankedByCamera : new VidarRankedElementFrame[0];
         this.tagsByCamera = tagsByCamera != null ? tagsByCamera : new VidarTagObservation[0];
     }

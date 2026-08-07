@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
 /**
  * Robot-frame spatial sample (+X forward, +Y left) in the active distance unit.
@@ -67,11 +68,11 @@ public final class VidarSpatialPoint {
     }
 
     public double bearingDeg() {
-        return Math.toDegrees(Math.atan2(robotY, robotX));
+        return VidarRobotPose2D.bearingDeg(robotX, robotY);
     }
 
     public double distance() {
-        return Math.hypot(robotX, robotY);
+        return VidarRobotPose2D.distance(robotX, robotY);
     }
 
     public double speedFieldInPerSec() {
@@ -89,24 +90,8 @@ public final class VidarSpatialPoint {
 
     public static VidarSpatialPoint fromElement(
             VidarElementObservation obs, String elementId, int occurrenceRank) {
-        if (obs == null) {
-            return null;
-        }
-        String id = elementId == null || elementId.isEmpty() ? obs.elementId : elementId;
-        return new VidarSpatialPoint(
-                Kind.ELEMENT,
-                Source.LIVE,
-                -1,
-                id,
-                occurrenceRank,
-                obs.robotX,
-                obs.robotY,
-                0,
-                0,
-                obs.range,
-                obs.confidence,
-                obs.cameraName,
-                obs.captureTimeNanos);
+        return VidarObservationMapper.toSpatialPoint(
+                VidarObservationMapper.fromElement(obs, elementId, occurrenceRank));
     }
 
     public VidarSpatialPoint withOccurrenceRank(int occurrenceRank) {

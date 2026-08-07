@@ -50,7 +50,7 @@ public final class VidarMotionCorrection {
         }
         double dx = odomNow.getX(DistanceUnit.INCH) - odomAtCapture.getX(DistanceUnit.INCH);
         double dy = odomNow.getY(DistanceUnit.INCH) - odomAtCapture.getY(DistanceUnit.INCH);
-        double dh = normalizeDeg(
+        double dh = VidarCoordinateFrames.normalizeDeg(
                 odomNow.getHeading(AngleUnit.DEGREES) - odomAtCapture.getHeading(AngleUnit.DEGREES));
         return new Pose2D(
                 DistanceUnit.INCH,
@@ -143,9 +143,4 @@ public final class VidarMotionCorrection {
                 odomNow.getHeading(AngleUnit.DEGREES));
     }
 
-    private static double normalizeDeg(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
-    }
 }

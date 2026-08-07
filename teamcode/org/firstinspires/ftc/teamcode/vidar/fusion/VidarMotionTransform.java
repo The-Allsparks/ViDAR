@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.fusion;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
+
 /**
  * Robot-frame motion transform for correcting tracks between observation updates.
  */
@@ -40,7 +42,7 @@ public final class VidarMotionTransform {
             double currX, double currY, double currHeadingDeg) {
         double dx = currX - prevX;
         double dy = currY - prevY;
-        double dHeading = normalizeDeg(currHeadingDeg - prevHeadingDeg);
+        double dHeading = VidarCoordinateFrames.normalizeDeg(currHeadingDeg - prevHeadingDeg);
         double rad = Math.toRadians(-prevHeadingDeg);
         double cos = Math.cos(rad);
         double sin = Math.sin(rad);
@@ -49,9 +51,4 @@ public final class VidarMotionTransform {
         return new VidarMotionTransform(robotDx, robotDy, dHeading);
     }
 
-    private static double normalizeDeg(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
-    }
 }

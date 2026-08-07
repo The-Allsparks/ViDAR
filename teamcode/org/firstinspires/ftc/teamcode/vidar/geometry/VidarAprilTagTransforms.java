@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -93,7 +95,7 @@ public final class VidarAprilTagTransforms {
         double dy = decoded.fieldPoseAtCapture.getY(DistanceUnit.INCH)
                 - fromChain.getY(DistanceUnit.INCH);
         double transErr = Math.hypot(dx, dy);
-        double headErr = Math.abs(normalizeDeg(
+        double headErr = Math.abs(VidarCoordinateFrames.normalizeDeg(
                 decoded.fieldPoseAtCapture.getHeading(AngleUnit.DEGREES)
                         - fromChain.getHeading(AngleUnit.DEGREES)));
         boolean ok = transErr <= maxTranslationErrorIn && headErr <= maxHeadingErrorDeg;
@@ -108,9 +110,4 @@ public final class VidarAprilTagTransforms {
         return decoded.fieldPoseAtCapture;
     }
 
-    private static double normalizeDeg(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
-    }
 }

@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.vidar.model;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
+
 /**
  * Non-localizing AprilTag scout observation — guides decode scheduling only.
  * Must never alter absolute field pose.
+ *
+ * <p>Use {@link #rawHit} for cheap scout output; {@link #enrich} adds bearing and confidence.
  */
 public final class VidarTagScoutObservation {
 
@@ -38,8 +41,22 @@ public final class VidarTagScoutObservation {
         this.captureTimeNanos = captureTimeNanos;
     }
 
-    public static VidarTagScoutObservation fromScoutResult(
-            VidarTagScoutResult scout,
+    /** Cheap top-half scout hit before bearing enrichment. */
+    public static VidarTagScoutObservation rawHit(
+            double cx,
+            double cy,
+            double widthPx,
+            VidarFrameRegions.HorizontalBand band) {
+        return new VidarTagScoutObservation(
+                Double.NaN, widthPx, 0, "", band, cx, cy, 0);
+    }
+
+    public boolean isRawHit() {
+        return Double.isNaN(bearingDeg);
+    }
+
+    public static VidarTagScoutObservation enrich(
+            VidarTagScoutObservation scout,
             VidarCameraProfile profile,
             int frameCols,
             long captureTimeNanos,
@@ -47,20 +64,25 @@ public final class VidarTagScoutObservation {
         if (scout == null) {
             return null;
         }
-        double fullWidth = scout.widthPx * ((double) frameCols / VidarTagConfig.SCOUT_WIDTH);
+        double fullWidth = scout.apparentWidthPx * ((double) frameCols / VidarTagConfig.SCOUT_WIDTH);
         double centerErr = scout.cx - frameCols / 2.0;
         double bearingErr = centerErr / Math.max(1, frameCols)
                 * VidarTagConfig.horizontalFovDeg(profile);
-        double bearing = normalizeDeg(profile.bearingDeg + bearingErr);
+        double bearing = VidarCoordinateFrames.normalizeDeg(profile.bearingDeg + bearingErr);
         double confidence = Math.min(1.0, fullWidth / VidarTagConfig.DECODE_MIN_TAG_WIDTH_PX);
         return new VidarTagScoutObservation(
                 bearing, fullWidth, confidence, cameraName, scout.band,
                 scout.cx, scout.cy, captureTimeNanos);
     }
 
-    private static double normalizeDeg(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
+    /** @deprecated use {@link #enrich} */
+    @Deprecated
+    public static VidarTagScoutObservation fromScoutResult(
+            VidarTagScoutObservation scout,
+            VidarCameraProfile profile,
+            int frameCols,
+            long captureTimeNanos,
+            String cameraName) {
+        return enrich(scout, profile, frameCols, captureTimeNanos, cameraName);
     }
 }

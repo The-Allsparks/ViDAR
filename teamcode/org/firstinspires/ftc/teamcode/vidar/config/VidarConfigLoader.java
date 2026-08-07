@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar.config;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
 import org.firstinspires.ftc.teamcode.vidar.VidarAlliance;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementDetectorType;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementShape;
@@ -65,14 +64,34 @@ public final class VidarConfigLoader {
         }
     }
 
-    /** Built-in season matching legacy {@link VidarConfig} constants. */
+    /** Built-in season from {@code bundled/default-season.json}. */
     public static VidarSeasonConfig defaultSeason() {
-        return loadSeason(defaultSeasonJson());
+        return loadSeason(readBundledResource("default-season.json"));
     }
 
-    /** Built-in robot layout matching legacy {@link VidarConfig} + {@link VidarCameraProfile#FOUR_SIDES}. */
+    /** Built-in robot layout from {@code bundled/default-robot.json}. */
     public static VidarRobotConfig defaultRobot() {
-        return loadRobot(defaultRobotJson());
+        return loadRobot(readBundledResource("default-robot.json"));
+    }
+
+    static String readBundledResource(String resourceName) {
+        String path = "bundled/" + resourceName;
+        InputStream stream = VidarConfigLoader.class.getResourceAsStream(path);
+        if (stream == null) {
+            throw new IllegalStateException("Missing bundled config resource: " + path);
+        }
+        try (InputStream in = stream;
+             BufferedReader reader = new BufferedReader(
+                     new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append('\n');
+            }
+            return sb.toString();
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to read bundled config: " + path, ex);
+        }
     }
 
     static VidarSeasonConfig parseSeason(JSONObject root) throws JSONException {
@@ -633,202 +652,5 @@ public final class VidarConfigLoader {
         }
         return VidarAlliance.RED;
     }
-
-    /** JSON string equivalent to legacy {@link VidarConfig} element/plate tuning. */
-    public static String defaultSeasonJson() {
-        return "{"
-                + "\"seasonId\":\"2025-decode\","
-                + "\"seasonName\":\"DECODE 2025 — game elements and team plates\","
-                + "\"fusion\":{"
-                + "\"minElementConfidence\":" + VidarConfig.MIN_ELEMENT_CONFIDENCE + ","
-                + "\"minPlateConfidence\":" + VidarConfig.MIN_PLATE_CONFIDENCE + ","
-                + "\"maxRangeMismatchRatio\":" + VidarConfig.MAX_RANGE_MISMATCH_RATIO
-                + "},"
-                + "\"elements\":[{"
-                + "\"id\":\"pollen\","
-                + "\"label\":\"Pollen element\","
-                + "\"diameter\":" + VidarConfig.DEFAULT_ELEMENT_DIAMETER + ","
-                + "\"detector\":\"color_blob_with_local_hough\","
-                + "\"hsv\":{"
-                + "\"hMin\":" + VidarConfig.DEFAULT_ELEMENT_HSV_H_MIN + ","
-                + "\"hMax\":" + VidarConfig.DEFAULT_ELEMENT_HSV_H_MAX + ","
-                + "\"sMin\":" + VidarConfig.DEFAULT_ELEMENT_HSV_S_MIN + ","
-                + "\"sMax\":" + VidarConfig.DEFAULT_ELEMENT_HSV_S_MAX + ","
-                + "\"vMin\":" + VidarConfig.DEFAULT_ELEMENT_HSV_V_MIN + ","
-                + "\"vMax\":" + VidarConfig.DEFAULT_ELEMENT_HSV_V_MAX
-                + "},"
-                + "\"filters\":{"
-                + "\"minAreaPx\":" + VidarConfig.DEFAULT_ELEMENT_MIN_AREA_PX + ","
-                + "\"maxAreaPx\":" + VidarConfig.DEFAULT_ELEMENT_MAX_AREA_PX + ","
-                + "\"minWidthPx\":" + VidarConfig.DEFAULT_ELEMENT_MIN_WIDTH_PX + ","
-                + "\"maxWidthPx\":" + VidarConfig.DEFAULT_ELEMENT_MAX_WIDTH_PX + ","
-                + "\"minHeightPx\":" + VidarConfig.DEFAULT_ELEMENT_MIN_HEIGHT_PX + ","
-                + "\"maxHeightPx\":" + VidarConfig.DEFAULT_ELEMENT_MAX_HEIGHT_PX + ","
-                + "\"maxAspectRatio\":" + VidarConfig.DEFAULT_ELEMENT_MAX_ASPECT_RATIO + ","
-                + "\"minCircularity\":" + VidarConfig.DEFAULT_ELEMENT_MIN_CIRCULARITY + ","
-                + "\"minFillRatio\":" + VidarConfig.DEFAULT_ELEMENT_MIN_FILL_RATIO + ","
-                + "\"minInteriorScore\":" + VidarConfig.DEFAULT_ELEMENT_MIN_INTERIOR_SCORE
-                + "},"
-                + "\"interior\":{"
-                + "\"brightMin\":" + VidarConfig.DEFAULT_ELEMENT_INTERIOR_BRIGHT + ","
-                + "\"spreadMax\":" + VidarConfig.DEFAULT_ELEMENT_INTERIOR_SPREAD + ","
-                + "\"holeDarkMax\":" + VidarConfig.DEFAULT_ELEMENT_HOLE_DARK_MAX
-                + "},"
-                + "\"morphology\":{"
-                + "\"erodePasses\":" + VidarConfig.DEFAULT_ELEMENT_MORPH_ERODE_PASSES + ","
-                + "\"dilatePasses\":" + VidarConfig.DEFAULT_ELEMENT_MORPH_DILATE_PASSES + ","
-                + "\"openPasses\":" + VidarConfig.DEFAULT_ELEMENT_MORPH_OPEN_PASSES + ","
-                + "\"closePasses\":" + VidarConfig.DEFAULT_ELEMENT_MORPH_CLOSE_PASSES
-                + "},"
-                + "\"hough\":{"
-                + "\"dp\":" + VidarConfig.HOUGH_DP + ","
-                + "\"minDist\":" + VidarConfig.HOUGH_MIN_DIST + ","
-                + "\"param1\":" + VidarConfig.HOUGH_PARAM1 + ","
-                + "\"param2\":" + VidarConfig.HOUGH_PARAM2 + ","
-                + "\"minRadius\":" + VidarConfig.HOUGH_MIN_RADIUS + ","
-                + "\"maxRadius\":" + VidarConfig.HOUGH_MAX_RADIUS + ","
-                + "\"minInterior\":" + VidarConfig.HOUGH_MIN_INTERIOR + ","
-                + "\"minAreaPx\":" + VidarConfig.MIN_ELEMENT_AREA_PX
-                + "}"
-                + "}],"
-                + "\"plates\":[{"
-                + "\"alliance\":\"red\","
-                + "\"width\":12.0,"
-                + "\"hsv\":{"
-                + "\"hMin\":" + VidarConfig.PLATE_RED_H_MIN + ","
-                + "\"hMax\":" + VidarConfig.PLATE_RED_H_MAX + ","
-                + "\"sMin\":" + VidarConfig.PLATE_S_MIN + ","
-                + "\"sMax\":255,"
-                + "\"vMin\":" + VidarConfig.PLATE_V_MIN + ","
-                + "\"vMax\":255"
-                + "},"
-                + "\"hsvWrap\":{"
-                + "\"hMin\":" + VidarConfig.PLATE_RED_WRAP_H_MIN + ","
-                + "\"hMax\":179,"
-                + "\"sMin\":" + VidarConfig.PLATE_S_MIN + ","
-                + "\"sMax\":255,"
-                + "\"vMin\":" + VidarConfig.PLATE_V_MIN + ","
-                + "\"vMax\":255"
-                + "},"
-                + "\"filters\":{"
-                + "\"minAreaPx\":" + VidarConfig.PLATE_MIN_AREA_PX + ","
-                + "\"maxAreaPx\":" + VidarConfig.PLATE_MAX_AREA_PX + ","
-                + "\"minAspect\":" + VidarConfig.PLATE_MIN_ASPECT + ","
-                + "\"maxAspect\":" + VidarConfig.PLATE_MAX_ASPECT + ","
-                + "\"minRectangularity\":" + VidarConfig.PLATE_MIN_RECTANGULARITY + ","
-                + "\"minWhiteRatio\":" + VidarConfig.PLATE_MIN_WHITE_RATIO
-                + "},"
-                + "\"whiteDigit\":{"
-                + "\"sampleGrid\":" + VidarConfig.PLATE_WHITE_SAMPLE_GRID + ","
-                + "\"brightMin\":" + VidarConfig.PLATE_WHITE_BRIGHT_MIN + ","
-                + "\"spreadMax\":" + VidarConfig.PLATE_WHITE_SPREAD_MAX
-                + "}"
-                + "},{"
-                + "\"alliance\":\"blue\","
-                + "\"width\":12.0,"
-                + "\"hsv\":{"
-                + "\"hMin\":" + VidarConfig.PLATE_BLUE_H_MIN + ","
-                + "\"hMax\":" + VidarConfig.PLATE_BLUE_H_MAX + ","
-                + "\"sMin\":" + VidarConfig.PLATE_S_MIN + ","
-                + "\"sMax\":255,"
-                + "\"vMin\":" + VidarConfig.PLATE_V_MIN + ","
-                + "\"vMax\":255"
-                + "},"
-                + "\"filters\":{"
-                + "\"minAreaPx\":" + VidarConfig.PLATE_MIN_AREA_PX + ","
-                + "\"maxAreaPx\":" + VidarConfig.PLATE_MAX_AREA_PX + ","
-                + "\"minAspect\":" + VidarConfig.PLATE_MIN_ASPECT + ","
-                + "\"maxAspect\":" + VidarConfig.PLATE_MAX_ASPECT + ","
-                + "\"minRectangularity\":" + VidarConfig.PLATE_MIN_RECTANGULARITY + ","
-                + "\"minWhiteRatio\":" + VidarConfig.PLATE_MIN_WHITE_RATIO
-                + "},"
-                + "\"whiteDigit\":{"
-                + "\"sampleGrid\":" + VidarConfig.PLATE_WHITE_SAMPLE_GRID + ","
-                + "\"brightMin\":" + VidarConfig.PLATE_WHITE_BRIGHT_MIN + ","
-                + "\"spreadMax\":" + VidarConfig.PLATE_WHITE_SPREAD_MAX
-                + "}"
-                + "}]"
-                + "}";
-    }
-
-    public static String defaultRobotJson() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"robotName\":\"example-robot\",\"activeCameraIndex\":")
-                .append(VidarConfig.ACTIVE_CAMERA_INDEX)
-                .append(",\"cameraCount\":").append(VidarConfig.activeCameraCount())
-                .append(",\"dimensions\":{\"length\":13,\"width\":13,\"height\":18}")
-                .append(",\"alliance\":{")
-                .append("\"defaultAlliance\":\"")
-                .append(VidarConfig.DEFAULT_ALLIANCE.name().toLowerCase())
-                .append("\",\"colorSensorName\":\"")
-                .append(VidarConfig.ALLIANCE_COLOR_SENSOR)
-                .append("\",\"useColorSensor\":")
-                .append(VidarConfig.ALLIANCE_USE_COLOR_SENSOR)
-                .append(",\"allowRuntimeToggle\":")
-                .append(VidarConfig.ALLIANCE_ALLOW_RUNTIME_TOGGLE)
-                .append("},\"cameraDefaults\":");
-        appendCameraDefaultsJson(sb, VidarCameraProfile.FOUR_SIDES[0]);
-        sb.append(",\"mountDefaults\":{\"yawDeg\":0,\"pitchDeg\":-12,\"rollDeg\":0},\"cameras\":[");
-        int count = VidarConfig.activeCameraCount();
-        for (int i = 0; i < count; i++) {
-            if (i > 0) {
-                sb.append(',');
-            }
-            appendCameraEntryJson(sb, i, VidarConfig.CAMERA_NAMES[i], VidarCameraProfile.forIndex(i));
-        }
-        sb.append("]}");
-        return sb.toString();
-    }
-
-    private static void appendCameraDefaultsJson(StringBuilder sb, VidarCameraProfile profile) {
-        sb.append("{\"horizonRowPx\":").append(profile.horizonRowPx)
-                .append(",\"focalLengthPx\":").append(profile.focalLengthPx)
-                .append(",\"focalLengthYPx\":").append(profile.focalLengthYPx)
-                .append(",\"principalPointX\":").append(profile.principalPointX)
-                .append(",\"principalPointY\":").append(profile.principalPointY);
-        if (profile.calibrationWidth > 0) {
-            sb.append(",\"calibrationWidth\":").append(profile.calibrationWidth);
-        }
-        if (profile.calibrationHeight > 0) {
-            sb.append(",\"calibrationHeight\":").append(profile.calibrationHeight);
-        }
-        sb.append(",\"horizontalFovDeg\":").append(profile.horizontalFovDeg)
-                .append(",\"verticalFovDeg\":").append(profile.verticalFovDeg)
-                .append(",\"plateWidth\":").append(profile.plateWidth)
-                .append(",\"floorLut\":[");
-        for (int j = 0; j < profile.floorCyPx.length; j++) {
-            if (j > 0) {
-                sb.append(',');
-            }
-            sb.append("{\"cy\":").append(profile.floorCyPx[j])
-                    .append(",\"dist\":").append(profile.floorDist[j]).append('}');
-        }
-        sb.append("],\"roi\":");
-        appendRoiJson(sb, profile.roiConfig);
-        sb.append('}');
-    }
-
-    private static void appendRoiJson(StringBuilder sb, VidarCameraRoiConfig roi) {
-        sb.append("{\"element\":{\"lowerFraction\":").append(roi.elementLowerFraction)
-                .append(",\"enabled\":").append(roi.elementEnabled).append("},")
-                .append("\"plate\":{\"startFraction\":").append(roi.plateStartFraction)
-                .append(",\"bandFraction\":").append(roi.plateBandFraction)
-                .append(",\"enabled\":").append(roi.plateEnabled).append("},")
-                .append("\"tag\":{\"upperFraction\":").append(roi.tagUpperFraction)
-                .append(",\"enabled\":").append(roi.tagEnabled).append("}}");
-    }
-
-    private static void appendCameraEntryJson(
-            StringBuilder sb, int index, String webcamName, VidarCameraProfile profile) {
-        sb.append("{\"index\":").append(index)
-                .append(",\"webcamName\":\"").append(webcamName).append("\",")
-                .append("\"name\":\"").append(profile.name).append("\",")
-                .append("\"mount\":{\"bearingDeg\":").append(profile.bearingDeg)
-                .append(",\"x\":").append(profile.mountX)
-                .append(",\"y\":").append(profile.mountY)
-                .append(",\"z\":").append(profile.mountZ)
-                .append(",\"pitchDeg\":").append(profile.mountPitchDeg)
-                .append(",\"rollDeg\":").append(profile.mountRollDeg)
-                .append("}}");
-    }
 }
+
