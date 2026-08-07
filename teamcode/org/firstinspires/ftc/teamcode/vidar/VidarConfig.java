@@ -13,7 +13,11 @@ import android.util.Size;
  * {@link org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig} to
  * {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}. See {@link org.firstinspires.ftc.teamcode.VidarTeamConfig}.
  *
- * <p>Constants below remain for backward compatibility and library defaults.
+ * <p>Season tuning (elements, plates, fusion thresholds, AprilTags) lives in bundled
+ * {@code default-season.json} / team {@code season.json}. Robot layout lives in
+ * {@code default-robot.json} / team {@code robot.json}. Constants below are
+ * <b>hardware-only fallbacks</b> (camera names, USB count, world-model radii not yet in JSON)
+ * and backward-compatible defaults when assets are missing.
  *
  * Robot config (Driver Station → Configure Robot) must include a USB webcam named
  * {@link #CAMERA_NAME} on the Control Hub.
