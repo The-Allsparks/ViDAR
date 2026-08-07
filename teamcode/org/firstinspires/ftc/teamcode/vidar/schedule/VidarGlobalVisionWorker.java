@@ -6,13 +6,13 @@ import org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision;
  * Round-robin global worker — one camera per step, skip when no new mailbox generation.
  * Tic-toc slots are out-of-phase via {@link VidarProcessScheduler#VidarProcessScheduler(int)}.
  */
-final class VidarGlobalVisionWorker extends Thread {
+public final class VidarGlobalVisionWorker extends Thread {
 
     private final VidarWorkerCameraSlot[] slots;
     private volatile boolean running = true;
     private int roundRobinIndex;
 
-    VidarGlobalVisionWorker(VidarVision[] cameras) {
+    public VidarGlobalVisionWorker(VidarVision[] cameras) {
         super("VidarGlobalVisionWorker");
         setPriority(Thread.NORM_PRIORITY - 1);
         int count = 0;
@@ -30,7 +30,7 @@ final class VidarGlobalVisionWorker extends Thread {
         }
     }
 
-    void shutdownAndJoin() {
+    public void shutdownAndJoin() {
         running = false;
         interrupt();
         try {

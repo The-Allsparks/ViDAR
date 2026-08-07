@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameMailbox;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
@@ -36,7 +35,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
     private final VidarMetrics metrics;
     private final VidarResourceBudget resourceBudget;
 
-    private volatile VidarTagScoutResult lastScout;
+    private volatile VidarTagScoutObservation lastScout;
     private volatile VidarTagObservation latestTag;
     private volatile VidarTagScoutObservation latestScoutObservation;
     private volatile Rect lastDecodeRegion;
@@ -113,21 +112,22 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
         }
 
         lastScout = tagScout.run(frame, profile);
+        latestScoutObservation = null;
         if (lastScout != null) {
-            latestScoutObservation = VidarTagScoutObservation.fromScoutResult(
+            latestScoutObservation = VidarTagScoutObservation.enrich(
                     lastScout, profile, frame.cols(), captureTimeNanos, cameraName);
             if (VidarTagCropPlanner.worthDecode(
-                    lastScout.widthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols())) {
+                    lastScout.apparentWidthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols())) {
                 currentDecimation = VidarTagConfig.DECODE_DECIMATION_AFTER_SCOUT;
             }
         }
 
         boolean reduceTag = resourceBudget != null && resourceBudget.shouldReduceTagFrequency();
         boolean forceDecode = VidarTagGate.consumeDriverRequest();
-        VidarTagScoutResult scout = lastScout;
+        VidarTagScoutObservation scout = lastScout;
         boolean worthDecode = scout != null
                 && VidarTagCropPlanner.worthDecode(
-                        scout.widthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
+                        scout.apparentWidthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
         boolean canDecode = !reduceTag
                 && scout != null
                 && (worthDecode || forceDecode)
@@ -152,13 +152,13 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
         }
     }
 
-    private void scheduleDecode(Mat frame, long captureTimeNanos, VidarTagScoutResult scout) {
+    private void scheduleDecode(Mat frame, long captureTimeNanos, VidarTagScoutObservation scout) {
         if (scout == null) {
             return;
         }
 
         int decimation = VidarTagCropPlanner.chooseDecimation(
-                scout.widthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
+                scout.apparentWidthPx, VidarTagConfig.SCOUT_WIDTH, frame.cols());
         decimation = Math.max(decimation, currentDecimation);
         Rect decodeRegion = VidarFrameRegions.tagDecodeCrop(
                 profile, frame.cols(), frame.rows(), scout.band);
@@ -177,7 +177,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             Rect decodeRegion,
             int decimation,
             long captureTimeNanos,
-            VidarTagScoutResult scout) {
+            VidarTagScoutObservation scout) {
         long t0 = System.nanoTime();
         try {
             VidarTagCropDecoder.DecodeResult decoded = cropDecoder.decode(
@@ -200,7 +200,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             long captureTimeNanos,
             int decimation,
             Rect decodeRegion,
-            VidarTagScoutResult scout) {
+            VidarTagScoutObservation scout) {
         long t0 = System.nanoTime();
         VidarTagCropDecoder.DecodeResult decoded = cropDecoder.decode(
                 frame, decodeRegion, decimation, captureTimeNanos, scout);
@@ -213,7 +213,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
     private void applyDecodeResult(
             VidarTagCropDecoder.DecodeResult decoded,
             long captureTimeNanos,
-            VidarTagScoutResult scout) {
+            VidarTagScoutObservation scout) {
         if (decoded == null || scout == null) {
             return;
         }
@@ -230,7 +230,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
                 decoded.decodePixels);
     }
 
-    public VidarTagScoutResult getLastScout() {
+    public VidarTagScoutObservation getLastScout() {
         return lastScout;
     }
 

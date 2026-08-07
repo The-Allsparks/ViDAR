@@ -107,7 +107,7 @@ public final class VidarObservationSpatial {
             return VidarSpatialDepthKind.UNAVAILABLE;
         }
         if (range.source0 != null
-                && range.source0.source == org.firstinspires.ftc.teamcode.vidar.VidarRangeEstimate.Source.PLATE_WIDTH) {
+                && range.source0.source == VidarRangeEstimate.Source.PLATE_WIDTH) {
             return VidarSpatialDepthKind.INFERRED;
         }
         return VidarSpatialDepthKind.INFERRED;

@@ -139,7 +139,7 @@ public final class VidarTransformRegistry {
             int fullWidth,
             int fullHeight,
             double processScale) {
-        VidarRoiRect roi = org.firstinspires.ftc.teamcode.vidar.VidarFrameRegions.elementRoi(
+        VidarRoiRect roi = VidarFrameRegions.elementRoi(
                 profile, fullWidth, fullHeight);
         if (!roi.enabled || processScale <= 0) {
             return VidarImageTransform.identity(fullWidth, fullHeight);
