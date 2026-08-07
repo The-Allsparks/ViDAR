@@ -1,5 +1,7 @@
 # ViDAR System Design
 
+ViDAR turns USB webcam detections into **calibrated positions in robot space**. Vision pipelines (color blobs, plate geometry, sparse AprilTags) feed explicit coordinate frames, range fusion, multi-camera fusion, and a short-term world model. Your OpMode reads robot-frame observations and tracks; field pose and autonomous pathing stay separate and optional.
+
 Status labels used throughout ViDAR documentation:
 
 | Label | Meaning |
@@ -14,11 +16,11 @@ Status labels used throughout ViDAR documentation:
 ## Architecture (preserved)
 
 ```
-Per-camera detection → Multi-camera fusion → Short-term world model
+Per-camera detection → Multi-camera fusion → Short-term world model (robot space)
                               ↓
                     AprilTag observations (localization separate)
                               ↓
-                    Pedro Pathing via external pose provider
+                    Your OpMode / optional auto stack (Pedro, Road Runner, custom)
 ```
 
 ## Element detection — **Implemented**, **Tested in simulation**
@@ -102,3 +104,18 @@ Browser sim (`sim/`) mirrors Java logic for ROIs, color-blob detection, weighted
 ## Competition legality
 
 Teams must verify final implementation against the current-season FTC manual. ViDAR does not claim competition readiness without team validation.
+
+Reviewed against **BIOBUZZ Competition Manual V0** (Jul 2026). Nothing in V0 appears to prohibit ViDAR's architecture (UVC webcams + custom Java on the Control Hub). Re-check after kickoff when game rules and expansion limits (R105) are published.
+
+| Topic | BIOBUZZ V0 rule | ViDAR note |
+|-------|-----------------|------------|
+| On-robot vision | R708 | UVC webcams via Robot Controller app; each camera must be natively supported (validate SVPRO or other models on your hub) |
+| USB wiring | R707, R611, R602 | Hub + cameras on USB; hub power from +5V aux or legal USB pack |
+| Custom software | R304 | ViDAR TeamCode is allowed |
+| Match networking | R704 | No FTC Dashboard or continuous streaming during MATCH play; Driver Station telemetry only |
+| Fair play | R202 | Do not put 36h11 AprilTag-like graphics on the robot |
+| Expansion / game rules | R105, Section 11 | **TBD at kickoff** (Sep 12, 2026) |
+
+Off-robot tools (browser sim, Python tests, Docker) are for development only and must not run vision during matches.
+
+Manual: [ftc-resources.firstinspires.org/ftc/game/manual](https://ftc-resources.firstinspires.org/ftc/game/manual)

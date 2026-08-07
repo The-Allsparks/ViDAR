@@ -1,6 +1,6 @@
 # ViDAR Roadmap
 
-Phased plan for multi-camera deployment, situational awareness, Pedro pathing integration, and field validation.
+Phased plan for multi-camera deployment, robot-space situational awareness, optional pathing integration, and field validation.
 
 ## Architecture (current)
 
@@ -15,8 +15,8 @@ flowchart TB
 
   subgraph vidar [ViDAR per camera]
     VP[VisionPortal]
-    CP[VidarContourProcessor — elements + plates]
-    Tags[Adaptive tags + non-localizing scout]
+    CP["VidarContourProcessor: elements and plates"]
+    Tags["Adaptive tags and non-localizing scout"]
   end
 
   subgraph fuse [Fusion layer]
@@ -40,7 +40,7 @@ flowchart TB
   LOC --> PED
 ```
 
-ViDAR **detects and remembers**; it does **not** own field pose. A separate localization module should fuse Pinpoint/odom/IMU with sparse ViDAR tag fixes, then feed Pedro.
+ViDAR **detects and remembers** in robot space; it does **not** own field pose. A separate localization module should fuse Pinpoint/odom/IMU with sparse ViDAR tag fixes, then feed your autonomous stack (Pedro, Road Runner, or custom). Pathing libraries are optional consumers, not requirements.
 
 ---
 
@@ -133,13 +133,17 @@ Pedro consumes `FieldPoseProvider.get()` for path following; assisted modes read
 
 ## Phase 5 — Real-world USB wiring
 
-### Rules (2025 manual summary)
+### Rules (BIOBUZZ Competition Manual V0, Jul 2026)
+
+Re-check [Section 12](https://ftc-resources.firstinspires.org/ftc/game/manual) and Team Updates after kickoff (Sep 12, 2026). Game rules and expansion limits are not in the V0 preview.
 
 - **R602:** COTS USB battery packs ≤ 100 Wh allowed for peripherals (with constraints).
-- **R617:** Powered USB hubs may draw from:
+- **R611:** Powered USB hubs may draw from:
   - Approved COTS USB battery pack, **or**
   - REV Control Hub / Expansion Hub **+5V auxiliary port** (5 V, 2 A max per port).
-- Vision must run on Control Hub (R715); no off-board coprocessor for competition path.
+- **R707 / R708:** USB vision only; UVC webcams natively supported by the Robot Controller app (single sensor; UVC stream only). No stereoscopic cameras.
+- **R704:** During **MATCH play**, FTC Dashboard and similar third-party streaming tools are prohibited. Use Driver Station telemetry only; disconnect laptops from RC Wi-Fi.
+- Vision must run on the Control Hub via the Robot Controller app (R708); no off-board coprocessor for the competition path. Custom TeamCode (ViDAR) is allowed (R304).
 
 ### Control Hub ports
 
@@ -199,9 +203,9 @@ Structured test plan before trusting ViDAR in auto.
 
 | Metric | Target | How |
 |--------|--------|-----|
-| Element FPS per camera | ≥ 15 | Discover telemetry + FTC Dashboard |
+| Element FPS per camera | ≥ 15 | Discover telemetry (bench/practice); FTC Dashboard OK off-match only (R704) |
 | Tag decode latency | < 400 ms | Log time around decode |
-| Tag decode CPU spike | acceptable at 2 s interval | Dashboard CPU |
+| Tag decode CPU spike | acceptable at 2 s interval | Discover telemetry or Dashboard off-match |
 | Plate false positives | < 1/min on empty field | 5 min static scene |
 
 ### 1 — Single-camera calibration

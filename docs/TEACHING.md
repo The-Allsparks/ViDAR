@@ -1,6 +1,6 @@
-# ViDAR — Java teaching path
+# ViDAR Java teaching path
 
-End-to-end Java on the **Control Hub** using the official FTC SDK vision APIs. One language, one device, competition-legal.
+End-to-end Java on the **Control Hub** using the official FTC SDK vision APIs. The goal is **robot-space awareness**: calibrated range, bearing, and tracks your OpMode can use, not raw pixels. One language, one device, competition-legal.
 
 ## Prerequisites
 
