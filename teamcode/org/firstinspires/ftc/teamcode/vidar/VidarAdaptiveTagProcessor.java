@@ -102,7 +102,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             metrics.recordFrameAge((System.nanoTime() - captureTimeNanos) / 1_000_000.0);
         }
 
-        lastScout = tagScout.run(frame);
+        lastScout = tagScout.run(frame, profile);
         if (lastScout != null) {
             latestScoutObservation = VidarTagScoutObservation.fromScoutResult(
                     lastScout, profile, frame.cols(), captureTimeNanos, cameraName);

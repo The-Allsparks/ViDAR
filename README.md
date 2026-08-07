@@ -1,4 +1,4 @@
-# ViDAR
+﻿# ViDAR
 
 Low-resolution, CPU-conscious vision for FTC — **game-element tracking**, **friend/foe plates**, and **sparse AprilTags** on the Control Hub.
 
@@ -24,6 +24,7 @@ Supports **1–4 USB webcams** architecturally; sustained multi-camera USB stabi
 | [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) | Architecture and feature status |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Tuning reference |
 | [docs/CALIBRATION.md](docs/CALIBRATION.md) | Field calibration workflow |
+| [docs/CALIBRATION_CHECKLIST.md](docs/CALIBRATION_CHECKLIST.md) | One-page setup before first match |
 | [docs/COORDINATE_FRAMES.md](docs/COORDINATE_FRAMES.md) | Frames, transforms, intrinsics, validation |
 | [docs/TEACHING.md](docs/TEACHING.md) | Java lessons for Control Hub |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Multi-cam wiring, validation, Pedro |
@@ -65,7 +66,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). License: MIT — see [LICENSE](LICENSE).
 2. Copy `teamcode/org/firstinspires/ftc/teamcode/vidar/` → `TeamCode/src/main/java/.../vidar/`.
 3. Configure USB webcams **`Webcam 1`** … **`Webcam 4`** (see `VidarConfig.CAMERA_NAMES`).
 4. Set `VidarConfig.CAMERA_COUNT` (1–4). Alliance is set at runtime — see below.
-5. Run OpModes: **Discover** → **TeleOp** → **Auto Seek**.
+5. Run OpModes: **Discover** → **Spatial** → **Spatial Map**.
+
+ViDAR is a **spatial system only** — pose plus three groups (`elements()`, `allies()`, `foes()`). It never commands motors.
 
 ### Alliance (friend / foe)
 
@@ -122,9 +125,10 @@ vidar/
 ├── VidarVision.java                ← one camera
 ├── VidarMultiVision.java           ← 1–4 cameras fused
 ├── VidarWorldModel.java            ← short-term spatial memory
+├── VidarSpatial.java               ← pose + targets / anti-targets facade
 ├── VidarDiscoverOpMode.java
-├── VidarTeleOp.java
-└── VidarAutoSeekOpMode.java
+├── VidarTeleOp.java                ← ViDAR: Spatial
+└── VidarAutoSeekOpMode.java        ← ViDAR: Spatial Map
 ```
 
 ```mermaid

@@ -162,6 +162,7 @@ Immutable fused game-piece detection.
 
 | Field | Type | Notes |
 |-------|------|-------|
+| `elementId` | string | season element id from `season.json` |
 | `cameraName` | string | |
 | `captureTimeNanos` | int64 | VisionPortal `frameCaptureNanos` at mailbox publish |
 | `cx`, `cy` | float | image center, full-frame px |
@@ -178,7 +179,7 @@ Immutable fused game-piece detection.
 | `robotX`, `robotY` | float | robot-frame floor point |
 | `houghVotes` | int | 0 for color-blob path |
 
-Python extension: `elementId` string (map key in Java is external via `getGameElement(id)`).
+Python `ElementObservation` should include matching `elementId` when sim parity is updated.
 
 ### `PlateObservation` / `VidarPlateObservation`
 
@@ -254,6 +255,79 @@ processFrame(frame, captureTimeNanos) // Java VisionProcessor entry
 | `getGameElement(elementId)` | best observation for that season element id |
 | `getGameElements()` | `Map<string, ElementObservation>` |
 | `getBestPlate()` | best `PlateObservation` or null |
+
+---
+
+## Spatial facade (Java — recommended for OpModes)
+
+Pedro-style entry point: one object, one `update()` per loop. Wraps `VidarMultiVision` + `VidarWorldModel`. Does **not** require Pedro Pathing.
+
+### `VidarSpatial`
+
+```
+create(hardwareMap): VidarSpatial
+create(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
+create(hardwareMap, robot, season, odomSupplier, allianceSupplier): VidarSpatial
+
+update(): void
+updateCorrected(): VidarCorrectedFrame    // when odom supplier configured
+
+bestElement(): VidarSpatialPoint | null       // LIVE
+nearestElement(): VidarSpatialPoint | null    // REMEMBERED when motion tracking active
+elements(): List<VidarSpatialPoint>           // ranked live + remembered tracks
+allies(): List<VidarSpatialPoint>
+foes(): List<VidarSpatialPoint>
+bestFoe() / nearestFoe() / bestAlly(): VidarSpatialPoint | null
+intakeBlocked(): bool
+offensiveLaneAnalysis(): VidarOffensiveLaneAnalysis
+recommendOffensiveLane(): VidarOffensiveLane   // LEFT | CENTER | RIGHT
+trackCount(): int                               // 0 when motion tracking inactive
+fieldPose(): Pose2D | null
+robotPose(): Pose2D | null
+isOdomConfigured(): bool
+isMotionTrackingEnabled(): bool
+isMotionTrackingActive(): bool                // enabled && odom supplier
+setMotionTrackingEnabled(enabled): void
+distanceUnit(): DistanceUnit
+cameraCount(): int
+
+setFieldPosePrior(pose): void
+setFieldPoseSupplier(supplier): void          // e.g. Pedro follower pose for world tracks
+vision(): VidarMultiVision                    // advanced escape hatch
+worldModel(): VidarWorldModel
+close(): void
+```
+
+**Setup:** copy `config/robots/*.json` → `assets/vidar/robot.json` — see [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md).
+
+Motion-corrected tracks require an odom supplier at `create()`. Field pose for tracks extrapolates from odom between tag fixes; optional `setFieldPoseSupplier()` for Pedro-primary pose.
+
+### `VidarSpatialPoint`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `kind` | `ELEMENT`, `FOE`, `ALLY` | |
+| `source` | `LIVE`, `REMEMBERED` | |
+| `trackId` | int | stable id when motion tracking active; `-1` for live-only |
+| `elementId` | string | season element id; empty for plates |
+| `occurrenceRank` | int | per-type rank 0 = closest/easiest; `-1` if N/A |
+| `velFieldXInPerSec`, `velFieldYInPerSec` | float | field-frame velocity on remembered tracks |
+| `robotX`, `robotY` | float | robot frame floor point (+X forward, +Y left) |
+| `range` | float | fused slant range |
+| `confidence` | float | 0–1 |
+| `bearingDeg()` | float | 0° = ahead, + = left |
+| `distance()` | float | `hypot(robotX, robotY)` |
+
+**Team integration:** after `spatial.update()`, read pose and iterate `elements()`, `allies()`, `foes()`. Use `recommendOffensiveLane()` for Phase 3 offensive lane choice (lowest foe density in forward cone). Motion-corrected tracks require an odom supplier and `isMotionTrackingActive()`. ViDAR never outputs motor commands.
+
+### `VidarOffensiveLaneAnalysis`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `leftCount` / `centerCount` / `rightCount` | int | Foes in each third of the forward cone |
+| `recommended` | `LEFT`, `CENTER`, `RIGHT` | Lane with fewest foes; tie → center, then left |
+| `maxRangeIn` | double | From `VidarConfig.OFFENSIVE_LANE_MAX_RANGE_IN` |
+| `coneHalfDeg` | double | From `VidarConfig.OFFENSIVE_LANE_CONE_HALF_DEG` |
 
 ---
 

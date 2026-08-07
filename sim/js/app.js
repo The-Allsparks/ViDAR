@@ -16,6 +16,12 @@ import { drawMockScene } from "./mock-scene.js";
 import { renderFrame, describeLogic } from "./renderer.js";
 import { saveCapture, canvasToDataUrl, downloadDataUrl } from "./capture.js";
 import { drawImageNative, setElementAspectRatio, toGrayscaleImageData } from "./canvas-util.js";
+import {
+  createSpatialTrackState,
+  updateSpatialTracks,
+  assignOccurrenceRanks,
+} from "./spatial-tracks.js";
+import { analyzeOffensiveLane } from "./offensive-lane.js";
 
 const display = /** @type {HTMLCanvasElement} */ (document.getElementById("display"));
 const capture = /** @type {HTMLCanvasElement} */ (document.getElementById("capture"));
@@ -36,6 +42,9 @@ const elementRobotXYEl = document.getElementById("element-robot-xy");
 const tagScoutEl = document.getElementById("tag-scout");
 const tagFixEl = document.getElementById("tag-fix");
 const tagPoseNowEl = document.getElementById("tag-pose-now");
+const spatialTracksEl = document.getElementById("spatial-tracks");
+const offensiveLaneEl = document.getElementById("offensive-lane");
+const motionTracksCheck = /** @type {HTMLInputElement | null} */ (document.getElementById("motion-tracks"));
 const tagSampleBtn = /** @type {HTMLButtonElement | null} */ (document.getElementById("tag-sample-btn"));
 const captureStatusEl = document.getElementById("capture-status");
 const processSizeLabel = document.getElementById("process-size-label");
@@ -84,6 +93,9 @@ let tagState = createTagState();
 
 /** @type {import('./temporal-filter.js').TemporalFilterState} */
 let temporalState = createTemporalFilterState();
+
+/** @type {ReturnType<typeof createSpatialTrackState>} */
+let spatialTrackState = createSpatialTrackState();
 
 /** @type {{ detections: import('./temporal-filter.js').StableDetection[], rawDetections: import('./detection.js').Detection[], roi: {x:number,y:number,w:number,h:number}, elementMask: Uint8Array | null, maskPixels: number, tuning: import('./config.js').VidarTuning, detectOpts: ReturnType<typeof readDetectOptions>, activeDetectors: string } | null} */
 let lastFrame = null;
@@ -239,6 +251,11 @@ cropOffsetInput.addEventListener("input", () => {
 temporalFilterCheck.addEventListener("change", () => {
   temporalState = createTemporalFilterState();
 });
+if (motionTracksCheck) {
+  motionTracksCheck.addEventListener("change", () => {
+    spatialTrackState = createSpatialTrackState();
+  });
+}
 
 startBtn.addEventListener("click", () => start());
 stopBtn.addEventListener("click", () => stop());
@@ -249,6 +266,7 @@ async function start() {
   if (!tuning || running) return;
   running = true;
   temporalState = createTemporalFilterState();
+  spatialTrackState = createSpatialTrackState();
   startBtn.disabled = true;
   stopBtn.disabled = false;
   captureBtn.disabled = false;
@@ -295,6 +313,7 @@ async function start() {
 function stop() {
   running = false;
   temporalState = createTemporalFilterState();
+  spatialTrackState = createSpatialTrackState();
   cancelAnimationFrame(rafId);
   startBtn.disabled = false;
   stopBtn.disabled = true;
@@ -362,6 +381,33 @@ function loop() {
   const detections = filtered.stable;
   const logicDetections = confirmedDetections(detections);
 
+  const motionEnabled = motionTracksCheck?.checked ?? false;
+  spatialTrackState = updateSpatialTracks(
+    spatialTrackState,
+    logicDetections,
+    performance.now(),
+    tagState.odom,
+    { enabled: motionEnabled },
+  );
+  const occurrenceRanks = assignOccurrenceRanks(
+    spatialTrackState.tracks.filter((t) => t.kind === "ELEMENT"),
+  );
+  for (const det of detections) {
+    const match = spatialTrackState.tracks.find(
+      (t) => t.kind === "ELEMENT" && t.elementId === (det.elementId ?? det.name)
+        && Math.hypot(t.cx - det.cx, t.cy - det.cy) < 8,
+    );
+    if (match) {
+      det.trackId = match.trackId;
+      det.trackSource = match.source;
+      const rank = occurrenceRanks.get(match.trackId);
+      if (rank != null) det.occurrenceRank = rank;
+    }
+  }
+
+  const foeTracks = spatialTrackState.tracks.filter((t) => t.kind === "FOE");
+  const lane = analyzeOffensiveLane(foeTracks);
+
   const best = bestByCategory(logicDetections, tuning.processHeight, tuning.geometry);
   const logic = describeLogic(best, tuning);
 
@@ -375,6 +421,8 @@ function loop() {
     tuning,
     detectOpts,
     activeDetectors,
+    spatialTracks: spatialTrackState.tracks,
+    offensiveLane: lane,
   };
 
   const maskCanvas = elementMask
@@ -392,9 +440,14 @@ function loop() {
     processCanvas,
     maskCanvas,
     tagRegion: tagState.lastRegion,
+    spatialTracks: motionEnabled ? spatialTrackState.tracks : [],
   });
 
-  updateSidebar(detections, rawDetections, logic, maskPixels, tuning, activeDetectors);
+  updateSidebar(detections, rawDetections, logic, maskPixels, tuning, activeDetectors, {
+    spatialTracks: spatialTrackState.tracks,
+    offensiveLane: lane,
+    motionEnabled,
+  });
   syncDetectorUiLabels();
   updateFps();
 }
@@ -458,8 +511,8 @@ async function captureStill() {
   }
 }
 
-/** @param {import('./temporal-filter.js').StableDetection[]} detections @param {import('./detection.js').Detection[]} rawDetections @param {ReturnType<typeof describeLogic>} logic @param {number} maskPixels @param {import('./config.js').VidarTuning} tuning @param {string} [activeDetectors] */
-function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, activeDetectors) {
+/** @param {import('./temporal-filter.js').StableDetection[]} detections @param {import('./detection.js').Detection[]} rawDetections @param {ReturnType<typeof describeLogic>} logic @param {number} maskPixels @param {import('./config.js').VidarTuning} tuning @param {string} [activeDetectors] @param {{ spatialTracks?: import('./spatial-tracks.js').SpatialTrack[], offensiveLane?: ReturnType<typeof analyzeOffensiveLane>, motionEnabled?: boolean }} [spatial] */
+function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, activeDetectors, spatial) {
   const temporalOn = temporalFilterCheck.checked;
   if (detections.length === 0) {
     const hint = activeDetectors?.includes("element")
@@ -479,7 +532,10 @@ function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, act
           d.range != null
             ? ` · ${d.range.toFixed(0)}in (size ${d.dSize?.toFixed(0) ?? "—"}/floor ${d.dFloor?.toFixed(0) ?? "—"}) conf ${((d.confidence ?? 0) * 100).toFixed(0)}%`
             : "";
-        return `<li><span class="tag" style="color:${d.color}">${d.label}</span> (${d.cx.toFixed(0)}, ${d.cy.toFixed(0)}) · ${Math.round(d.area)} px${geom}${status ? ` · <em>${status}</em>` : ""}${d.circularity != null ? ` · circ ${d.circularity.toFixed(2)}` : ""}${d.interior != null ? ` · fill ${(d.interior * 100).toFixed(0)}%` : ""}</li>`;
+        const idPart = d.elementId ? ` · ${d.elementId}` : "";
+        const rankPart = d.occurrenceRank != null && d.occurrenceRank >= 0 ? `#${d.occurrenceRank}` : "";
+        const trackPart = d.trackId != null && d.trackId >= 0 ? ` · T${d.trackId}` : "";
+        return `<li><span class="tag" style="color:${d.color}">${d.label}</span>${idPart}${rankPart}${trackPart} (${d.cx.toFixed(0)}, ${d.cy.toFixed(0)}) · ${Math.round(d.area)} px${geom}${status ? ` · <em>${status}</em>` : ""}${d.circularity != null ? ` · circ ${d.circularity.toFixed(2)}` : ""}${d.interior != null ? ` · fill ${(d.interior * 100).toFixed(0)}%` : ""}</li>`;
       })
       .join("");
     if (temporalOn && rawDetections.length > detections.length) {
@@ -536,6 +592,25 @@ function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, act
     const now = backdateFieldPose(tag, tagState.odom);
     tagPoseNowEl.textContent = now
       ? `(${now.x.toFixed(1)}, ${now.y.toFixed(1)}) ${now.h.toFixed(0)}°`
+      : "—";
+  }
+  if (spatialTracksEl) {
+    const tracks = spatial?.spatialTracks ?? [];
+    if (!spatial?.motionEnabled) {
+      spatialTracksEl.textContent = "off — enable motion tracks";
+    } else if (!tracks.length) {
+      spatialTracksEl.textContent = "—";
+    } else {
+      spatialTracksEl.textContent = tracks
+        .slice(0, 4)
+        .map((t) => `T${t.trackId}${t.elementId ? ` ${t.elementId}` : ""} ${t.source} ${t.range.toFixed(0)}in`)
+        .join(" · ");
+    }
+  }
+  if (offensiveLaneEl) {
+    const lane = spatial?.offensiveLane;
+    offensiveLaneEl.textContent = lane
+      ? `${lane.recommended} (L${lane.left} C${lane.center} R${lane.right})`
       : "—";
   }
 }

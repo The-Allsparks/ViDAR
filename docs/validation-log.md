@@ -51,7 +51,10 @@ Re-run on Control Hub hardware before competition.
 | Test row | Pass/Fail | Notes |
 |----------|-----------|-------|
 | `VidarWorldModel` foe memory survives 1 s occlusion | | |
-| Auto Seek stops at `PICKUP_STOP` | | |
+| Spatial Map lists match live element position | | |
+| Same `trackId` survives 0.5 s element occlusion with odom | | |
+| `elementId#0` / `#1` per type ranked by distance | | |
+| Static element field velocity ≈ 0 after settle | | |
 | Tag fix + odom backdating vs known field dimension | | |
 
 ## 5 — Pedro auto routines
