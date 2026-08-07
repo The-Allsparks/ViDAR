@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.frame;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;

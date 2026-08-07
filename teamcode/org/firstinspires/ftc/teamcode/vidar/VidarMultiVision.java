@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.vidar.fusion.VidarOdomHistory;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarTemporalFilter;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraMount;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetricsLogger;

@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameMailbox;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;

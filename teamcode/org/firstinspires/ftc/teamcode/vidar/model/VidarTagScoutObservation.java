@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.model;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
@@ -50,7 +52,7 @@ public final class VidarTagScoutObservation {
         double centerErr = scout.cx - frameCols / 2.0;
         double bearingErr = centerErr / Math.max(1, frameCols)
                 * VidarTagConfig.horizontalFovDeg(profile);
-        double bearing = normalizeDeg(profile.bearingDeg + bearingErr);
+        double bearing = VidarCoordinateFrames.normalizeDeg(profile.bearingDeg + bearingErr);
         double confidence = Math.min(1.0, fullWidth / VidarTagConfig.DECODE_MIN_TAG_WIDTH_PX);
         return new VidarTagScoutObservation(
                 bearing, fullWidth, confidence, cameraName, scout.band,

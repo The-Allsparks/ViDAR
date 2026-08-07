@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameMailbox;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
@@ -12,7 +12,7 @@ import org.opencv.core.Rect;
  * Crop mailbox: submit copies into {@code pendingCrop}; take swaps {@code pendingCrop} /
  * {@code processingCrop} (same model as {@link VidarFrameMailbox}).
  */
-final class VidarTagDecodeWorker extends Thread {
+public final class VidarTagDecodeWorker extends Thread {
 
     private static final class DecodeRequest {
         final VidarAdaptiveTagProcessor processor;
@@ -74,7 +74,7 @@ final class VidarTagDecodeWorker extends Thread {
         setPriority(Thread.NORM_PRIORITY - 2);
     }
 
-    static void ensureStarted() {
+    public static void ensureStarted() {
         if (!VidarConfig.ASYNC_TAG_DECODE_ENABLED || !VidarTagConfig.ENABLED) {
             return;
         }
@@ -86,7 +86,7 @@ final class VidarTagDecodeWorker extends Thread {
         }
     }
 
-    static void submit(
+    public static void submit(
             VidarAdaptiveTagProcessor processor,
             Mat frame,
             Rect decodeRegion,
@@ -112,7 +112,7 @@ final class VidarTagDecodeWorker extends Thread {
         }
     }
 
-    static void shutdownAndJoin() {
+    public static void shutdownAndJoin() {
         synchronized (INSTANCE_LOCK) {
             if (instance == null) {
                 return;

@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.runtime;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
@@ -297,15 +297,15 @@ public class VidarVision {
         return failed;
     }
 
-    boolean hasAsyncWorker() {
+    public boolean hasAsyncWorker() {
         return asyncWorkerEnabled;
     }
 
-    VidarFrameMailbox frameMailbox() {
+    public VidarFrameMailbox frameMailbox() {
         return frameMailbox;
     }
 
-    boolean isWorkerProcessingAllowed() {
+    public boolean isWorkerProcessingAllowed() {
         if (excludedFromRotation || failed) {
             return false;
         }
@@ -314,7 +314,7 @@ public class VidarVision {
                 && state != VidarCameraScheduler.State.DEEP_IDLE;
     }
 
-    void processSnapshot(VidarFrameMailbox.Snapshot snap) {
+    public void processSnapshot(VidarFrameMailbox.Snapshot snap) {
         if (snap == null || snap.frame == null || snap.frame.empty()) {
             return;
         }
