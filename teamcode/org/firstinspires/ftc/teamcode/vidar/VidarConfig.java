@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraMount;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
+import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
 import android.util.Size;
 
 /**

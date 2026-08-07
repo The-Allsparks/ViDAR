@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeEstimate;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeResult;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarElementSpec;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarPlateSpec;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
 /**
  * Robot-frame spatial sample (+X forward, +Y left) in the active distance unit.
  *

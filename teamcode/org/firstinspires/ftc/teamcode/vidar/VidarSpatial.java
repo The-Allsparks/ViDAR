@@ -1,5 +1,11 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedFrame;
+import org.firstinspires.ftc.teamcode.vidar.frame.VidarRankedElementFrame;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarElementOccurrenceRank;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;

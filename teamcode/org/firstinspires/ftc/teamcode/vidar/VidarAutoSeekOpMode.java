@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.detect.VidarBlobUtil;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 

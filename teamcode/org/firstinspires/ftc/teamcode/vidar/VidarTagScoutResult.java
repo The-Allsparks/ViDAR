@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
 /**
  * Cheap top-half scout hit used to pick horizontal decode band and decimation.
  */
