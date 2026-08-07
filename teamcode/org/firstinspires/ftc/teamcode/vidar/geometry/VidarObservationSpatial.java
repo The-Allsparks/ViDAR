@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
+import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeEstimate;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarOdomHistory;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarOdomHistory;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarRangeResult;
-import org.firstinspires.ftc.teamcode.vidar.VidarTagObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutObservation;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeResult;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 
 /**
  * Spatial metadata helpers for observations — image vs robot vs field frames.
@@ -106,7 +107,7 @@ public final class VidarObservationSpatial {
             return VidarSpatialDepthKind.UNAVAILABLE;
         }
         if (range.source0 != null
-                && range.source0.source == org.firstinspires.ftc.teamcode.vidar.VidarRangeEstimate.Source.PLATE_WIDTH) {
+                && range.source0.source == VidarRangeEstimate.Source.PLATE_WIDTH) {
             return VidarSpatialDepthKind.INFERRED;
         }
         return VidarSpatialDepthKind.INFERRED;

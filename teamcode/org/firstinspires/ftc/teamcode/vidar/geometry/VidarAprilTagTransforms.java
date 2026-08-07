@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.vidar.geometry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.vidar.VidarTagObservation;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 
 /**
  * Explicit AprilTag localization transform chain.

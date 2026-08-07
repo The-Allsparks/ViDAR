@@ -1,11 +1,12 @@
 package org.firstinspires.ftc.teamcode.vidar.config;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
 import org.firstinspires.ftc.teamcode.vidar.VidarAlliance;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementDetectorType;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementShape;
-import org.firstinspires.ftc.teamcode.vidar.VidarCameraMount;
-import org.firstinspires.ftc.teamcode.vidar.VidarCameraProfile;
-import org.firstinspires.ftc.teamcode.vidar.VidarCameraRoiConfig;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraMount;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraRoiConfig;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.VidarDistanceUnit;
 import org.json.JSONArray;
