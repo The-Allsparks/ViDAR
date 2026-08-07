@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameMailbox;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
@@ -12,21 +12,21 @@ import org.opencv.core.Rect;
  * Crop mailbox: submit copies into {@code pendingCrop}; take swaps {@code pendingCrop} /
  * {@code processingCrop} (same model as {@link VidarFrameMailbox}).
  */
-final class VidarTagDecodeWorker extends Thread {
+public final class VidarTagDecodeWorker extends Thread {
 
     private static final class DecodeRequest {
         final VidarAdaptiveTagProcessor processor;
         final Rect localRegion;
         final int decimation;
         final long captureTimeNanos;
-        final VidarTagScoutResult scout;
+        final VidarTagScoutObservation scout;
 
         DecodeRequest(
                 VidarAdaptiveTagProcessor processor,
                 Rect localRegion,
                 int decimation,
                 long captureTimeNanos,
-                VidarTagScoutResult scout) {
+                VidarTagScoutObservation scout) {
             this.processor = processor;
             this.localRegion = localRegion;
             this.decimation = decimation;
@@ -41,7 +41,7 @@ final class VidarTagDecodeWorker extends Thread {
         final Rect decodeRegion;
         final int decimation;
         final long captureTimeNanos;
-        final VidarTagScoutResult scout;
+        final VidarTagScoutObservation scout;
 
         Job(
                 VidarAdaptiveTagProcessor processor,
@@ -49,7 +49,7 @@ final class VidarTagDecodeWorker extends Thread {
                 Rect decodeRegion,
                 int decimation,
                 long captureTimeNanos,
-                VidarTagScoutResult scout) {
+                VidarTagScoutObservation scout) {
             this.processor = processor;
             this.crop = crop;
             this.decodeRegion = decodeRegion;
@@ -74,7 +74,7 @@ final class VidarTagDecodeWorker extends Thread {
         setPriority(Thread.NORM_PRIORITY - 2);
     }
 
-    static void ensureStarted() {
+    public static void ensureStarted() {
         if (!VidarConfig.ASYNC_TAG_DECODE_ENABLED || !VidarTagConfig.ENABLED) {
             return;
         }
@@ -86,13 +86,13 @@ final class VidarTagDecodeWorker extends Thread {
         }
     }
 
-    static void submit(
+    public static void submit(
             VidarAdaptiveTagProcessor processor,
             Mat frame,
             Rect decodeRegion,
             int decimation,
             long captureTimeNanos,
-            VidarTagScoutResult scout,
+            VidarTagScoutObservation scout,
             VidarMetrics metrics) {
         if (!VidarConfig.ASYNC_TAG_DECODE_ENABLED || processor == null
                 || frame == null || frame.empty() || decodeRegion == null) {
@@ -112,7 +112,7 @@ final class VidarTagDecodeWorker extends Thread {
         }
     }
 
-    static void shutdownAndJoin() {
+    public static void shutdownAndJoin() {
         synchronized (INSTANCE_LOCK) {
             if (instance == null) {
                 return;
@@ -140,7 +140,7 @@ final class VidarTagDecodeWorker extends Thread {
             int h,
             int decimation,
             long captureTimeNanos,
-            VidarTagScoutResult scout,
+            VidarTagScoutObservation scout,
             VidarMetrics metrics) {
         synchronized (lock) {
             if (pendingRequest != null && metrics != null) {

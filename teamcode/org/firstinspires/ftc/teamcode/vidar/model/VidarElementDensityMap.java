@@ -15,7 +15,7 @@ public final class VidarElementDensityMap {
         public final int cellCol;
         public final int cellRow;
 
-        Peak(double robotX, double robotY, double density, int cellCol, int cellRow) {
+        public Peak(double robotX, double robotY, double density, int cellCol, int cellRow) {
             this.robotX = robotX;
             this.robotY = robotY;
             this.density = density;
