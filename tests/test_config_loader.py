@@ -10,6 +10,8 @@ from vidar.units import DistanceUnit
 ROOT = Path(__file__).resolve().parents[1]
 SEASON_FILES = sorted((ROOT / "config/seasons").glob("*.json"))
 ROBOT_FILES = sorted((ROOT / "config/robots").glob("example*.json"))
+BUNDLED_SEASON = ROOT / "teamcode/assets/vidar/default-season.json"
+BUNDLED_ROBOT = ROOT / "teamcode/assets/vidar/default-robot.json"
 
 
 def test_load_biobuzz_season():
@@ -100,3 +102,21 @@ def test_all_season_json_files_load(season_path: Path):
     for element in season.elements:
         assert element.diameter > 0
         assert element.detector in ElementDetectorType
+
+
+def test_bundled_default_season_matches_legacy_fusion_defaults():
+    """Bundled fallback mirrors VidarConfig fusion constants, not team season templates."""
+    bundled = load_season(BUNDLED_SEASON)
+    decode = load_season(ROOT / "config/seasons/2025-decode.json")
+    assert bundled.season_id == "2025-decode"
+    assert bundled.season_id == decode.season_id
+    assert bundled.elements[0].id == "pollen"
+    assert bundled.min_element_confidence == decode.min_element_confidence
+    assert bundled.max_range_mismatch_ratio == decode.max_range_mismatch_ratio
+
+
+def test_bundled_default_robot_loads():
+    robot = load_robot(BUNDLED_ROBOT)
+    assert robot.robot_name == "example-robot"
+    assert len(robot.cameras) >= 1
+    assert robot.cameras[0].profile.focal_length_px == pytest.approx(340)
