@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.detect.VidarContourWorkspace;
 import org.firstinspires.ftc.teamcode.vidar.detect.VidarContourWorkspacePool;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
@@ -28,11 +28,11 @@ public final class VidarTagScoutRunner {
     private Mat reusableEdges;
     private Mat reusableHierarchy;
 
-    public VidarTagScoutResult run(Mat frameBgra) {
+    public VidarTagScoutObservation run(Mat frameBgra) {
         return run(frameBgra, null);
     }
 
-    public VidarTagScoutResult run(Mat frameBgra, VidarCameraProfile profile) {
+    public VidarTagScoutObservation run(Mat frameBgra, VidarCameraProfile profile) {
         if (frameBgra == null || frameBgra.empty()) {
             return null;
         }
@@ -77,7 +77,7 @@ public final class VidarTagScoutRunner {
                 MatOfPoint2f curve = workspace.curve;
                 MatOfPoint2f approx = workspace.approx;
 
-                VidarTagScoutResult best = null;
+                VidarTagScoutObservation best = null;
                 double bestScore = -1;
 
                 for (MatOfPoint contour : contours) {
@@ -121,7 +121,7 @@ public final class VidarTagScoutRunner {
                     double score = area * (1.0 / aspect);
                     if (score > bestScore) {
                         bestScore = score;
-                        best = new VidarTagScoutResult(cxFull, cyFull, wFull, band);
+                        best = VidarTagScoutObservation.rawHit(cxFull, cyFull, wFull, band);
                     }
                     contour.release();
                 }

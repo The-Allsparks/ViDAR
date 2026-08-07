@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar.runtime;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
@@ -247,7 +246,7 @@ public class VidarVision {
         return bestPlate;
     }
 
-    public VidarTagScoutResult getLastTagScout() {
+    public VidarTagScoutObservation getLastTagScout() {
         return tagProcessor.getLastScout();
     }
 

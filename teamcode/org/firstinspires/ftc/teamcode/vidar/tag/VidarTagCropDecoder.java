@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.tag;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarTagScoutResult;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -97,7 +97,7 @@ public final class VidarTagCropDecoder {
             Rect crop,
             int decimation,
             long captureTimeNanos,
-            VidarTagScoutResult scout) {
+            VidarTagScoutObservation scout) {
         if (fullFrame == null || fullFrame.empty() || crop == null) {
             return null;
         }
@@ -190,7 +190,7 @@ public final class VidarTagCropDecoder {
 
     private static AprilTagDetection pickBest(
             List<AprilTagDetection> detections,
-            VidarTagScoutResult scout,
+            VidarTagScoutObservation scout,
             Rect crop,
             int workCols,
             int workRows) {

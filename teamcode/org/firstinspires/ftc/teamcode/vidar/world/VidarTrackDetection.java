@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.vidar.world;
 
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
+import org.firstinspires.ftc.teamcode.vidar.VidarObservationMapper;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 /**
  * Normalized spatial detection for one vision cycle — input to {@link VidarTrackAssociator}.
  */
@@ -44,20 +46,8 @@ public final class VidarTrackDetection {
 
     public static VidarTrackDetection fromElement(
             VidarElementObservation obs, String elementId, int occurrenceRank) {
-        if (obs == null || Double.isNaN(obs.robotX) || Double.isNaN(obs.robotY)) {
-            return null;
-        }
-        String id = elementId == null || elementId.isEmpty() ? obs.elementId : elementId;
-        return new VidarTrackDetection(
-                VidarWorldModel.Kind.ELEMENT,
-                id,
-                occurrenceRank,
-                obs.robotX,
-                obs.robotY,
-                obs.range,
-                obs.confidence,
-                obs.cameraName,
-                obs.captureTimeNanos);
+        return VidarObservationMapper.toTrackDetection(
+                VidarObservationMapper.fromElement(obs, elementId, occurrenceRank));
     }
 
     public static VidarTrackDetection fromPlate(
@@ -78,7 +68,7 @@ public final class VidarTrackDetection {
     }
 
     public double distance() {
-        return Math.hypot(robotX, robotY);
+        return VidarRobotPose2D.distance(robotX, robotY);
     }
 
     public VidarTrackDetection withOccurrenceRank(int occurrenceRank) {

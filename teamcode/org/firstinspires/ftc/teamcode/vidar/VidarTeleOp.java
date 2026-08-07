@@ -2,11 +2,8 @@ package org.firstinspires.ftc.teamcode.vidar;
 
 import org.firstinspires.ftc.teamcode.vidar.detect.VidarBlobUtil;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import java.util.List;
@@ -19,7 +16,7 @@ import java.util.List;
  * <p>INIT: Y=RED, B=BLUE on gamepad1 (or color sensor on own sign).
  */
 @TeleOp(name = "ViDAR: Spatial", group = "ViDAR")
-public class VidarTeleOp extends LinearOpMode {
+public class VidarTeleOp extends VidarSpatialOpModeBase {
 
     private VidarSpatial spatial;
     private VidarAllianceSelector alliance;
@@ -33,11 +30,7 @@ public class VidarTeleOp extends LinearOpMode {
         telemetry.addLine("Motion tracks: off (no odom supplier)");
         telemetry.update();
 
-        while (!isStarted() && !isStopRequested()) {
-            alliance.pollInit(gamepad1);
-            telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.update();
-        }
+        pollAllianceInit(alliance, gamepad1);
 
         waitForStart();
 
@@ -52,11 +45,7 @@ public class VidarTeleOp extends LinearOpMode {
 
             telemetry.addData("Alliance", alliance.formatStatus());
             telemetry.addData("Motion tracks", spatial.isMotionTrackingActive());
-            telemetry.addData("Field pose", field == null ? "—"
-                    : String.format("(%.1f, %.1f) %.0f°",
-                    field.getX(DistanceUnit.INCH),
-                    field.getY(DistanceUnit.INCH),
-                    field.getHeading(AngleUnit.DEGREES)));
+            telemetry.addData("Field pose", formatFieldPose(field));
             telemetry.addData("Elements", elements.size());
             telemetry.addData("Nearest element", VidarBlobUtil.formatSpatialPoint(
                     elements.isEmpty() ? null : elements.get(0)));
