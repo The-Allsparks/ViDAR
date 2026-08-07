@@ -1,7 +1,7 @@
 [project]
 name = "vidar"
 version = "0.2.0"
-description = "FTC vision library — off-robot Python companion for ViDAR Java"
+description = "Off-robot Python companion for ViDAR: robot-space spatial awareness for FTC (simulation and tests)"
 readme = "README.md"
 requires-python = ">=3.11"
 

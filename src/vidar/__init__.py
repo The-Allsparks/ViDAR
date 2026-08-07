@@ -1,4 +1,4 @@
-"""ViDAR - high-speed low-resolution vision for FTC element gathering and avoidance."""
+"""ViDAR: robot-space spatial awareness for FTC (off-robot Python companion for Java on the Control Hub)."""
 
 from vidar.geometry import (
     build_size_estimate,

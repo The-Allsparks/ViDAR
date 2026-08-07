@@ -17,7 +17,7 @@ Re-run on Control Hub hardware before competition.
 |----------|--------|-----------|-------|
 | Element FPS per camera | ≥ 15 | | `python scripts/bench_metrics.py` |
 | Tag decode latency | < 400 ms | | Manual OpMode |
-| Tag decode CPU spike | acceptable at 2 s interval | | Manual OpMode |
+| Tag decode CPU spike | acceptable at 2 s interval | | Manual OpMode (Dashboard off-match only per R704) |
 | Plate false positives | < 1/min on empty field | | Manual / sim |
 
 ## 1 — Single-camera calibration
