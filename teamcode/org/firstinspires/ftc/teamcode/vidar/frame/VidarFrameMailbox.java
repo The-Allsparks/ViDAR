@@ -13,14 +13,14 @@ import org.opencv.core.Mat;
  * at publish. Single- and multi-camera paths both publish here; processing is triggered by
  * {@link VidarVision#drainMailboxSync()} or {@link VidarGlobalVisionWorker}.
  */
-final class VidarFrameMailbox {
+public final class VidarFrameMailbox {
 
-    static final class Snapshot {
-        final Mat frame;
-        final long captureTimeNanos;
-        final int generation;
+    public static final class Snapshot {
+        public final Mat frame;
+        public final long captureTimeNanos;
+        public final int generation;
 
-        Snapshot(Mat frame, long captureTimeNanos, int generation) {
+        public Snapshot(Mat frame, long captureTimeNanos, int generation) {
             this.frame = frame;
             this.captureTimeNanos = captureTimeNanos;
             this.generation = generation;
@@ -38,11 +38,11 @@ final class VidarFrameMailbox {
     private int generation;
     private int lastTakenGeneration;
 
-    VidarFrameMailbox(VidarMetrics metrics) {
+    public VidarFrameMailbox(VidarMetrics metrics) {
         this.metrics = metrics;
     }
 
-    void publish(Mat sdkFrame, long captureNanos) {
+    public void publish(Mat sdkFrame, long captureNanos) {
         if (sdkFrame == null || sdkFrame.empty()) {
             return;
         }
@@ -61,7 +61,7 @@ final class VidarFrameMailbox {
         }
     }
 
-    Snapshot tryTake(int lastProcessedGeneration) {
+    public Snapshot tryTake(int lastProcessedGeneration) {
         synchronized (lock) {
             if (generation <= lastProcessedGeneration || pending == null || pending.empty()) {
                 return null;
@@ -74,7 +74,7 @@ final class VidarFrameMailbox {
         }
     }
 
-    void release() {
+    public void release() {
         synchronized (lock) {
             if (pending != null) {
                 pending.release();
