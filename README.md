@@ -1,8 +1,4 @@
-<p align="center">
-  <img src="assets/vidar-logo-transparent.svg" alt="ViDAR" width="120" />
-</p>
-
-<h1 align="center">ViDAR</h1>
+﻿<h1 align="center">ViDAR</h1>
 
 <p align="center">
   <strong>Robot-space situational awareness for FTC</strong><br />
@@ -63,6 +59,7 @@ Repository: **[The-Allsparks/ViDAR](https://github.com/The-Allsparks/ViDAR)**
 | Unified element + plate contour pipeline | Implemented; tested in simulation |
 | Per-camera overlapping ROIs + alliance selector | Implemented; tested in simulation |
 | Multi-camera fusion + world model | Implemented; **not hardware-validated at 4 cameras** |
+| `VidarSpatial` facade (elements / allies / foes) | Implemented; motion tracking needs field validation |
 | AprilTag scout + async decode | Implemented; tested in simulation |
 | Browser simulator + Python parity tests | Available |
 | Sustained 4× USB webcam on Control Hub | **Requires team validation.** See [docs/ROADMAP.md](docs/ROADMAP.md) |
@@ -79,6 +76,7 @@ Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DES
 | [API contract](docs/API.md) | Cross-language names, units, and telemetry fields |
 | [Configuration](docs/CONFIGURATION.md) | Season JSON, robot JSON, tuning reference |
 | [Calibration](docs/CALIBRATION.md) | Floor LUT, ROI, and field calibration workflow |
+| [Calibration checklist](docs/CALIBRATION_CHECKLIST.md) | One-page setup before first match |
 | [Coordinate frames](docs/COORDINATE_FRAMES.md) | Frames, transforms, intrinsics, validation |
 | [Teaching guide](docs/TEACHING.md) | Java lessons for Control Hub development |
 | [Roadmap](docs/ROADMAP.md) | Multi-cam USB wiring, validation, optional pathing integration |
@@ -92,7 +90,7 @@ Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DES
 
 ### Spatial model
 
-Every detection is anchored in explicit frames (`ROBOT`, `CAMERA_OPTICAL`, `IMAGE`, and field when tags decode). Mount pose, intrinsics, and transform chains convert pixels into **robot-frame range, bearing, and position**. `VidarWorldModel` motion-corrects short-term tracks so your OpMode sees a stable picture of what is around the robot.
+Every detection is anchored in explicit frames (`ROBOT`, `CAMERA_OPTICAL`, `IMAGE`, and field when tags decode). Mount pose, intrinsics, and transform chains convert pixels into **robot-frame range, bearing, and position**. `VidarWorldModel` motion-corrects short-term tracks; `VidarSpatial` exposes **`elements()`**, **`allies()`**, and **`foes()`** in one facade.
 
 See [docs/COORDINATE_FRAMES.md](docs/COORDINATE_FRAMES.md) for conventions and calibration.
 
@@ -126,15 +124,15 @@ Set `VidarConfig.CAMERA_COUNT` (1–4). Name webcams **`Webcam 1`** … **`Webca
 | OpMode | Purpose |
 |--------|---------|
 | **ViDAR: Discover** | Live detection telemetry and tuning feedback |
-| **ViDAR: TeleOp** | Drive while vision runs |
-| **ViDAR: Auto Seek** | Demo autonomous seek using fused observations |
+| **ViDAR: Spatial** | Spatial telemetry only (no motor output) |
+| **ViDAR: Spatial Map** | Full elements / allies / foes map preview |
 | **ViDAR ROI Calibrate** | Per-camera ROI and horizon calibration |
 
 ---
 
 ## Browser simulator
 
-Tune before hardware: mock scene or webcam, detection overlays, calibration-axis preview, and auto-seek. Same JSON tuning as on-robot Java.
+Tune before hardware: mock scene or webcam, detection overlays, motion-track preview, calibration-axis preview. Same JSON tuning as on-robot Java.
 
 ```powershell
 .\scripts\serve_sim.ps1
@@ -172,8 +170,10 @@ python -m pytest tests/ -v
 2. Copy `teamcode/org/firstinspires/ftc/teamcode/vidar/` → `TeamCode/src/main/java/.../vidar/`.
 3. Copy a robot template from [`config/robots/`](config/robots/README.md) to `TeamCode/src/main/assets/vidar/robot.json`.
 4. Configure USB webcams as **`Webcam 1`** … **`Webcam 4`** (see `VidarConfig.CAMERA_NAMES`).
-5. Set `VidarConfig.CAMERA_COUNT` (1–4).
-6. Run **ViDAR: Discover** → **ViDAR: TeleOp** → **ViDAR: Auto Seek**.
+5. Set `VidarConfig.CAMERA_COUNT` (1–4). Alliance is set at runtime — see below.
+6. Run **ViDAR: Discover** → **ViDAR: Spatial** → **ViDAR: Spatial Map**.
+
+ViDAR is a **spatial system only** — pose plus three groups (`elements()`, `allies()`, `foes()`). It never commands motors.
 
 ### Alliance (friend / foe)
 
@@ -194,7 +194,7 @@ while (!isStarted() && !isStopRequested()) {
     telemetry.addData("Alliance", alliance.formatStatus());
     telemetry.update();
 }
-VidarMultiVision vision = new VidarMultiVision(hardwareMap, odomSupplier, alliance::get);
+VidarSpatial spatial = VidarSpatial.create(hardwareMap, odom::getPose, alliance::get);
 ```
 
 ### Multi-camera wiring
@@ -209,21 +209,40 @@ ViDAR **detects and remembers**. It does **not** own field pose or drive your ro
 
 | Output | Typical use |
 |--------|-------------|
-| `VidarElementObservation` / `VidarPlateObservation` | TeleOp assist, intake alignment, foe avoidance |
-| `VidarWorldModel` | Short-term tracks (`nearestElement()`, ranked frames) |
+| `VidarSpatial.elements()` / `allies()` / `foes()` | Intake assist, foe avoidance, lane choice |
+| `VidarWorldModel` tracks | Short-term memory through brief occlusion |
 | AprilTag decode (≤ 1 s) | Sparse field fixes when **you** fuse them with odom / Pinpoint |
 
-**Standalone:** **ViDAR: TeleOp**, **ViDAR: Auto Seek**, and custom OpModes work with no pathing dependency.
+**Standalone:** **ViDAR: Spatial** and custom OpModes work with no pathing dependency.
 
-**With autonomous pathing (optional):** fuse localization separately, then pass pose to [Pedro Pathing](https://pedropathing.com/), Road Runner, or your own state machine. ViDAR does not bundle or require any of these. The Allsparks happen to use Pedro; your team can choose differently.
+**With autonomous pathing (optional):** wire odom at `VidarSpatial.create()`, optionally `setFieldPoseSupplier(follower::getPose)` for Pedro-primary pose, then read spatial groups in your drivetrain code. ViDAR does not bundle or require any pathing library.
+
+```
+vidar/
+├── VidarConfig.java / VidarRuntimeConfig.java
+├── config/                         ← season + robot JSON loaders
+├── VidarCameraProfile.java / VidarCameraMount.java
+├── VidarGeometry.java / VidarFrameRegions.java / VidarFramePipeline.java
+├── VidarContourProcessor.java      ← unified element + plate detection
+├── VidarAdaptiveTagProcessor.java / VidarTagScoutRunner.java / VidarTagDecodeWorker.java
+├── VidarFrameMailbox.java          ← zero-copy frame handoff to worker thread
+├── VidarVision.java                ← one camera
+├── VidarMultiVision.java           ← 1–4 cameras fused
+├── VidarWorldModel.java            ← short-term spatial memory
+├── VidarSpatial.java               ← elements / allies / foes facade
+├── VidarDiscoverOpMode.java
+├── VidarTeleOp.java                ← ViDAR: Spatial
+└── VidarAutoSeekOpMode.java        ← ViDAR: Spatial Map
+```
 
 ```mermaid
 flowchart LR
   Cam["1-4 USB webcams"] --> Hub["Control Hub"]
   Hub --> MV["VidarMultiVision"]
   MV --> WM["VidarWorldModel"]
-  MV --> Op["OpMode or auto stack"]
-  WM --> Op
+  MV --> SP["VidarSpatial"]
+  WM --> SP
+  SP --> Op["OpMode or auto stack"]
   Op -.-> PED["Optional pathing library"]
   Sim["Browser sim"] -.-> MV
 ```

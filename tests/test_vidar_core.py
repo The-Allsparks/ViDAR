@@ -15,18 +15,28 @@ from vidar_pure import (
     fuse_range_weighted,
     build_size_estimate,
     build_floor_estimate,
+    build_ground_plane_estimate,
     build_plate_width_estimate,
     MotionTransform,
     LocalizationFusionPure,
     distance_from_size,
     distance_from_width,
 )
+from vidar.models import CameraProfile
+from vidar.transforms import distance_from_ground_plane
 
 
 class TestRangeFusion:
     def test_size_only_estimate(self):
         d = distance_from_size(5.0, 340, 20)
         assert 40 < d < 45
+
+    def test_size_with_svpro_focal_and_pollen(self):
+        # Pollen 2.8 in @ 24 in with SVPRO fx ≈ 246 → radius ≈ 14.3 px
+        d = distance_from_size(2.8, 246, 14.3)
+        assert 23 < d < 25
+        wrong = distance_from_size(2.8, 340, 14.3)
+        assert abs(wrong - d) / d > 0.30
 
     def test_weighted_fusion_agreement(self):
         size = build_size_estimate(36, 20, 0.9, False, False)
@@ -46,6 +56,33 @@ class TestRangeFusion:
         floor = build_floor_estimate(48, 60, 0.8, False)
         result = fuse_range_weighted(size, floor)
         assert result.confidence < 0.8
+
+    def test_three_way_fusion_when_geometry_agrees(self):
+        size = build_size_estimate(24, 14, 0.9, False, False)
+        floor = build_floor_estimate(25, 200, 0.8, False)
+        ground = build_ground_plane_estimate(24.5, 200, 0.8, False)
+        result = fuse_range_weighted(size, floor, ground)
+        assert result.is_valid
+        assert result.source_count == 3
+        assert 23 < result.distance < 26
+        assert result.confidence > 0
+
+    def test_ground_plane_range_with_mount(self):
+        profile = CameraProfile(
+            name="front",
+            bearing_deg=0,
+            horizon_row_px=12,
+            focal_length_px=246,
+            floor_cy_px=(95, 75, 55, 40),
+            floor_dist=(12, 24, 36, 48),
+            mount_x=6.5,
+            mount_y=0,
+            mount_z=9.0,
+            mount_pitch_deg=-12,
+        )
+        d = distance_from_ground_plane(320, 350, profile, 1.4)
+        assert not math.isnan(d)
+        assert 10 < d < 80
 
     def test_plate_width_range(self):
         d = distance_from_width(12.0, 340, 80)

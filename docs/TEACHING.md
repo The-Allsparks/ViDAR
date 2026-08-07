@@ -10,7 +10,6 @@ End-to-end Java on the **Control Hub** using the official FTC SDK vision APIs. T
    - USB cameras named **`Webcam 1`** … **`Webcam 4`** (match `VidarConfig.CAMERA_NAMES`)
    - Set `VidarConfig.CAMERA_COUNT` to the number installed
    - Optional: REV Color Sensor named **`alliance_color`** on your own ROBOT SIGN
-   - For TeleOp lesson: drive motors **`left`** and **`right`**
 
 ## Install ViDAR into your robot project
 
@@ -50,21 +49,23 @@ Build and deploy to the Control Hub like any other OpMode.
 
 **Concepts:** VisionProcessor, color contour + `minEnclosingCircle`, known-size ranging, floor-row LUT, multi-camera profiles.
 
-### Lesson 2 — `VidarTeleOp` (drive + crude avoidance)
+### Lesson 2 — `VidarTeleOp` / **ViDAR: Spatial** (pose + nearest targets)
 
-**Goal:** Gamepad tank drive + turn away when a detected element is near center of view.
+**Goal:** Read field pose, nearest target, nearest anti-target, and `intakeBlocked()` on telemetry. **No motors** — your drivetrain consumes spatial data.
 
-1. Wire a simple two-motor drive; names must match `VidarConfig`.
-2. Run **ViDAR: TeleOp**.
-3. Hold a colored object in front of the camera — robot should nudge aside.
+1. Run **ViDAR: Spatial**.
+2. Hold a game element in view — nearest target line updates with robot-frame `(fwd, left)`.
+3. Block the intake cone with a foe plate — `intakeBlocked` goes true.
 
-**Concepts:** Reading `getBestElement()` / alliance plates, simple proportional avoidance, combining manual + automatic inputs.
+**Concepts:** `VidarSpatial.update()`, `fieldPose()`, `elements()`, `allies()`, `foes()`, `isMotionTrackingActive()`.
 
-### Lesson 3 — `VidarAutoSeekOpMode` (autonomous seek)
+### Lesson 3 — `VidarAutoSeekOpMode` / **ViDAR: Spatial Map** (full spatial lists)
 
-**Goal:** Turn toward element, drive with power scaled by fused range, stop at pickup distance.
+**Goal:** See every remembered element and foe track after `update()`. **No motors** — map lists to Pedro or your follower in team code.
 
-Try the same logic in the **browser sim** first — sidebar shows range, size/floor cross-check, and SEARCH / TURN / DRIVE / AT PICKUP states.
+Calibrate first: [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md).
+
+Try the same logic in the **browser sim** first — sidebar shows range and spatial overlays.
 
 ### Lesson 4 — Browser simulator (no robot)
 
@@ -83,7 +84,7 @@ Ideas in order of difficulty:
 
 | Project | What to change |
 |---------|----------------|
-| Drive toward a specific element | Use `getBestElement()` center X → `turn` toward target |
+| Drive toward a specific element | Iterate `spatial.elements()` → bearing + distance → your drivetrain |
 | Autonomous grab line | New `@Autonomous` OpMode, no gamepad |
 | Custom HSV color | Add or edit an entry in `config/seasons/*.json` |
 | Second camera | Second `VisionPortal` + second `VidarVision` instance (ports 5555-style not needed — USB on hub) |
@@ -92,13 +93,15 @@ Ideas in order of difficulty:
 
 ```
 VidarConfig.java / config/     ← tune camera, season elements, floor LUT
-VidarCameraProfile.java      ← per-side bearing + horizon + calibration
-VidarContourProcessor        ← unified element + plate detection + range overlay
-VidarGeometry.java           ← size/floor fusion math (VidarRangeResult)
-VidarVision.java             ← portal wiring (contour + tag processors)
-VidarDiscoverOpMode          ← read-only test OpMode
-VidarAutoSeekOpMode.java     ← range-based autonomous approach
-VidarTeleOp.java             ← OpMode that uses vision to affect motors
+VidarSpatial.java              ← recommended OpMode entry (vision + world model + target lists)
+VidarCameraProfile.java        ← per-side bearing + horizon + calibration
+VidarContourProcessor          ← unified element + plate detection + range overlay
+VidarGeometry.java             ← size/floor fusion math (VidarRangeResult)
+VidarMultiVision.java          ← advanced multi-camera fusion
+VidarVision.java               ← portal wiring (contour + tag processors)
+VidarDiscoverOpMode            ← read-only test OpMode
+VidarTeleOp.java               ← ViDAR: Spatial (no motors)
+VidarAutoSeekOpMode.java       ← ViDAR: Spatial Map (no motors)
 ```
 
 ## SDK samples to compare

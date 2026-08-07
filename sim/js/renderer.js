@@ -1,5 +1,6 @@
 import { scaleRect, processToCapture } from "./config.js";
 import { letterboxRect } from "./canvas-util.js";
+import { drawCalibrationDiagram, drawSamplePixelRays } from "./calibration-viz.js";
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -7,7 +8,7 @@ import { letterboxRect } from "./canvas-util.js";
  * @param {import('./detection.js').Detection[]} detections
  * @param {{ x: number, y: number, w: number, h: number }} roiProcess
  * @param {import('./config.js').VidarTuning} tuning
- * @param {{ overlay: string, viewMode: string, showProcessPip: boolean, showMask: boolean, showCrop: boolean, grayscaleProcess?: boolean, processCanvas: HTMLCanvasElement | null, maskCanvas: HTMLCanvasElement | null, tagRegion?: { x: number, y: number, w: number, h: number } | null }} opts
+ * @param {{ overlay: string, viewMode: string, showProcessPip: boolean, showMask: boolean, showCrop: boolean, showCalibration?: boolean, grayscaleProcess?: boolean, processCanvas: HTMLCanvasElement | null, maskCanvas: HTMLCanvasElement | null, tagRegion?: { x: number, y: number, w: number, h: number } | null }} opts
  */
 export function renderFrame(ctx, sourceCanvas, detections, roiProcess, tuning, opts) {
   const displayW = ctx.canvas.width;
@@ -212,13 +213,37 @@ export function renderFrame(ctx, sourceCanvas, detections, roiProcess, tuning, o
         temporal === "coasting" ? " hold" : "";
       const rangeTag = det.range != null ? ` ${det.range.toFixed(0)}in` : "";
       const confTag = det.confidence != null ? ` ${(det.confidence * 100).toFixed(0)}%` : "";
+      const idTag = det.elementId ? ` id=${det.elementId}` : "";
+      const rankTag = det.occurrenceRank != null && det.occurrenceRank >= 0
+        ? `#${det.occurrenceRank}`
+        : "";
+      const trackTag = det.trackId != null && det.trackId >= 0 ? ` T${det.trackId}` : "";
       ctx.fillText(
-        `${det.label}${tag} (${Math.round(det.area)}px${extra})${rangeTag}${confTag}`,
+        `${det.label}${idTag}${rankTag}${trackTag}${tag} (${Math.round(det.area)}px${extra})${rangeTag}${confTag}`,
         bx + 4,
         by - 6,
       );
       ctx.restore();
     }
+  }
+
+  if (opts.spatialTracks?.length && (opts.overlay === "all" || opts.overlay === "boxes")) {
+    drawSpatialTracks(
+      ctx,
+      opts.spatialTracks,
+      detectionView,
+      oxProc,
+      oyProc,
+      sxProc,
+      syProc,
+      oxCap,
+      oyCap,
+      sxCap,
+      syCap,
+      crop,
+      procW,
+      procH,
+    );
   }
 
   if (!detectionView && opts.showProcessPip && opts.processCanvas) {
@@ -231,6 +256,13 @@ export function renderFrame(ctx, sourceCanvas, detections, roiProcess, tuning, o
     ctx.fillStyle = "#8fa3bf";
     ctx.font = "11px sans-serif";
     ctx.fillText(`Process ${procW}×${procH}${opts.grayscaleProcess ? " gray" : ""}`, pad + 4, pad + 14);
+  }
+
+  if (opts.showCalibration) {
+    drawCalibrationDiagram(ctx, displayW - 150, 8, 40, tuning);
+    if (!detectionView) {
+      drawSamplePixelRays(ctx, oxCap, oyCap, sxCap, syCap, tuning);
+    }
   }
 }
 
@@ -397,6 +429,55 @@ export function describeLogic(best, tuning) {
     elementConfidence: null,
     robotXY: null,
   };
+}
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import('./spatial-tracks.js').SpatialTrack[]} tracks
+ */
+function drawSpatialTracks(
+  ctx,
+  tracks,
+  detectionView,
+  oxProc,
+  oyProc,
+  sxProc,
+  syProc,
+  oxCap,
+  oyCap,
+  sxCap,
+  syCap,
+  crop,
+  procW,
+  procH,
+) {
+  for (const track of tracks) {
+    if (track.source !== "REMEMBERED") continue;
+
+    let cx;
+    let cy;
+    if (detectionView) {
+      cx = oxProc + track.cx * sxProc;
+      cy = oyProc + track.cy * syProc;
+    } else {
+      const c = processToCapture(track.cx, track.cy, crop, procW, procH);
+      cx = oxCap + c.x * sxCap;
+      cy = oyCap + c.y * syCap;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = track.kind === "FOE" ? "#ff6b6b" : "#c8ff80";
+    ctx.setLineDash([5, 4]);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.font = "600 11px Segoe UI, sans-serif";
+    const id = track.elementId ? ` ${track.elementId}` : "";
+    ctx.fillText(`T${track.trackId}${id}`, cx + 10, cy - 8);
+    ctx.restore();
+  }
 }
 
 /** @param {import('./detection.js').Detection | null | undefined} element */

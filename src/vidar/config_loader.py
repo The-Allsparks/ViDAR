@@ -206,7 +206,7 @@ def _build_camera_profile_json(
     if not floor_lut:
         raise ValueError(f'Camera "{name}" missing floorLut (set cameraDefaults.floorLut)')
 
-    return {
+    flat: dict[str, Any] = {
         "name": name,
         "bearingDeg": mount.get("bearingDeg", camera.get("bearingDeg", 0)),
         "horizonRowPx": camera.get("horizonRowPx", 12),
@@ -226,6 +226,13 @@ def _build_camera_profile_json(
         "mountPitchDeg": _read_mount_orientation(mount, "pitch"),
         "mountRollDeg": _read_mount_orientation(mount, "roll"),
     }
+    for key in ("calibrationWidth", "calibrationHeight", "distortionModel",
+                "calibrationVersion", "calibrationDate"):
+        if key in camera:
+            flat[key] = camera[key]
+    if "distortionCoeffs" in camera:
+        flat["distortionCoeffs"] = camera["distortionCoeffs"]
+    return flat
 
 
 def _parse_camera_profile(raw: dict[str, Any]) -> CameraProfile:
@@ -254,6 +261,12 @@ def _parse_camera_profile(raw: dict[str, Any]) -> CameraProfile:
         mount_pitch_deg=float(raw.get("mountPitchDeg", 0)),
         mount_roll_deg=float(raw.get("mountRollDeg", 0)),
         roi_config=_parse_roi(raw.get("roi")),
+        calibration_width=int(raw.get("calibrationWidth", raw.get("imageWidth", 0))),
+        calibration_height=int(raw.get("calibrationHeight", raw.get("imageHeight", 0))),
+        distortion_model=str(raw.get("distortionModel", "none")),
+        distortion_coeffs=tuple(float(v) for v in raw.get("distortionCoeffs", []) or []),
+        calibration_version=raw.get("calibrationVersion"),
+        calibration_date=raw.get("calibrationDate"),
     )
 
 

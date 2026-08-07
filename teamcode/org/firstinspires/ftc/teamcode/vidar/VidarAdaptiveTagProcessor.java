@@ -62,7 +62,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-        cropDecoder.init(width, height, calibration, season);
+        cropDecoder.init(width, height, calibration, season, profile);
         latestTag = null;
         latestScoutObservation = null;
         lastScout = null;
@@ -102,7 +102,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             metrics.recordFrameAge((System.nanoTime() - captureTimeNanos) / 1_000_000.0);
         }
 
-        lastScout = tagScout.run(frame);
+        lastScout = tagScout.run(frame, profile);
         if (lastScout != null) {
             latestScoutObservation = VidarTagScoutObservation.fromScoutResult(
                     lastScout, profile, frame.cols(), captureTimeNanos, cameraName);
@@ -212,6 +212,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
                 decoded.tagId,
                 decoded.fieldPose,
                 captureTimeNanos,
+                cameraName,
                 decoded.centerX,
                 decoded.centerY,
                 scout.band,

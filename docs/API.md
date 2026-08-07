@@ -11,7 +11,7 @@ This document is the **language-neutral contract** for ViDAR's outer layer. Impl
 | **JSON config keys** | camelCase (unchanged): `diameter`, `minElementConfidence` |
 | **Distance fields** | Plain names (`distance`, `range`, `diameter`); unit from `distanceUnit`. Legacy `*In` and `*Dist` JSON keys still load. `Px`, `Deg`, `Nanos`, `Ms` unchanged. |
 | **Robot frame** | +X forward, +Y left, in the active distance unit |
-| **Timestamps** | Monotonic `captureTimeNanos` on every observation |
+| **Timestamps** | VisionPortal `frameCaptureNanos` (`captureTimeNanos` on observations) — same mailbox path for 1–4 cameras |
 
 Type prefix `Vidar` is used in Java (`VidarRangeResult`). Other languages may drop the prefix but must preserve field names.
 
@@ -25,6 +25,7 @@ Type prefix `Vidar` is used in Java (`VidarRangeResult`). Other languages may dr
 |-------|---------|
 | `SIZE` | Known physical diameter → pixel radius |
 | `FLOOR` | Floor-row LUT from image Y |
+| `GROUND_PLANE` | Mount + intrinsics ray intersect at ball-center height (element diameter / 2) |
 | `PLATE_WIDTH` | Known plate width → pixel width |
 
 ### `ElementDetectorType` / `VidarElementDetectorType`
@@ -93,7 +94,7 @@ sourceDistance(source: RangeSource): float
 sourceWeight(source: RangeSource): float
 ```
 
-**Fusion** (at most two estimates, no list allocation):
+**Fusion** (up to three estimates for elements: SIZE + FLOOR LUT + GROUND_PLANE, no list allocation):
 
 ```
 fuseRangeWeighted(maxRangeMismatchRatio, ...estimates): RangeResult
@@ -115,7 +116,10 @@ All static in Java `VidarGeometry`; module functions in Python `vidar.geometry`.
 | `distanceFromFloor` | `cyPx, profile` | range from LUT (in) |
 | `buildSizeEstimate` | `dSize, radiusPx, circleFitQuality, partialOcclusion, touchesBoundary` | `RangeEstimate` |
 | `buildFloorEstimate` | `dFloor, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
+| `distanceFromGroundPlane` | `cx, cy, profile, targetHeightZ` | slant range from mount + intrinsics |
+| `buildGroundPlaneEstimate` | `dGround, cyPx, horizonConfidence, nearHorizon` | `RangeEstimate` |
 | `buildPlateWidthEstimate` | `dWidth, pixelWidth, rectangularity, whiteRatio, partialVisibility, touchesRoiBoundary, rotationPenalty` | `RangeEstimate` |
+| `fusePlateRange` | plate pixel + profile + floor cy | `RangeResult` (width + floor + ground @ z=0) |
 | `fuseRangeWeighted` | `maxRangeMismatchRatio?, ...estimates` | `RangeResult` |
 | `robotX` | `range, bearingDeg, profile?` | robot X (in) |
 | `robotY` | `range, bearingDeg, profile?` | robot Y (in) |
@@ -129,6 +133,27 @@ Python also exposes **camelCase aliases** (`distanceFromSize = distance_from_siz
 
 ---
 
+## Coordinate frames and transforms
+
+**Status:** **Implemented**, **Tested in simulation**. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md). Distortion: pinhole on-robot (`distortionModel: "none"` default); FTC USB cameras are not fisheye — mild Brown-Conrady at edges is optional future work.
+
+Java package `vidar.geometry`; Python module `vidar.transforms`.
+
+| Type / function | Role |
+|-----------------|------|
+| `VidarFrameId` / `FrameId` | `FIELD`, `ROBOT`, `CAMERA_OPTICAL` |
+| `VidarTransform3D` / `Transform3D` | `destination_T_source`; compose, inverse, point vs direction |
+| `VidarCameraIntrinsics` / `CameraIntrinsics` | `fx`, `fy`, `cx`, `cy`, `pixelToRay`, `pointToPixel` |
+| `VidarImageTransform` / `ImageTransform` | processed pixel → calibrated sensor pixel |
+| `VidarTransformRegistry` / `build_robot_t_camera` | cached `robot_T_camera` from profile |
+| `VidarGroundPlane` / `intersect_ground_plane` | floor z=0 intersection |
+| `VidarAprilTagTransforms` | documented `field_T_robot` chain |
+| `VidarCalibrationDataset` / `calibration_dataset` | offline JSONL schema validation |
+
+Notation: **`robot_T_camera`** maps points from camera optical frame into robot frame.
+
+---
+
 ## Observations
 
 ### `ElementObservation` / `VidarElementObservation`
@@ -137,8 +162,9 @@ Immutable fused game-piece detection.
 
 | Field | Type | Notes |
 |-------|------|-------|
+| `elementId` | string | season element id from `season.json` |
 | `cameraName` | string | |
-| `captureTimeNanos` | int64 | monotonic capture time |
+| `captureTimeNanos` | int64 | VisionPortal `frameCaptureNanos` at mailbox publish |
 | `cx`, `cy` | float | image center, full-frame px |
 | `boundingWidthPx`, `boundingHeightPx` | float | axis-aligned box |
 | `fittedCx`, `fittedCy`, `radiusPx` | float | circle fit |
@@ -148,12 +174,12 @@ Immutable fused game-piece detection.
 | `detectorType` | `ElementDetectorType` | |
 | `confidence` | float | 0–1 composite |
 | `range`, `rangeUncertainty` | float | fused slant range |
-| `dSize`, `dFloor` | float | component ranges |
+| `dSize`, `dFloor`, `dGround` | float | component ranges (element fusion) |
 | `rangeResult` | `RangeResult` | full fusion detail |
 | `robotX`, `robotY` | float | robot-frame floor point |
 | `houghVotes` | int | 0 for color-blob path |
 
-Python extension: `elementId` string (map key in Java is external via `getGameElement(id)`).
+Python `ElementObservation` should include matching `elementId` when sim parity is updated.
 
 ### `PlateObservation` / `VidarPlateObservation`
 
@@ -164,7 +190,7 @@ Python extension: `elementId` string (map key in Java is external via `getGameEl
 | `widthPx`, `heightPx`, `angleDeg` | float |
 | `aspectRatio`, `whiteRatio` | float |
 | `range`, `rangeUncertainty` | float |
-| `sizeBasedRange`, `floorBasedRange` | float |
+| `sizeBasedRange`, `floorBasedRange`, `groundBasedRange` | float |
 | `rangeResult` | `RangeResult` |
 | `viewingAnglePenalty`, `partialVisibilityPenalty` | float |
 | `confidence` | float |
@@ -229,6 +255,79 @@ processFrame(frame, captureTimeNanos) // Java VisionProcessor entry
 | `getGameElement(elementId)` | best observation for that season element id |
 | `getGameElements()` | `Map<string, ElementObservation>` |
 | `getBestPlate()` | best `PlateObservation` or null |
+
+---
+
+## Spatial facade (Java — recommended for OpModes)
+
+Pedro-style entry point: one object, one `update()` per loop. Wraps `VidarMultiVision` + `VidarWorldModel`. Does **not** require Pedro Pathing.
+
+### `VidarSpatial`
+
+```
+create(hardwareMap): VidarSpatial
+create(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
+create(hardwareMap, robot, season, odomSupplier, allianceSupplier): VidarSpatial
+
+update(): void
+updateCorrected(): VidarCorrectedFrame    // when odom supplier configured
+
+bestElement(): VidarSpatialPoint | null       // LIVE
+nearestElement(): VidarSpatialPoint | null    // REMEMBERED when motion tracking active
+elements(): List<VidarSpatialPoint>           // ranked live + remembered tracks
+allies(): List<VidarSpatialPoint>
+foes(): List<VidarSpatialPoint>
+bestFoe() / nearestFoe() / bestAlly(): VidarSpatialPoint | null
+intakeBlocked(): bool
+offensiveLaneAnalysis(): VidarOffensiveLaneAnalysis
+recommendOffensiveLane(): VidarOffensiveLane   // LEFT | CENTER | RIGHT
+trackCount(): int                               // 0 when motion tracking inactive
+fieldPose(): Pose2D | null
+robotPose(): Pose2D | null
+isOdomConfigured(): bool
+isMotionTrackingEnabled(): bool
+isMotionTrackingActive(): bool                // enabled && odom supplier
+setMotionTrackingEnabled(enabled): void
+distanceUnit(): DistanceUnit
+cameraCount(): int
+
+setFieldPosePrior(pose): void
+setFieldPoseSupplier(supplier): void          // e.g. Pedro follower pose for world tracks
+vision(): VidarMultiVision                    // advanced escape hatch
+worldModel(): VidarWorldModel
+close(): void
+```
+
+**Setup:** copy `config/robots/*.json` → `assets/vidar/robot.json` — see [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md).
+
+Motion-corrected tracks require an odom supplier at `create()`. Field pose for tracks extrapolates from odom between tag fixes; optional `setFieldPoseSupplier()` for Pedro-primary pose.
+
+### `VidarSpatialPoint`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `kind` | `ELEMENT`, `FOE`, `ALLY` | |
+| `source` | `LIVE`, `REMEMBERED` | |
+| `trackId` | int | stable id when motion tracking active; `-1` for live-only |
+| `elementId` | string | season element id; empty for plates |
+| `occurrenceRank` | int | per-type rank 0 = closest/easiest; `-1` if N/A |
+| `velFieldXInPerSec`, `velFieldYInPerSec` | float | field-frame velocity on remembered tracks |
+| `robotX`, `robotY` | float | robot frame floor point (+X forward, +Y left) |
+| `range` | float | fused slant range |
+| `confidence` | float | 0–1 |
+| `bearingDeg()` | float | 0° = ahead, + = left |
+| `distance()` | float | `hypot(robotX, robotY)` |
+
+**Team integration:** after `spatial.update()`, read pose and iterate `elements()`, `allies()`, `foes()`. Use `recommendOffensiveLane()` for Phase 3 offensive lane choice (lowest foe density in forward cone). Motion-corrected tracks require an odom supplier and `isMotionTrackingActive()`. ViDAR never outputs motor commands.
+
+### `VidarOffensiveLaneAnalysis`
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `leftCount` / `centerCount` / `rightCount` | int | Foes in each third of the forward cone |
+| `recommended` | `LEFT`, `CENTER`, `RIGHT` | Lane with fewest foes; tie → center, then left |
+| `maxRangeIn` | double | From `VidarConfig.OFFENSIVE_LANE_MAX_RANGE_IN` |
+| `coneHalfDeg` | double | From `VidarConfig.OFFENSIVE_LANE_CONE_HALF_DEG` |
 
 ---
 

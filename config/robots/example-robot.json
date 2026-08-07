@@ -1,4 +1,5 @@
 {
+  "description": "Team default (alias of example-robot-svpro-4cam.json): four SVPRO 8MP modules @ 640x480. See config/robots/README.md for other camera layouts.",
   "robotName": "example-robot",
   "activeCameraIndex": 0,
   "cameraCount": 4,
@@ -14,14 +15,20 @@
     "allowRuntimeToggle": true
   },
   "cameraDefaults": {
+    "calibrationWidth": 640,
+    "calibrationHeight": 480,
+    "calibrationVersion": "svpro-640x480-v1",
+    "calibrationDate": "2026-08-05",
+    "distortionModel": "none",
     "horizonRowPx": 12,
-    "focalLengthPx": 340,
-    "focalLengthYPx": 340,
+    "focalLengthPx": 246,
+    "focalLengthYPx": 246,
     "principalPointX": 320,
     "principalPointY": 240,
-    "horizontalFovDeg": 70,
-    "verticalFovDeg": 55,
+    "horizontalFovDeg": 105,
+    "verticalFovDeg": 88,
     "plateWidth": 12.0,
+    "floorLutStatus": "example-placeholder-recalibrate-on-robot",
     "floorLut": [
       { "cy": 95, "dist": 12 },
       { "cy": 75, "dist": 24 },

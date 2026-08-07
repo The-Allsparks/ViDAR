@@ -2,35 +2,33 @@ package org.firstinspires.ftc.teamcode.vidar;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
+import java.util.List;
 
 /**
- * Lesson 2 — drive with gamepad; nudge away from foe plates using world memory.
+ * Lesson 2 — spatial snapshot telemetry (no motor output).
+ *
+ * <p>ViDAR reports pose and the three spatial groups: elements, allies, foes.
  *
  * <p>INIT: Y=RED, B=BLUE on gamepad1 (or color sensor on own sign).
  */
-@TeleOp(name = "ViDAR: TeleOp", group = "ViDAR")
+@TeleOp(name = "ViDAR: Spatial", group = "ViDAR")
 public class VidarTeleOp extends LinearOpMode {
 
-    private DcMotor leftDrive;
-    private DcMotor rightDrive;
-    private VidarMultiVision vision;
-    private VidarWorldModel world;
+    private VidarSpatial spatial;
     private VidarAllianceSelector alliance;
 
     @Override
     public void runOpMode() {
-        leftDrive = hardwareMap.get(DcMotor.class, VidarConfig.LEFT_DRIVE);
-        rightDrive = hardwareMap.get(DcMotor.class, VidarConfig.RIGHT_DRIVE);
-        leftDrive.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightDrive.setDirection(DcMotorSimple.Direction.REVERSE);
-
         alliance = new VidarAllianceSelector(hardwareMap);
-        vision = new VidarMultiVision(hardwareMap, null, alliance::get);
-        world = new VidarWorldModel();
+        spatial = VidarSpatial.create(hardwareMap, null, alliance::get);
 
-        telemetry.addLine("ViDAR TeleOp — INIT: Y=RED B=BLUE");
+        telemetry.addLine("ViDAR Spatial — elements / allies / foes (no motors)");
+        telemetry.addLine("Motion tracks: off (no odom supplier)");
         telemetry.update();
 
         while (!isStarted() && !isStopRequested()) {
@@ -43,47 +41,31 @@ public class VidarTeleOp extends LinearOpMode {
 
         while (opModeIsActive()) {
             alliance.pollRuntime(gamepad1);
+            spatial.update();
 
-            long now = System.nanoTime();
-            vision.update();
-            world.update(vision, now);
+            List<VidarSpatialPoint> elements = spatial.elements();
+            List<VidarSpatialPoint> allies = spatial.allies();
+            List<VidarSpatialPoint> foes = spatial.foes();
+            Pose2D field = spatial.fieldPose();
 
-            double drive = -gamepad1.left_stick_y * VidarConfig.DRIVE_SPEED;
-            double turn = gamepad1.right_stick_x * VidarConfig.DRIVE_SPEED;
-
-            turn += avoidanceTurn(vision.getBestFoe());
-
-            leftDrive.setPower(drive + turn);
-            rightDrive.setPower(drive - turn);
-
-            VidarAlliance ours = alliance.get();
             telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.addData("Element", VidarBlobUtil.formatElement(vision.getBestElement()));
-            telemetry.addData("Foe", VidarBlobUtil.formatPlate(vision.getBestFoe(), ours));
-            telemetry.addData("World foes", world.getTracks(VidarWorldModel.Kind.FOE).size());
-            telemetry.addData("Drive", "%.2f  Turn: %.2f", drive, turn);
+            telemetry.addData("Motion tracks", spatial.isMotionTrackingActive());
+            telemetry.addData("Field pose", field == null ? "—"
+                    : String.format("(%.1f, %.1f) %.0f°",
+                    field.getX(DistanceUnit.INCH),
+                    field.getY(DistanceUnit.INCH),
+                    field.getHeading(AngleUnit.DEGREES)));
+            telemetry.addData("Elements", elements.size());
+            telemetry.addData("Nearest element", VidarBlobUtil.formatSpatialPoint(
+                    elements.isEmpty() ? null : elements.get(0)));
+            telemetry.addData("Nearest ally", VidarBlobUtil.formatSpatialPoint(
+                    allies.isEmpty() ? null : allies.get(0)));
+            telemetry.addData("Nearest foe", VidarBlobUtil.formatSpatialPoint(
+                    foes.isEmpty() ? null : foes.get(0)));
+            telemetry.addData("Intake blocked", spatial.intakeBlocked());
             telemetry.update();
         }
 
-        leftDrive.setPower(0);
-        rightDrive.setPower(0);
-        vision.close();
-    }
-
-    private double avoidanceTurn(VidarPlateObservation foe) {
-        if (foe == null) {
-            return 0;
-        }
-
-        double frameWidth = VidarConfig.portalCameraResolution().getWidth();
-        double error = VidarBlobUtil.errorFromCenter(foe, frameWidth);
-        double dist = Math.abs(error);
-        if (dist > VidarConfig.AVOID_CENTER_RADIUS) {
-            return 0;
-        }
-
-        double direction = error > 0 ? -1 : 1;
-        double strength = 1.0 - (dist / VidarConfig.AVOID_CENTER_RADIUS);
-        return direction * VidarConfig.AVOID_TURN_POWER * strength;
+        spatial.close();
     }
 }

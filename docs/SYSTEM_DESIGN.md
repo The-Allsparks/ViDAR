@@ -79,15 +79,31 @@ Floor LUT used only as secondary consistency check when geometry supports it.
 
 ## Range fusion — **Implemented**, **Tested in simulation**
 
-`VidarRangeResult` with uncertainty-weighted fusion (up to two contributing estimates, no list allocation):
+`VidarRangeResult` with uncertainty-weighted fusion (up to **three** estimates: elements = SIZE + FLOOR + GROUND_PLANE; plates = width + floor + ground @ z=0):
 
 `fusedDistance = Σ(weight × distance) / Σ(weight)`
 
-Component estimates exposed as `source0`, `source1`, and `sourceCount` for telemetry.
+Component estimates exposed as `source0`, `source1`, and `sourceCount` (up to 3) for telemetry. **ViDAR: Discover** logs `size` / `floor` / `ground` on the element detail line.
 
 ## World model — **Implemented**, **Tested in simulation**
 
 `VidarWorldModel` motion-corrects tracks using odom delta (translation + rotation) or field-pose reprojection when available.
+
+## Spatial facade — **Implemented**, **Tested in simulation**
+
+`VidarSpatial` is the Pedro-style entry point: one `update()` per loop, no motor output.
+
+| Output | Role |
+|--------|------|
+| `fieldPose()` / `robotPose()` | Pose estimates (tag fusion + optional odom supplier) |
+| `elements()` | Season game elements (ranked live + remembered when motion tracking active) |
+| `allies()` | Friendly alliance plates |
+| `foes()` | Opponent plates |
+| `intakeBlocked()` | Spatial hint — foe in intake cone |
+
+Motion-corrected tracks run only when `isMotionTrackingActive()` (odom supplier + `WORLD_MOTION_TRACKING_ENABLED`). Without odom, queries return live detections only.
+
+**Track associator:** each cycle predicts field position (`pos + velocity × dt`), reprojects to robot frame, gates detections within `WORLD_TRACK_GATE_RADIUS_IN`, updates velocity with EMA, coasts on miss. Elements classify as `STATIC` after stable low velocity; foes/allies as `MOVING` when speed exceeds threshold.
 
 ## Multi-camera — **Implemented**, not **Hardware validated**
 

@@ -1,10 +1,39 @@
 # ViDAR Calibration Guide
 
-Calibrate each camera independently. Store results in `VidarCameraProfile.FOUR_SIDES[index]`.
+Calibrate each camera independently. Store results in robot JSON (`config/robots/*.json`) — see [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md) for `robot_T_camera`, intrinsics, and crop mapping.
 
-## 1. Camera intrinsic calibration — **Planned** (manual constants today)
+**Acknowledgement:** Coordinate-frame and calibration architecture was substantially informed by Matt Vitelli’s [*How Robots Understand Space*](https://vivalosmentors.org/wp-content/uploads/2026/08/How_Robots_Understand_Space-Vitelli.pdf) (Viva Los Mentors). Conceptual credit only — see [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md).
 
-Measure or estimate at 640×480:
+## Team camera — SVPRO 8MP USB module
+
+**Model:** [SVPRO SV-USB8MP05AF-FF105](https://www.amazon.com/dp/B0DCF8WW6V) (ASIN B0DCF8WW6V)
+
+| Spec | Value | ViDAR note |
+|------|-------|------------|
+| Sensor | Sony IMX179, 1/3.2″ CMOS | UVC; native up to 3264×2448 |
+| HFOV | ~105° (manufacturer) | Wide **rectilinear**, not fisheye — pinhole + `distortionModel: "none"` is appropriate |
+| Focus | Fixed | No autofocus hunting on field |
+| Interface | USB 2.0 UVC | Plug-and-play on Control Hub; use a **powered hub** for 3–4 cameras |
+| ViDAR stream | **640×480** | `VidarConfig.PORTAL_RESOLUTION` — calibrate intrinsics at this size, not native 8MP |
+
+**Starting intrinsics @ 640×480** (pinhole from 105° HFOV; refine on-field):
+
+```
+focalLengthPx ≈ 246     // (640/2) / tan(105°/2)
+focalLengthYPx ≈ 246    // ~88° VFOV at 4:3
+principalPointX/Y ≈ 320, 240
+horizontalFovDeg = 105
+verticalFovDeg = 88
+distortionModel = "none"
+```
+
+Wider FOV than a C920 (~78°): same physical object occupies fewer pixels at a given range — re-run floor LUT and size-based ranging after swapping cameras. Template JSON files include `"floorLutStatus": "example-placeholder-recalibrate-on-robot"` until you measure on-field.
+
+**Robot templates:** [`config/robots/README.md`](../config/robots/README.md) compares SVPRO vs C920 example files.
+
+--- — **Implemented** (manual + validation; checkerboard OpMode **Planned**)
+
+Measure or estimate at calibration resolution (`calibrationWidth` × `calibrationHeight`, default 640×480):
 
 | Field | Location |
 |-------|----------|
@@ -13,7 +42,7 @@ Measure or estimate at 640×480:
 | `principalPointX/Y` | Usually ~320, 240 |
 | `horizontalFovDeg` / `verticalFovDeg` | From datasheet or measurement |
 
-OpMode for full checkerboard calibration: **Planned**.
+OpMode for full checkerboard calibration: **Planned**. Pinhole `pixelToRay` / `pointToPixel` and sim axis overlay: **Implemented**, **Tested in simulation**.
 
 ## 2. Camera mount calibration — **Implemented** (manual)
 

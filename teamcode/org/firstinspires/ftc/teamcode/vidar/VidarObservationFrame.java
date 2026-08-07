@@ -5,7 +5,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 /**
  * Immutable snapshot of all fused ViDAR outputs from one {@link VidarMultiVision#update()} cycle.
  *
- * <p>Every observation carries {@code captureTimeNanos}. Prefer batch correction:
+ * <p>Every observation carries VisionPortal {@code frameCaptureNanos} as {@code captureTimeNanos}.
+ * Prefer batch correction:
  * {@link #toRobotNow(VidarOdomHistory, Pose2D)} — low-level per-point helpers remain in
  * {@link VidarMotionCorrection}.
  */

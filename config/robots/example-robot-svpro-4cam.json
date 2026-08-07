@@ -1,0 +1,75 @@
+{
+  "description": "Team default: four SVPRO 8MP USB modules (105° HFOV). Same intrinsics as example-robot.json — use either file as robot.json template.",
+  "robotName": "example-svpro-4cam",
+  "activeCameraIndex": 0,
+  "cameraCount": 4,
+  "dimensions": {
+    "length": 13.0,
+    "width": 13.0,
+    "height": 18.0
+  },
+  "alliance": {
+    "defaultAlliance": "red",
+    "colorSensorName": "alliance_color",
+    "useColorSensor": true,
+    "allowRuntimeToggle": true
+  },
+  "cameraDefaults": {
+    "calibrationWidth": 640,
+    "calibrationHeight": 480,
+    "calibrationVersion": "svpro-640x480-v1",
+    "calibrationDate": "2026-08-05",
+    "distortionModel": "none",
+    "horizonRowPx": 12,
+    "focalLengthPx": 246,
+    "focalLengthYPx": 246,
+    "principalPointX": 320,
+    "principalPointY": 240,
+    "horizontalFovDeg": 105,
+    "verticalFovDeg": 88,
+    "plateWidth": 12.0,
+    "floorLutStatus": "example-placeholder-recalibrate-on-robot",
+    "floorLut": [
+      { "cy": 95, "dist": 12 },
+      { "cy": 75, "dist": 24 },
+      { "cy": 55, "dist": 36 },
+      { "cy": 40, "dist": 48 }
+    ],
+    "roi": {
+      "element": { "lowerFraction": 0.65, "enabled": true },
+      "plate": { "startFraction": 0.30, "bandFraction": 0.40, "enabled": true },
+      "tag": { "upperFraction": 0.65, "enabled": true }
+    }
+  },
+  "mountDefaults": {
+    "yawDeg": 0,
+    "pitchDeg": -12,
+    "rollDeg": 0
+  },
+  "cameras": [
+    {
+      "index": 0,
+      "webcamName": "Webcam 1",
+      "name": "front",
+      "mount": { "bearingDeg": 0, "x": 6.5, "y": 0, "z": 9.0 }
+    },
+    {
+      "index": 1,
+      "webcamName": "Webcam 2",
+      "name": "right",
+      "mount": { "bearingDeg": 90, "x": 0, "y": -6.5, "z": 9.0 }
+    },
+    {
+      "index": 2,
+      "webcamName": "Webcam 3",
+      "name": "back",
+      "mount": { "bearingDeg": 180, "x": -6.5, "y": 0, "z": 9.0 }
+    },
+    {
+      "index": 3,
+      "webcamName": "Webcam 4",
+      "name": "left",
+      "mount": { "bearingDeg": 270, "x": 0, "y": 6.5, "z": 9.0 }
+    }
+  ]
+}

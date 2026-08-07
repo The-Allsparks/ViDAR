@@ -45,7 +45,8 @@ public final class VidarTagScoutObservation {
         }
         double fullWidth = scout.widthPx * ((double) frameCols / VidarTagConfig.SCOUT_WIDTH);
         double centerErr = scout.cx - frameCols / 2.0;
-        double bearingErr = centerErr / Math.max(1, frameCols) * VidarTagConfig.HORIZONTAL_FOV_DEG;
+        double bearingErr = centerErr / Math.max(1, frameCols)
+                * VidarTagConfig.horizontalFovDeg(profile);
         double bearing = normalizeDeg(profile.bearingDeg + bearingErr);
         double confidence = Math.min(1.0, fullWidth / VidarTagConfig.DECODE_MIN_TAG_WIDTH_PX);
         return new VidarTagScoutObservation(

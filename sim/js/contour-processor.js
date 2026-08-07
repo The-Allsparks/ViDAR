@@ -94,6 +94,7 @@ function blobsToContourDetections(blobs, target, tuning, data, width, height) {
     out.push({
       category,
       name: target.name,
+      elementId: target.name,
       label: target.label,
       color: target.color,
       shape: target.shape ?? "plate",

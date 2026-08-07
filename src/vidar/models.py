@@ -190,6 +190,12 @@ class CameraProfile:
     mount_pitch_deg: float = 0.0
     mount_roll_deg: float = 0.0
     roi_config: CameraRoiConfig = CameraRoiConfig.default()
+    calibration_width: int = 0
+    calibration_height: int = 0
+    distortion_model: str = "none"
+    distortion_coeffs: tuple[float, ...] = ()
+    calibration_version: str | None = None
+    calibration_date: str | None = None
 
     @property
     def floor_lut(self) -> tuple[tuple[float, float], ...]:

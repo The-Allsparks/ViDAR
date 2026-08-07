@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 from vidar.models import ElementDetectorType, CameraProfile, ElementSpec, PlateSpec, SeasonConfig
+from vidar.transforms import distance_from_ground_plane
 from vidar.types import (
     ElementObservation,
     PlateObservation,
@@ -28,8 +29,11 @@ __all__ = [
     "distance_from_floor",
     "build_size_estimate",
     "build_floor_estimate",
+    "build_ground_plane_estimate",
     "build_plate_width_estimate",
+    "fuse_plate_range",
     "fuse_range_weighted",
+    "distance_from_ground_plane",
     "ray_direction_robot_frame",
     "floor_point_in_robot",
     "robot_x",
@@ -43,8 +47,10 @@ __all__ = [
     "distanceFromFloor",
     "buildSizeEstimate",
     "buildFloorEstimate",
+    "buildGroundPlaneEstimate",
     "buildPlateWidthEstimate",
     "fuseRangeWeighted",
+    "distanceFromGroundPlane",
     "floorPointInRobot",
     "robotX",
     "robotY",
@@ -123,6 +129,56 @@ def build_floor_estimate(
     return RangeEstimate(RangeSource.FLOOR, d_floor, weight, base_uncertainty)
 
 
+def build_ground_plane_estimate(
+    d_ground: float,
+    cy_px: float,
+    horizon_confidence: float,
+    near_horizon: bool,
+) -> RangeEstimate:
+    del cy_px
+    if math.isnan(d_ground) or d_ground <= 0:
+        return RangeEstimate.rejected(RangeSource.GROUND_PLANE, "invalid_geometry")
+    if near_horizon:
+        return RangeEstimate.rejected(RangeSource.GROUND_PLANE, "near_horizon")
+    base_uncertainty = d_ground * 0.10 / max(0.25, horizon_confidence)
+    weight = 1.0 / (base_uncertainty * base_uncertainty)
+    return RangeEstimate(RangeSource.GROUND_PLANE, d_ground, weight, base_uncertainty)
+
+
+def fuse_plate_range(
+    cx: float,
+    cy: float,
+    cy_for_floor: float,
+    d_width: float,
+    pixel_width: float,
+    rectangularity: float,
+    white_ratio: float,
+    partial_visibility: bool,
+    touches_roi_boundary: bool,
+    rotation_penalty: float,
+    near_horizon: bool,
+    horizon_confidence: float,
+    profile: CameraProfile,
+    max_range_mismatch_ratio: float = MAX_RANGE_MISMATCH_RATIO,
+) -> RangeResult:
+    d_floor = distance_from_floor(cy_for_floor, profile)
+    d_ground = distance_from_ground_plane(cx, cy, profile, 0.0)
+    width_est = build_plate_width_estimate(
+        d_width,
+        pixel_width,
+        rectangularity,
+        white_ratio,
+        partial_visibility,
+        touches_roi_boundary,
+        rotation_penalty,
+    )
+    floor_est = build_floor_estimate(d_floor, cy_for_floor, horizon_confidence, near_horizon)
+    ground_est = build_ground_plane_estimate(d_ground, cy_for_floor, horizon_confidence, near_horizon)
+    return fuse_range_weighted(
+        width_est, floor_est, ground_est, max_range_mismatch_ratio=max_range_mismatch_ratio
+    )
+
+
 def build_plate_width_estimate(
     d_width: float,
     pixel_width: float,
@@ -152,8 +208,7 @@ def fuse_range_weighted(
     *estimates: RangeEstimate | None,
     max_range_mismatch_ratio: float = MAX_RANGE_MISMATCH_RATIO,
 ) -> RangeResult:
-    first_valid: RangeEstimate | None = None
-    second_valid: RangeEstimate | None = None
+    valid: list[RangeEstimate] = []
     first_any: RangeEstimate | None = None
     second_any: RangeEstimate | None = None
     any_count = 0
@@ -167,30 +222,19 @@ def fuse_range_weighted(
         elif any_count == 1:
             second_any = est
             any_count = 2
-        if not est.is_valid:
-            continue
-        if first_valid is None:
-            first_valid = est
-        elif second_valid is None:
-            second_valid = est
+        if est.is_valid and len(valid) < 3:
+            valid.append(est)
 
-    if first_valid is None:
+    if not valid:
         if any_count == 0:
             return RangeResult.invalid()
         if any_count == 1:
             return RangeResult(float("nan"), float("nan"), 0.0, first_any, None, 1)
         return RangeResult(float("nan"), float("nan"), 0.0, first_any, second_any, 2)
 
-    weight_sum = first_valid.weight
-    weighted_dist = first_valid.weight * first_valid.distance
-    variance_sum = first_valid.weight * first_valid.uncertainty * first_valid.uncertainty
-    valid_count = 1
-
-    if second_valid is not None:
-        weight_sum += second_valid.weight
-        weighted_dist += second_valid.weight * second_valid.distance
-        variance_sum += second_valid.weight * second_valid.uncertainty * second_valid.uncertainty
-        valid_count = 2
+    weight_sum = sum(e.weight for e in valid)
+    weighted_dist = sum(e.weight * e.distance for e in valid)
+    variance_sum = sum(e.weight * e.uncertainty * e.uncertainty for e in valid)
 
     if weight_sum <= 0:
         return RangeResult.invalid()
@@ -198,18 +242,24 @@ def fuse_range_weighted(
     fused = weighted_dist / weight_sum
     uncertainty = math.sqrt(variance_sum / weight_sum)
 
-    disagreement_penalty = 1.0
-    if second_valid is not None:
-        denom = max(first_valid.distance, second_valid.distance)
-        if denom > 0:
-            max_diff = abs(first_valid.distance - second_valid.distance) / denom
-            if max_diff > max_range_mismatch_ratio:
-                disagreement_penalty = max(0.2, 1.0 - max_diff)
+    max_pair_diff = 0.0
+    for i, a_est in enumerate(valid):
+        for b_est in valid[i + 1 :]:
+            denom = max(a_est.distance, b_est.distance)
+            if denom > 0:
+                max_pair_diff = max(
+                    max_pair_diff, abs(a_est.distance - b_est.distance) / denom
+                )
 
-    confidence = min(1.0, (weight_sum / valid_count) * disagreement_penalty)
-    return RangeResult(
-        fused, uncertainty, confidence, first_valid, second_valid, valid_count
-    )
+    disagreement_penalty = 1.0
+    if len(valid) > 1 and max_pair_diff > max_range_mismatch_ratio:
+        disagreement_penalty = max(0.2, 1.0 - max_pair_diff)
+
+    confidence = min(1.0, (weight_sum / len(valid)) * disagreement_penalty)
+    ranked = sorted(valid, key=lambda e: e.weight, reverse=True)
+    top0 = ranked[0]
+    top1 = ranked[1] if len(ranked) > 1 else None
+    return RangeResult(fused, uncertainty, confidence, top0, top1, len(valid))
 
 
 def _normalize3(x: float, y: float, z: float) -> tuple[float, float, float]:
@@ -230,14 +280,9 @@ def _rotate_z(v: tuple[float, float, float], rad: float) -> tuple[float, float, 
 
 
 def ray_direction_robot_frame(cx: float, cy: float, profile: CameraProfile) -> tuple[float, float, float]:
-    u = (cx - profile.principal_point_x) / profile.focal_length_px
-    v = (cy - profile.principal_point_y) / profile.focal_length_y_px
-    cam = _normalize3(u, v, 1.0)
-    base = (cam[2], -cam[0], -cam[1])
-    bearing_rad = math.radians(profile.bearing_deg + profile.mount_yaw_deg)
-    panned = _rotate_z(base, bearing_rad)
-    pitched = _rotate_x(panned, math.radians(profile.mount_pitch_deg))
-    return _normalize3(*_rotate_z(pitched, math.radians(profile.mount_roll_deg)))
+    from vidar.transforms import ray_direction_robot_frame as _ray
+
+    return _ray(cx, cy, profile)
 
 
 def floor_point_in_robot(
@@ -353,15 +398,16 @@ def fuse_element_observation(
 ) -> ElementObservation:
     d_size = distance_from_size(element.diameter, profile.focal_length_px, radius_px)
     d_floor = distance_from_floor(cy, profile)
+    d_ground = distance_from_ground_plane(cx, cy, profile, element.diameter * 0.5)
     near_horizon = cy <= profile.horizon_row_px + 8
+    horizon_conf = _profile_horizon_confidence(profile.horizon_row_px)
     size_est = build_size_estimate(
         d_size, radius_px, circle_fit_quality, partial_occlusion, touches_boundary
     )
-    floor_est = build_floor_estimate(
-        d_floor, cy, _profile_horizon_confidence(profile.horizon_row_px), near_horizon
-    )
+    floor_est = build_floor_estimate(d_floor, cy, horizon_conf, near_horizon)
+    ground_est = build_ground_plane_estimate(d_ground, cy, horizon_conf, near_horizon)
     range_result = fuse_range_weighted(
-        size_est, floor_est, max_range_mismatch_ratio=season.max_range_mismatch_ratio
+        size_est, floor_est, ground_est, max_range_mismatch_ratio=season.max_range_mismatch_ratio
     )
     confidence = compose_element_confidence(
         interior_score,
@@ -397,6 +443,7 @@ def fuse_element_observation(
         range_uncertainty=range_result.uncertainty,
         d_size=d_size,
         d_floor=d_floor,
+        d_ground=d_ground,
         range_result=range_result,
         robot_x=robot_x,
         robot_y=robot_y,
@@ -411,8 +458,11 @@ distanceFromWidth = distance_from_width
 distanceFromFloor = distance_from_floor
 buildSizeEstimate = build_size_estimate
 buildFloorEstimate = build_floor_estimate
+buildGroundPlaneEstimate = build_ground_plane_estimate
 buildPlateWidthEstimate = build_plate_width_estimate
+fusePlateRange = fuse_plate_range
 fuseRangeWeighted = fuse_range_weighted
+distanceFromGroundPlane = distance_from_ground_plane
 floorPointInRobot = floor_point_in_robot
 robotX = robot_x
 robotY = robot_y

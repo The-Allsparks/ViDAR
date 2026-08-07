@@ -77,7 +77,9 @@ ViDAR **detects and remembers** in robot space; it does **not** own field pose. 
 | Camera scheduler (disable processors before stream stop) | **Done** |
 | Full checkerboard intrinsic calibration OpMode | **Closed — not planned** |
 | Runtime auto-switch element detector under CPU load | **Closed — not planned** (metrics only) |
-| Profile-aware tag scout ROI in `VidarTagScoutRunner` | **Open — low priority** |
+| Profile-aware tag scout ROI in `VidarTagScoutRunner` | **Done** |
+| Browser sim: `elementId`, motion tracks, offensive lane | **Done** — see [sim/README-SIM.md](../sim/README-SIM.md) |
+| Offensive lane helper on `VidarSpatial` | **Done** (`VidarOffensiveLaneAnalysis`) |
 | Four-camera USB stress validation | **Open — requires hardware** |
 
 ---
@@ -101,11 +103,12 @@ Pipeline: **HSV mask → contour → `minAreaRect` → white-digit ratio → wid
 
 | Behavior | Uses |
 |----------|------|
-| Auto element collection | `nearestElement()`, fused range, remembered bearing |
-| Defensive nudge | `intakeBlocked()`, foe tracks |
-| Offensive lane choice | foe density in forward cone (extend in your team code) |
+| Auto element collection | `elements()`, ranked live + `VidarSpatialTrack` memory (odom required) |
+| Defensive avoidance | `foes()`, `intakeBlocked()` |
+| Ally awareness | `allies()` |
+| Motion tracking | Predict → gate → associate (`VidarTrackAssociator`); field velocity on tracks |
 
-**Next:** expose `getTracks(Kind)` to Pedro `PathCommand` callbacks or a thin `VidarAssistedDrive` helper.
+**Next:** consume `spatial.elements()` / `allies()` / `foes()` in Pedro callbacks — team maps bearing/distance to motion.
 
 ---
 
@@ -184,13 +187,15 @@ Power options:
 ### Practical limits
 
 - Use **640×480** portal when tags enabled (`VidarTagConfig`).
-- Identical camera models (e.g. C920) simplify intrinsics sharing.
+- Identical camera models simplify intrinsics sharing (team: SVPRO 8MP module).
 - Short USB cables, strain relief, ferrite if you see dropouts.
 - Log `portal.getCameraState()` and frame timing in a stress OpMode before competition.
 
 ### Cameras
 
-- Logitech C920 / C270 class UVC webcams are common FTC choices.
+- **Team hardware:** [SVPRO 8MP USB module](https://www.amazon.com/dp/B0DCF8WW6V) — 105° HFOV, fixed focus, IMX179, UVC USB 2.0. Wide rectilinear lens (not fisheye); see [CALIBRATION.md](CALIBRATION.md).
+- Logitech C920 / C270 class UVC webcams remain common FTC references; intrinsics differ (~70–80° HFOV).
+- Use **identical camera models** across all four mounts so `cameraDefaults` intrinsics can be shared.
 - Mount all cameras with **horizon near 50%** row for the dual ROI layout.
 
 ---
@@ -231,7 +236,7 @@ Structured test plan before trusting ViDAR in auto.
 ### 4 — Integration
 
 - [ ] `VidarWorldModel` foe memory survives 1 s occlusion
-- [ ] Auto Seek stops at `PICKUP_STOP`
+- [ ] **ViDAR: Spatial Map** — `trackId` stable through 0.5 s occlusion; `elementId#0` nearest per type
 - [ ] Tag fix + odom backdating vs known field dimension
 
 ### 5 — Pedro auto routines
@@ -243,6 +248,23 @@ Structured test plan before trusting ViDAR in auto.
 ### Deliverable
 
 Maintain a team **validation log** (spreadsheet or `docs/validation-log.md`): date, hub firmware, camera count, pass/fail per row above.
+
+---
+
+## Coordinate frames and offline calibration
+
+| Task | Status |
+|------|--------|
+| Explicit `robot_T_camera`, intrinsics, crop mapping | ✅ **Implemented**, **Tested in simulation** |
+| Browser calibration axis overlay | ✅ **Tested in simulation** |
+| JSONL offline calibration dataset schema | ✅ **Implemented** |
+| Nonlinear extrinsic optimizer (Ceres / offline) | **Planned** |
+| Optional Brown-Conrady runtime (mild radial at image edges) | **Planned** — low priority; pinhole is the default for FTC USB cameras |
+| One-camera / multi-camera hardware validation | **Planned** |
+
+Fisheye lenses are **not** a ViDAR target. Team cameras (SVPRO 105° wide rectilinear) and typical Logitech-class USB modules use pinhole or mild radial distortion — not fisheye projection.
+
+Workflow (planned): Record Dataset → Extract Scans → Optimize Poses → Validate → Export. See [COORDINATE_FRAMES.md](COORDINATE_FRAMES.md).
 
 ---
 
