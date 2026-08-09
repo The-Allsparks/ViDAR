@@ -18,6 +18,21 @@ python scripts/run_tests.py
 
 Tests use a pure-Python mirror of core Java logic in `tests/pure/` — no Control Hub or OpenCV required.
 
+### Java unit tests (java-pure)
+
+JVM tests compile selected TeamCode classes with Android/FTC stubs:
+
+```powershell
+cd java-pure
+.\gradlew.bat test
+```
+
+Or run everything:
+
+```powershell
+python scripts/run_tests.py
+```
+
 ## Browser simulator
 
 ```powershell

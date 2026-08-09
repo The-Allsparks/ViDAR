@@ -776,397 +776,44 @@ public class VidarContourProcessor implements VisionProcessor {
 
 
     private void processGameTarget(
-
             VidarContourTarget target,
-
             VidarFramePipeline.ScaledRoi scaled,
-
             int frameW,
-
             int frameH,
-
             long captureTimeNanos,
-
             boolean disableLocalHough,
-
             boolean grayReady,
-
             VidarContourWorkspace workspace) {
-
-        switch (target.shape) {
-
-            case RECT:
-
-                processRectGameTarget(
-
-                        target, scaled, frameW, frameH, captureTimeNanos, workspace);
-
-                break;
-
-            case BLOB:
-
-            case CIRCLE:
-
-            default:
-
-                processCircleGameTarget(
-
-                        target, scaled, frameW, frameH, captureTimeNanos,
-
-                        disableLocalHough, grayReady, workspace);
-
-                break;
-
+        ElementDetector.Result result = ElementDetector.detectGameTarget(
+                target, scaled, frameW, frameH, captureTimeNanos, disableLocalHough, grayReady,
+                workspace, reusableMask, reusableHierarchy, reusableGray, reusableCircles,
+                profile, cameraName, season, this::seasonElement);
+        for (ElementDetector.ScoredObservation scored : result.frameCandidates) {
+            frameCandidates.add(new ScoredObservation(scored.observation, scored.score));
         }
-
+        bestGameById.putAll(result.bestById);
     }
-
-
-
-    private void processCircleGameTarget(
-
-            VidarContourTarget target,
-
-            VidarFramePipeline.ScaledRoi scaled,
-
-            int frameW,
-
-            int frameH,
-
-            long captureTimeNanos,
-
-            boolean disableLocalHough,
-
-            boolean grayReady,
-
-            VidarContourWorkspace workspace) {
-
-        List<VidarContourDetect.CircleHit> hits = VidarContourDetect.findCircleHits(
-
-                scaled.image, reusableMask, reusableHierarchy, target, scaled,
-
-                frameW, frameH, profile, workspace);
-
-        if (!disableLocalHough
-
-                && grayReady
-
-                && target.detector == VidarElementDetectorType.COLOR_BLOB_WITH_LOCAL_HOUGH
-
-                && !hits.isEmpty()) {
-
-            hits = VidarContourDetect.applyLocalHough(
-
-                    scaled, hits, target, reusableGray, reusableCircles);
-
-        }
-
-
-
-        VidarElementSpec elementSpec = seasonElement(target.id);
-
-        VidarElementObservation bestForTarget = null;
-
-        double bestScore = -1;
-
-        for (VidarContourDetect.CircleHit hit : hits) {
-
-            VidarElementObservation obs = VidarGeometry.fuseElementObservation(
-
-                    hit.cx, hit.cy, hit.radius, hit.area, hit.aspectRatio, hit.circularity,
-
-                    hit.fillRatio, hit.interiorScore, target.detector, profile, cameraName,
-
-                    captureTimeNanos, hit.touchesBoundary, false, hit.circleFitQuality,
-
-                    elementSpec, season);
-
-            if (obs.confidence < season.minElementConfidence) {
-
-                continue;
-
-            }
-
-            double localCy = (hit.cy - scaled.sourceCrop.y) / scaled.scale;
-
-            double floorWeight = 0.25 + 0.75 * (localCy / scaled.image.rows());
-
-            double score = obs.confidence * obs.radiusPx * obs.radiusPx * floorWeight * floorWeight;
-
-            frameCandidates.add(new ScoredObservation(obs, score));
-
-            if (score > bestScore) {
-
-                bestScore = score;
-
-                bestForTarget = obs;
-
-            }
-
-        }
-
-        if (bestForTarget != null) {
-
-            bestGameById.put(target.id, bestForTarget);
-
-        }
-
-    }
-
-
-
-    private void processRectGameTarget(
-
-            VidarContourTarget target,
-
-            VidarFramePipeline.ScaledRoi scaled,
-
-            int frameW,
-
-            int frameH,
-
-            long captureTimeNanos,
-
-            VidarContourWorkspace workspace) {
-
-        List<VidarContourDetect.RectHit> hits = VidarContourDetect.findRectHits(
-
-                scaled.image, reusableMask, reusableHierarchy, target, scaled,
-
-                frameW, frameH, profile, workspace);
-
-
-
-        VidarElementSpec elementSpec = seasonElement(target.id);
-
-        VidarElementObservation bestForTarget = null;
-
-        double bestScore = -1;
-
-        for (VidarContourDetect.RectHit hit : hits) {
-
-            double absCx = scaled.toFullX(hit.box.center.x);
-
-            double absCy = scaled.toFullY(hit.box.center.y);
-
-            double fullWidthPx = Math.max(hit.box.size.width, hit.box.size.height) * scaled.scale;
-
-            double fullHeightPx = Math.min(hit.box.size.width, hit.box.size.height) * scaled.scale;
-
-            double radiusPx = Math.max(fullWidthPx, fullHeightPx) * 0.5;
-
-
-
-            VidarElementObservation obs = VidarGeometry.fuseElementObservation(
-
-                    absCx, absCy, radiusPx, hit.contourArea, hit.aspect, hit.rectangularity,
-
-                    hit.rectangularity, 0.5, target.detector, profile, cameraName,
-
-                    captureTimeNanos, hit.touchesBoundary, false, hit.rectangularity,
-
-                    elementSpec, season);
-
-            if (obs.confidence < season.minElementConfidence) {
-
-                continue;
-
-            }
-
-            double score = obs.confidence * hit.contourArea;
-
-            frameCandidates.add(new ScoredObservation(obs, score));
-
-            if (score > bestScore) {
-
-                bestScore = score;
-
-                bestForTarget = obs;
-
-            }
-
-        }
-
-        if (bestForTarget != null) {
-
-            bestGameById.put(target.id, bestForTarget);
-
-        }
-
-    }
-
-
 
     private void processPlateTarget(
-
             VidarContourTarget target,
-
             VidarFramePipeline.ScaledRoi scaled,
-
             int frameW,
-
             int frameH,
-
             long captureTimeNanos,
-
             VidarContourWorkspace workspace) {
-
-        List<VidarContourDetect.RectHit> hits = VidarContourDetect.findRectHits(
-
-                scaled.image, reusableMask, reusableHierarchy, target, scaled,
-
-                frameW, frameH, profile, workspace);
-
-
-
-        VidarPlateSpec plateSpec = season.plateSpec(target.alliance);
-
-        VidarPlateObservation bestForAlliance = null;
-
-        double bestScore = -1;
-
-
-
-        for (VidarContourDetect.RectHit hit : hits) {
-
-            double absCx = scaled.toFullX(hit.box.center.x);
-
-            double absCy = scaled.toFullY(hit.box.center.y);
-
-            double fullWidthPx = Math.max(hit.box.size.width, hit.box.size.height) * scaled.scale;
-
-            double fullHeightPx = Math.min(hit.box.size.width, hit.box.size.height) * scaled.scale;
-
-
-
-            double rotationPenalty = Math.abs(hit.box.angle % 90) / 45.0;
-
-            double partialPenalty = hit.rectangularity < 0.65 ? 0.7 : 1.0;
-
-            double viewingPenalty = 1.0 - Math.min(0.5, rotationPenalty * 0.25);
-
-
-
-            double dWidth = VidarGeometry.distanceFromWidth(
-
-                    profile.plateWidth, profile.focalLengthPx, fullWidthPx);
-
-            double cyForFloor = (absCy - scaled.sourceCrop.y) / scaled.scale;
-
-            boolean nearHorizon = absCy <= profile.horizonRowPx + 8;
-
-            double horizonConf = profile.horizonRowPx > 0
-                    ? Math.max(0.3, 1.0 - profile.horizonRowPx / 120.0) : 0.5;
-
-            double dFloor = VidarGeometry.distanceFromFloor(cyForFloor, profile);
-
-            double dGround = VidarGeometry.distanceFromGroundPlane(absCx, absCy, profile, 0.0);
-
-            VidarRangeResult rangeResult = VidarGeometry.fusePlateRange(
-
-                    absCx, absCy, cyForFloor,
-
-                    dWidth, fullWidthPx, hit.rectangularity, hit.whiteRatio,
-
-                    partialPenalty < 1.0, hit.touchesBoundary, rotationPenalty,
-
-                    nearHorizon, horizonConf, profile, season.maxRangeMismatchRatio);
-
-            double range = rangeResult.isValid() ? rangeResult.distance : Double.NaN;
-
-            double confidence = VidarGeometry.composePlateConfidence(
-
-                    hit.whiteRatio, hit.contourArea, hit.rectangularity, hit.aspect,
-
-                    rangeResult, viewingPenalty, partialPenalty, plateSpec);
-
-            if (confidence < season.minPlateConfidence) {
-
-                continue;
-
-            }
-
-
-
-            double[] robotPoint = VidarGeometry.floorPointInRobot(absCx, absCy, range, profile);
-
-            double score = confidence * hit.contourArea;
-
-            if (score > bestScore) {
-
-                bestScore = score;
-
-                bestForAlliance = new VidarPlateObservation(
-
-                        target.alliance,
-
-                        absCx,
-
-                        absCy,
-
-                        fullWidthPx,
-
-                        fullHeightPx,
-
-                        hit.box.angle,
-
-                        hit.aspect,
-
-                        hit.whiteRatio,
-
-                        range,
-
-                        rangeResult.uncertainty,
-
-                        dWidth,
-
-                        dFloor,
-
-                        dGround,
-
-                        rangeResult,
-
-                        viewingPenalty,
-
-                        partialPenalty,
-
-                        confidence,
-
-                        robotPoint[0],
-
-                        robotPoint[1],
-
-                        cameraName,
-
-                        captureTimeNanos);
-
-                bestPlateDraw = hit.box;
-
-            }
-
-        }
-
-
-
-        if (bestForAlliance == null) {
-
+        PlateDetector.Result result = PlateDetector.detectPlate(
+                target, scaled, frameW, frameH, captureTimeNanos, workspace,
+                reusableMask, reusableHierarchy, profile, cameraName, season);
+        if (result == null) {
             return;
-
         }
-
         if (target.alliance == VidarAlliance.RED) {
-
-            bestRed = bestForAlliance;
-
+            bestRed = result.observation;
         } else {
-
-            bestBlue = bestForAlliance;
-
+            bestBlue = result.observation;
         }
-
+        bestPlateDraw = result.drawBox;
     }
-
-
 
     private VidarElementSpec seasonElement(String id) {
 

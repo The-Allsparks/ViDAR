@@ -22,3 +22,7 @@ Desktop.ini
 *.log
 captures/*
 !captures/.gitignore
+
+# Java (java-pure test module)
+java-pure/.gradle/
+java-pure/build/

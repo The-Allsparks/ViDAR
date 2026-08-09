@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.vidar.fusion;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarCoordinateFrames;
-import org.firstinspires.ftc.teamcode.vidar.frame.VidarObservationFrame;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;

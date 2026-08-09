@@ -59,8 +59,12 @@ public class VidarAllianceSelector {
         }
         try {
             colorSensor = hardwareMap.get(NormalizedColorSensor.class, robot.allianceColorSensor);
-        } catch (Exception ignored) {
+        } catch (Exception ex) {
             colorSensor = null;
+            android.util.Log.w(
+                    "VidarAllianceSelector",
+                    "Alliance color sensor '" + robot.allianceColorSensor
+                            + "' not found — use gamepad Y/B at INIT or fix Driver Station config.");
         }
     }
 

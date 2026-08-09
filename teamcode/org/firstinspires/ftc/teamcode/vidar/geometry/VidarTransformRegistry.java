@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarGeometry;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRoiRect;

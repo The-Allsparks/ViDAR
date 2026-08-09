@@ -24,10 +24,13 @@ public class VidarTeleOp extends VidarSpatialOpModeBase {
     @Override
     public void runOpMode() {
         alliance = new VidarAllianceSelector(hardwareMap);
-        spatial = VidarSpatial.create(hardwareMap, null, alliance::get);
+        spatial = VidarSpatial.createWithBundledDefaults(hardwareMap, null, alliance::get);
 
         telemetry.addLine("ViDAR Spatial — elements / allies / foes (no motors)");
         telemetry.addLine("Motion tracks: off (no odom supplier)");
+        if (!spatial.diagnostics().warnings.isEmpty()) {
+            telemetry.addLine(spatial.diagnostics().warnings.get(0));
+        }
         telemetry.update();
 
         pollAllianceInit(alliance, gamepad1);

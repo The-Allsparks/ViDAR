@@ -13,9 +13,10 @@ import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.schedule.VidarCameraScheduler;
 import org.firstinspires.ftc.teamcode.vidar.schedule.VidarProcessScheduler;
 import org.firstinspires.ftc.teamcode.vidar.schedule.VidarResourceBudget;
+import org.firstinspires.ftc.teamcode.vidar.tag.TagDecodeBudget;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarAdaptiveTagProcessor;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
-import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagGate;
+import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagDecodeWorker;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
 
@@ -46,6 +47,24 @@ public class VidarVision {
     private VidarPlateObservation bestPlate;
 
     private int lastProcessedGeneration;
+
+    public VidarVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            CameraPipelineConfig config) {
+        this(
+                hardwareMap,
+                config.cameraName,
+                config.profile,
+                config.odomSupplier,
+                config.portalLabel,
+                config.fieldPosePriorSupplier,
+                config.season,
+                config.resourceBudget,
+                config.robotCameraCount,
+                config.cameraIndex,
+                config.decodeBudget,
+                config.decodeWorker);
+    }
 
     public VidarVision(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
         this(hardwareMap, VidarConfig.CAMERA_NAME, VidarConfig.cameraProfile(), null, VidarConfig.CAMERA_NAME, null);
@@ -127,6 +146,23 @@ public class VidarVision {
             VidarResourceBudget resourceBudget,
             int robotCameraCount,
             int cameraIndex) {
+        this(hardwareMap, cameraName, profile, odomSupplier, portalLabel, fieldPosePriorSupplier,
+                season, resourceBudget, robotCameraCount, cameraIndex, null, null);
+    }
+
+    public VidarVision(
+            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+            String cameraName,
+            VidarCameraProfile profile,
+            Supplier<Pose2D> odomSupplier,
+            String portalLabel,
+            Supplier<Pose2D> fieldPosePriorSupplier,
+            VidarSeasonConfig season,
+            VidarResourceBudget resourceBudget,
+            int robotCameraCount,
+            int cameraIndex,
+            TagDecodeBudget decodeBudget,
+            VidarTagDecodeWorker decodeWorker) {
         this.profile = profile;
         this.cameraName = portalLabel;
         this.season = season != null ? season : VidarConfigLoader.defaultSeason();
@@ -139,7 +175,8 @@ public class VidarVision {
         contourProcessor = new VidarContourProcessor(
                 profile, portalLabel, scheduler, metrics, this.season, resourceBudget);
         tagProcessor = new VidarAdaptiveTagProcessor(
-                scheduler, profile, portalLabel, metrics, this.season, resourceBudget);
+                scheduler, profile, portalLabel, metrics, this.season, resourceBudget,
+                decodeBudget, decodeWorker);
 
         frameMailbox = new VidarFrameMailbox(metrics);
         contourProcessor.setFrameMailbox(frameMailbox);

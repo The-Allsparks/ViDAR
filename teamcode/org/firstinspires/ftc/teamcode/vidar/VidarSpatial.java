@@ -1,23 +1,19 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.api.VidarDiagnostics;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedFrame;
-import org.firstinspires.ftc.teamcode.vidar.frame.VidarRankedElementFrame;
-import org.firstinspires.ftc.teamcode.vidar.model.VidarElementOccurrenceRank;
+import org.firstinspires.ftc.teamcode.vidar.frame.VidarObservationFrame;
+import org.firstinspires.ftc.teamcode.vidar.frame.VidarSpatialSnapshot;
+import org.firstinspires.ftc.teamcode.vidar.fusion.FieldPoseContext;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
-import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
-import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.VidarTeamConfig;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -33,40 +29,43 @@ import java.util.function.Supplier;
  */
 public final class VidarSpatial {
 
-    private final VidarMultiVision vision;
-    private final VidarWorldModel world;
-    private final Supplier<Pose2D> odomSupplier;
-    private Supplier<Pose2D> fieldPoseSupplier;
+    private final VidarSession session;
+    private VidarDiagnostics diagnostics = VidarDiagnostics.empty();
+    private VidarSpatialSnapshot snapshot = VidarSpatialSnapshot.empty();
 
-    private VidarSpatial(
-            VidarMultiVision vision,
-            VidarWorldModel world,
-            Supplier<Pose2D> odomSupplier,
-            Supplier<Pose2D> fieldPoseSupplier) {
-        this.vision = vision;
-        this.world = world;
-        this.odomSupplier = odomSupplier;
-        this.fieldPoseSupplier = fieldPoseSupplier;
+    private VidarSpatial(VidarSession session) {
+        this.session = session;
+        refreshDiagnostics();
     }
 
     public static VidarSpatial create(HardwareMap hardwareMap) {
         return create(hardwareMap, null, null);
     }
 
+    /**
+     * Load team {@code assets/vidar/season.json} and {@code robot.json}.
+     *
+     * @throws VidarConfigException if assets are missing — use {@link #createWithBundledDefaults}
+     *         for bundled fallbacks during bring-up.
+     */
     public static VidarSpatial create(
             HardwareMap hardwareMap,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> allianceSupplier) {
-        try {
-            return create(
-                    hardwareMap,
-                    VidarTeamConfig.loadRobot(hardwareMap),
-                    VidarTeamConfig.loadSeason(hardwareMap),
-                    odomSupplier,
-                    allianceSupplier);
-        } catch (IOException e) {
-            return create(hardwareMap, null, null, odomSupplier, allianceSupplier);
-        }
+        return new VidarSpatial(VidarSession.create(hardwareMap, odomSupplier, allianceSupplier));
+    }
+
+    /** Explicit bundled defaults when team assets are not deployed yet. */
+    public static VidarSpatial createWithBundledDefaults(HardwareMap hardwareMap) {
+        return createWithBundledDefaults(hardwareMap, null, null);
+    }
+
+    public static VidarSpatial createWithBundledDefaults(
+            HardwareMap hardwareMap,
+            Supplier<Pose2D> odomSupplier,
+            Supplier<VidarAlliance> allianceSupplier) {
+        return new VidarSpatial(
+                VidarSession.createWithBundledDefaults(hardwareMap, odomSupplier, allianceSupplier));
     }
 
     public static VidarSpatial create(
@@ -75,147 +74,128 @@ public final class VidarSpatial {
             VidarSeasonConfig season,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> allianceSupplier) {
-        VidarMultiVision vision = new VidarMultiVision(
-                hardwareMap, robot, season, odomSupplier, allianceSupplier);
-        VidarWorldModel world = new VidarWorldModel(odomSupplier, null);
-        VidarSpatial spatial = new VidarSpatial(vision, world, odomSupplier, null);
-        world.setFieldPoseSupplier(spatial::fieldPoseForWorldTracks);
-        return spatial;
+        return new VidarSpatial(
+                VidarSession.create(hardwareMap, robot, season, odomSupplier, allianceSupplier));
     }
 
     public void setFieldPoseSupplier(Supplier<Pose2D> supplier) {
-        this.fieldPoseSupplier = supplier;
-        world.setFieldPoseSupplier(this::fieldPoseForWorldTracks);
+        session.setFieldPoseSupplier(supplier);
     }
 
     public void setFieldPosePrior(Pose2D prior) {
-        vision.setFieldPosePrior(prior);
+        session.setFieldPosePrior(prior);
     }
 
     /** Enable/disable motion-corrected world tracks (no-op without odom supplier). */
     public void setMotionTrackingEnabled(boolean enabled) {
-        world.setMotionTrackingEnabled(enabled);
+        session.setMotionTrackingEnabled(enabled);
     }
 
     public boolean isMotionTrackingEnabled() {
-        return world.isMotionTrackingEnabled();
+        return session.world().isMotionTrackingEnabled();
     }
 
     public boolean isOdomConfigured() {
-        return odomSupplier != null;
+        return session.fieldPoseContext().odomSupplier() != null;
     }
 
     /** True when world-model motion correction and track memory are active. */
     public boolean isMotionTrackingActive() {
-        return world.isMotionTrackingActive();
+        return session.world().isMotionTrackingActive();
     }
 
     public void update() {
-        if (odomSupplier != null) {
-            vision.recordOdom(odomSupplier.get());
-        }
-        vision.update();
-        world.update(vision, System.nanoTime());
+        session.update();
+        snapshot = VidarSpatialSnapshot.build(
+                session.vision(), session.world(), session.fieldPoseContext()::fieldPoseForSnapshot);
+        refreshDiagnostics();
     }
 
     public VidarCorrectedFrame updateCorrected() {
-        if (odomSupplier != null) {
-            vision.recordOdom(odomSupplier.get());
+        if (session.fieldPoseContext().odomSupplier() != null) {
+            session.vision().recordOdom(session.fieldPoseContext().odomSupplier().get());
         }
-        VidarCorrectedFrame corrected = vision.updateCorrected();
-        world.update(vision, System.nanoTime());
+        VidarCorrectedFrame corrected = session.vision().updateCorrected();
+        session.world().update(session.vision(), System.nanoTime());
+        snapshot = VidarSpatialSnapshot.build(
+                session.vision(), session.world(), session.fieldPoseContext()::fieldPoseForSnapshot);
+        refreshDiagnostics();
         return corrected;
     }
 
-    /**
-     * Season game elements — fused rank 0 = closest/easiest, plus remembered tracks when motion
-     * tracking is active. Sorted nearest-first.
-     */
+    /** Immutable spatial groups from the last {@link #update()} — stable within one loop. */
+    public VidarSpatialSnapshot snapshot() {
+        return snapshot;
+    }
+
+    /** Latest observation frame from the last vision update. */
+    public VidarObservationFrame lastFrame() {
+        return session.vision().getLatestFrame();
+    }
+
     public List<VidarSpatialPoint> elements() {
-        List<VidarSpatialPoint> out = new ArrayList<>();
-        VidarRankedElementFrame ranked = vision.getRankedElements();
-        if (ranked != null) {
-            for (int i = 0; i < ranked.count(); i++) {
-                VidarElementObservation obs = ranked.at(i);
-                if (obs == null || obs.confidence < VidarConfig.MIN_ELEMENT_CONFIDENCE) {
-                    continue;
-                }
-                addUnique(out, VidarSpatialPoint.fromElement(obs));
-            }
-        }
-        if (world.isMotionTrackingActive()) {
-            for (VidarSpatialTrack track : world.getTracks(VidarWorldModel.Kind.ELEMENT)) {
-                addUnique(out, VidarSpatialPoint.fromTrack(track));
-            }
-        }
-        return VidarElementOccurrenceRank.assignPerType(out);
+        return snapshot.elements;
     }
 
-    /** Friendly alliance plates — live plus remembered tracks when motion tracking is active. */
     public List<VidarSpatialPoint> allies() {
-        List<VidarSpatialPoint> out = new ArrayList<>();
-        addUnique(out, bestAlly());
-        if (world.isMotionTrackingActive()) {
-            for (VidarSpatialTrack track : world.getTracks(VidarWorldModel.Kind.ALLY)) {
-                addUnique(out, VidarSpatialPoint.fromTrack(track));
-            }
-        }
-        sortByDistance(out);
-        return out;
+        return snapshot.allies;
     }
 
-    /** Opponent plates — live plus remembered tracks when motion tracking is active. */
     public List<VidarSpatialPoint> foes() {
-        List<VidarSpatialPoint> out = new ArrayList<>();
-        addUnique(out, bestFoe());
-        if (world.isMotionTrackingActive()) {
-            for (VidarSpatialTrack track : world.getTracks(VidarWorldModel.Kind.FOE)) {
-                addUnique(out, VidarSpatialPoint.fromTrack(track));
-            }
-        }
-        sortByDistance(out);
-        return out;
+        return snapshot.foes;
     }
 
     public VidarSpatialPoint bestElement() {
-        return VidarSpatialPoint.fromElement(vision.getBestElement());
+        return snapshot.elements.isEmpty() ? null : snapshot.elements.get(0);
     }
 
     public VidarSpatialPoint nearestElement() {
-        return world.isMotionTrackingActive()
-                ? VidarSpatialPoint.fromTrack(world.nearestElement())
-                : bestElement();
+        if (session.world().isMotionTrackingActive()) {
+            return VidarSpatialPoint.fromTrack(session.world().nearestElement());
+        }
+        return bestElement();
     }
 
     public VidarSpatialPoint bestFoe() {
-        return VidarSpatialPoint.fromPlate(vision.getBestFoe(), VidarSpatialPoint.Kind.FOE);
+        for (VidarSpatialPoint p : snapshot.foes) {
+            if (p.source == VidarSpatialPoint.Source.LIVE) {
+                return p;
+            }
+        }
+        return snapshot.foes.isEmpty() ? null : snapshot.foes.get(0);
     }
 
     public VidarSpatialPoint nearestFoe() {
-        if (world.isMotionTrackingActive()) {
-            return VidarSpatialPoint.fromTrack(world.nearestFoe());
+        if (session.world().isMotionTrackingActive()) {
+            return VidarSpatialPoint.fromTrack(session.world().nearestFoe());
         }
         return bestFoe();
     }
 
     public VidarSpatialPoint bestAlly() {
-        return VidarSpatialPoint.fromPlate(vision.getBestAlly(), VidarSpatialPoint.Kind.ALLY);
-    }
-
-    public Pose2D robotPose() {
-        return odomSupplier != null ? odomSupplier.get() : null;
+        for (VidarSpatialPoint p : snapshot.allies) {
+            if (p.source == VidarSpatialPoint.Source.LIVE) {
+                return p;
+            }
+        }
+        return snapshot.allies.isEmpty() ? null : snapshot.allies.get(0);
     }
 
     public boolean intakeBlocked() {
-        if (world.isMotionTrackingActive()) {
-            return world.intakeBlocked();
-        }
-        VidarSpatialPoint foe = bestFoe();
-        if (foe == null || !foe.isValid()) {
-            return false;
-        }
-        return foe.distance() <= VidarConfig.WORLD_BLOCK_RANGE_IN
-                && Math.abs(foe.bearingDeg()) <= VidarConfig.WORLD_BLOCK_CONE_DEG;
+        return snapshot.intakeBlocked;
+    }
+
+    public int trackCount() {
+        return snapshot.trackCount;
+    }
+
+    public Pose2D fieldPose() {
+        return snapshot.fieldPose;
+    }
+
+    public Pose2D robotPose() {
+        Supplier<Pose2D> odom = session.fieldPoseContext().odomSupplier();
+        return odom != null ? odom.get() : null;
     }
 
     /** Foe counts in left / center / right forward lanes from {@link #foes()}. */
@@ -228,85 +208,62 @@ public final class VidarSpatial {
         return offensiveLaneAnalysis().recommended;
     }
 
-    public int trackCount() {
-        return world.isMotionTrackingActive() ? world.trackCount() : 0;
-    }
-
-    public Pose2D fieldPose() {
-        if (fieldPoseSupplier != null) {
-            Pose2D external = fieldPoseSupplier.get();
-            if (external != null) {
-                return external;
-            }
-        }
-        return vision.getFusedFieldPose();
-    }
-
     public VidarDistanceUnit distanceUnit() {
-        return vision.distanceUnit();
+        return session.vision().distanceUnit();
     }
 
     public int cameraCount() {
-        return vision.getCameraCount();
+        return session.vision().getCameraCount();
     }
 
+    public VidarDiagnostics diagnostics() {
+        return diagnostics;
+    }
+
+    /**
+     * @deprecated Prefer {@link #diagnostics()} and {@link #lastFrame()} for student-facing access.
+     */
+    @Deprecated
     public VidarMultiVision vision() {
-        return vision;
+        return session.vision();
+    }
+
+    public VidarSession session() {
+        return session;
     }
 
     public VidarWorldModel worldModel() {
-        return world;
+        return session.world();
     }
 
     public void close() {
-        vision.close();
+        session.close();
     }
 
-    /** Team override first, then odom-extrapolated field pose for world tracks. */
-    Pose2D fieldPoseForWorldTracks() {
-        if (fieldPoseSupplier != null) {
-            Pose2D external = fieldPoseSupplier.get();
-            if (external != null) {
-                return external;
-            }
-        }
-        return vision.getFieldPoseForMotionTracking();
-    }
-
-    private static void addUnique(List<VidarSpatialPoint> list, VidarSpatialPoint candidate) {
-        if (candidate == null || !candidate.isValid()) {
-            return;
-        }
-        if (candidate.trackId >= 0) {
-            for (int i = 0; i < list.size(); i++) {
-                if (list.get(i).trackId == candidate.trackId) {
-                    if (candidate.source == VidarSpatialPoint.Source.LIVE) {
-                        list.set(i, candidate);
-                    }
-                    return;
-                }
-            }
-        }
-        for (int i = 0; i < list.size(); i++) {
-            VidarSpatialPoint existing = list.get(i);
-            if (existing.kind != candidate.kind) {
+    private void refreshDiagnostics() {
+        List<String> warnings = new ArrayList<>();
+        int connected = 0;
+        org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth[] health =
+                new org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth[cameraCount()];
+        for (int i = 0; i < cameraCount(); i++) {
+            org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision cam = session.vision().camera(i);
+            if (cam == null) {
+                warnings.add("Camera " + i + " failed to initialize — check Driver Station webcam name.");
+                health[i] = org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth.FAILED;
                 continue;
             }
-            if (VidarRobotPose2D.withinRadius(
-                    existing.robotX, existing.robotY,
-                    candidate.robotX, candidate.robotY,
-                    VidarConfig.WORLD_TRACK_GATE_RADIUS_IN)) {
-                if (candidate.source == VidarSpatialPoint.Source.LIVE
-                        && existing.source == VidarSpatialPoint.Source.REMEMBERED) {
-                    list.set(i, candidate);
-                }
-                return;
+            connected++;
+            health[i] = cam.metrics().health();
+            if (cam.isFailed()) {
+                String err = cam.metrics().lastError();
+                warnings.add("Camera " + i + " (" + cam.getProfile().name + ") failed"
+                        + (err == null || err.isEmpty() ? "" : ": " + err));
             }
         }
-        list.add(candidate);
-    }
-
-    private static void sortByDistance(List<VidarSpatialPoint> points) {
-        Collections.sort(points, Comparator.comparingDouble(VidarSpatialPoint::distance));
+        if (session.configSource() == VidarDiagnostics.ConfigSource.BUNDLED_DEFAULTS) {
+            warnings.add(0, "Using bundled default season/robot JSON — deploy team assets for match tuning.");
+        }
+        diagnostics = new VidarDiagnostics(
+                session.configSource(), cameraCount(), connected, warnings, health);
     }
 }

@@ -34,6 +34,8 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
     private final VidarCameraProfile profile;
     private final VidarMetrics metrics;
     private final VidarResourceBudget resourceBudget;
+    private final TagDecodeBudget decodeBudget;
+    private final VidarTagDecodeWorker decodeWorker;
 
     private volatile VidarTagScoutObservation lastScout;
     private volatile VidarTagObservation latestTag;
@@ -47,7 +49,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             VidarProcessScheduler scheduler,
             VidarCameraProfile profile,
             String cameraName) {
-        this(scheduler, profile, cameraName, null, null, null);
+        this(scheduler, profile, cameraName, null, null, null, null, null);
     }
 
     public VidarAdaptiveTagProcessor(
@@ -57,12 +59,26 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
             VidarMetrics metrics,
             VidarSeasonConfig season,
             VidarResourceBudget resourceBudget) {
+        this(scheduler, profile, cameraName, metrics, season, resourceBudget, null, null);
+    }
+
+    public VidarAdaptiveTagProcessor(
+            VidarProcessScheduler scheduler,
+            VidarCameraProfile profile,
+            String cameraName,
+            VidarMetrics metrics,
+            VidarSeasonConfig season,
+            VidarResourceBudget resourceBudget,
+            TagDecodeBudget decodeBudget,
+            VidarTagDecodeWorker decodeWorker) {
         this.scheduler = scheduler;
         this.profile = profile;
         this.cameraName = cameraName;
         this.metrics = metrics;
         this.season = season;
         this.resourceBudget = resourceBudget;
+        this.decodeBudget = decodeBudget != null ? decodeBudget : new TagDecodeBudget();
+        this.decodeWorker = decodeWorker;
     }
 
     public void setFrameMailbox(VidarFrameMailbox mailbox) {
@@ -132,7 +148,7 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
                 && scout != null
                 && (worthDecode || forceDecode)
                 && (forceDecode || VidarTagGate.shouldSample(scout, frame.cols()))
-                && VidarDecodeArbiter.tryAcquire(captureTimeNanos, cameraName);
+                && decodeBudget.tryAcquire(captureTimeNanos, cameraName);
 
         if (canDecode) {
             scheduler.setOddSlot(VidarProcessScheduler.Slot.TAG_DECODE);
@@ -164,8 +180,8 @@ public class VidarAdaptiveTagProcessor implements VisionProcessor {
                 profile, frame.cols(), frame.rows(), scout.band);
         lastDecodeRegion = decodeRegion;
 
-        if (VidarConfig.ASYNC_TAG_DECODE_ENABLED) {
-            VidarTagDecodeWorker.submit(
+        if (VidarConfig.ASYNC_TAG_DECODE_ENABLED && decodeWorker != null) {
+            decodeWorker.submit(
                     this, frame, decodeRegion, decimation, captureTimeNanos, scout, metrics);
         } else {
             tryDecode(frame, captureTimeNanos, decimation, decodeRegion, scout);

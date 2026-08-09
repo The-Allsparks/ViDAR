@@ -31,10 +31,13 @@ public class VidarAutoSeekOpMode extends VidarSpatialOpModeBase {
     @Override
     public void runOpMode() {
         alliance = new VidarAllianceSelector(hardwareMap);
-        spatial = VidarSpatial.create(hardwareMap, null, alliance::get);
+        spatial = VidarSpatial.createWithBundledDefaults(hardwareMap, null, alliance::get);
 
         telemetry.addLine("ViDAR Spatial Map — three groups (no motors)");
         telemetry.addLine("Calibrate robot.json — docs/CALIBRATION_CHECKLIST.md");
+        if (!spatial.diagnostics().warnings.isEmpty()) {
+            telemetry.addLine(spatial.diagnostics().warnings.get(0));
+        }
         telemetry.update();
 
         pollAllianceInit(alliance, gamepad1);

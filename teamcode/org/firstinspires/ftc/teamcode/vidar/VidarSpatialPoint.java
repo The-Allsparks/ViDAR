@@ -90,8 +90,24 @@ public final class VidarSpatialPoint {
 
     public static VidarSpatialPoint fromElement(
             VidarElementObservation obs, String elementId, int occurrenceRank) {
-        return VidarObservationMapper.toSpatialPoint(
-                VidarObservationMapper.fromElement(obs, elementId, occurrenceRank));
+        if (obs == null) {
+            return null;
+        }
+        String id = elementId == null || elementId.isEmpty() ? obs.elementId : elementId;
+        return new VidarSpatialPoint(
+                Kind.ELEMENT,
+                Source.LIVE,
+                -1,
+                id,
+                occurrenceRank,
+                obs.robotX,
+                obs.robotY,
+                0,
+                0,
+                obs.range,
+                obs.confidence,
+                obs.cameraName,
+                obs.captureTimeNanos);
     }
 
     public VidarSpatialPoint withOccurrenceRank(int occurrenceRank) {

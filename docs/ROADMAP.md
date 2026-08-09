@@ -81,6 +81,14 @@ ViDAR **detects and remembers** in robot space; it does **not** own field pose. 
 | Browser sim: `elementId`, motion tracks, offensive lane | **Done** — see [sim/README-SIM.md](../sim/README-SIM.md) |
 | Offensive lane helper on `VidarSpatial` | **Done** (`VidarOffensiveLaneAnalysis`) |
 | Four-camera USB stress validation | **Open — requires hardware** |
+| `java-pure/` JVM test harness | **Done** |
+| `VidarSpatialSnapshot` (stable per-loop queries) | **Done** |
+| `VidarSession` + instance tag decode worker | **Done** |
+| `MultiCameraFusion` extraction | **Done** |
+| `VidarSettings` + JSON tuning path | **Done** (constants remain as fallbacks) |
+| `ElementDetector` / `PlateDetector` split | **Done** |
+| Deprecate `spatial.vision()` | **Done** — use `diagnostics()` + `lastFrame()` |
+| Remove `.refactor-staging/` duplicate tree | **Done** |
 
 ---
 

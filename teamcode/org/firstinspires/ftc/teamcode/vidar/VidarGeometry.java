@@ -13,6 +13,9 @@ import org.firstinspires.ftc.teamcode.vidar.geometry.VidarVec3;
 
 /**
  * Known-size monocular range, floor-plane cross-check, and uncertainty-weighted fusion.
+ *
+ * <p>Stable student-facing geometry facade. Advanced teams may use
+ * {@link org.firstinspires.ftc.teamcode.vidar.geometry.VidarRangeFusion} directly for custom pipelines.
  */
 public final class VidarGeometry {
 

@@ -1,0 +1,56 @@
+package org.firstinspires.ftc.teamcode.vidar.fusion;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
+
+import java.util.function.Supplier;
+
+/**
+ * Single owner for field-pose suppliers used by vision fusion and world-model tracks.
+ */
+public final class FieldPoseContext {
+
+    private final Supplier<Pose2D> odomSupplier;
+    private Supplier<Pose2D> externalFieldPoseSupplier;
+    private VidarMultiVision vision;
+
+    public FieldPoseContext(Supplier<Pose2D> odomSupplier) {
+        this.odomSupplier = odomSupplier;
+    }
+
+    public void bindVision(VidarMultiVision vision) {
+        this.vision = vision;
+    }
+
+    public void setExternalFieldPoseSupplier(Supplier<Pose2D> supplier) {
+        this.externalFieldPoseSupplier = supplier;
+    }
+
+    public Supplier<Pose2D> worldTrackFieldPoseSupplier() {
+        return this::fieldPoseForWorldTracks;
+    }
+
+    public Pose2D fieldPoseForWorldTracks() {
+        if (externalFieldPoseSupplier != null) {
+            Pose2D external = externalFieldPoseSupplier.get();
+            if (external != null) {
+                return external;
+            }
+        }
+        return vision == null ? null : vision.getFieldPoseForMotionTracking();
+    }
+
+    public Pose2D fieldPoseForSnapshot() {
+        if (externalFieldPoseSupplier != null) {
+            Pose2D external = externalFieldPoseSupplier.get();
+            if (external != null) {
+                return external;
+            }
+        }
+        return vision == null ? null : vision.getFusedFieldPose();
+    }
+
+    public Supplier<Pose2D> odomSupplier() {
+        return odomSupplier;
+    }
+}

@@ -267,10 +267,14 @@ Pedro-style entry point: one object, one `update()` per loop. Wraps `VidarMultiV
 ```
 create(hardwareMap): VidarSpatial
 create(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
-create(hardwareMap, robot, season, odomSupplier, allianceSupplier): VidarSpatial
+createWithBundledDefaults(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
+create(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial   // throws if team assets missing
 
 update(): void
 updateCorrected(): VidarCorrectedFrame    // when odom supplier configured
+snapshot(): VidarSpatialSnapshot          // immutable groups from last update
+lastFrame(): VidarObservationFrame        // fused vision outputs from last update
+diagnostics(): VidarDiagnostics           // config source, camera health, warnings
 
 bestElement(): VidarSpatialPoint | null       // LIVE
 nearestElement(): VidarSpatialPoint | null    // REMEMBERED when motion tracking active
@@ -293,7 +297,8 @@ cameraCount(): int
 
 setFieldPosePrior(pose): void
 setFieldPoseSupplier(supplier): void          // e.g. Pedro follower pose for world tracks
-vision(): VidarMultiVision                    // advanced escape hatch
+vision(): VidarMultiVision                    // @Deprecated — use diagnostics() + lastFrame()
+session(): VidarSession                       // advanced orchestrator access
 worldModel(): VidarWorldModel
 close(): void
 ```

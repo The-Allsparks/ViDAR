@@ -8,9 +8,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
- * Background AprilTag decode — scheduled by tic-toc / round-robin, runs off the scan worker.
- * Crop mailbox: submit copies into {@code pendingCrop}; take swaps {@code pendingCrop} /
- * {@code processingCrop} (same model as {@link VidarFrameMailbox}).
+ * Background AprilTag decode — one instance per {@link org.firstinspires.ftc.teamcode.vidar.VidarSession}.
  */
 public final class VidarTagDecodeWorker extends Thread {
 
@@ -59,34 +57,30 @@ public final class VidarTagDecodeWorker extends Thread {
         }
     }
 
-    private static final Object INSTANCE_LOCK = new Object();
-    private static VidarTagDecodeWorker instance;
-
     private final Object lock = new Object();
     private volatile boolean running = true;
+    private volatile boolean started;
 
     private Mat pendingCrop;
     private Mat processingCrop;
     private DecodeRequest pendingRequest;
 
-    private VidarTagDecodeWorker() {
+    public VidarTagDecodeWorker() {
         super("VidarTagDecodeWorker");
         setPriority(Thread.NORM_PRIORITY - 2);
     }
 
-    public static void ensureStarted() {
+    public void ensureStarted() {
         if (!VidarConfig.ASYNC_TAG_DECODE_ENABLED || !VidarTagConfig.ENABLED) {
             return;
         }
-        synchronized (INSTANCE_LOCK) {
-            if (instance == null || !instance.running) {
-                instance = new VidarTagDecodeWorker();
-                instance.start();
-            }
+        if (!started) {
+            started = true;
+            start();
         }
     }
 
-    public static void submit(
+    public void submit(
             VidarAdaptiveTagProcessor processor,
             Mat frame,
             Rect decodeRegion,
@@ -104,32 +98,24 @@ public final class VidarTagDecodeWorker extends Thread {
             return;
         }
         ensureStarted();
-
-        synchronized (INSTANCE_LOCK) {
-            if (instance != null) {
-                instance.publish(processor, frame, decodeRegion, w, h, decimation, captureTimeNanos, scout, metrics);
-            }
-        }
+        publish(processor, frame, decodeRegion, w, h, decimation, captureTimeNanos, scout, metrics);
     }
 
-    public static void shutdownAndJoin() {
-        synchronized (INSTANCE_LOCK) {
-            if (instance == null) {
-                return;
-            }
-            instance.running = false;
-            instance.interrupt();
-            synchronized (instance.lock) {
-                instance.lock.notifyAll();
-            }
+    public void shutdownAndJoin() {
+        running = false;
+        interrupt();
+        synchronized (lock) {
+            lock.notifyAll();
+        }
+        if (started) {
             try {
-                instance.join(750);
+                join(750);
             } catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
             }
-            instance.releaseBuffers();
-            instance = null;
         }
+        releaseBuffers();
+        started = false;
     }
 
     private void publish(

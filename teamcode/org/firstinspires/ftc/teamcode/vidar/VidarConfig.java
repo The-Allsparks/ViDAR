@@ -8,10 +8,11 @@ import android.util.Size;
 /**
  * ViDAR tuning constants — change these in one place when calibrating on the field.
  *
- * <p><b>Preferred:</b> teams load JSON via {@link org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader}
- * and pass {@link org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig} /
- * {@link org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig} to
- * {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}. See {@link org.firstinspires.ftc.teamcode.VidarTeamConfig}.
+ * <b>Preferred:</b> teams load JSON via {@link org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader}
+ * and pass configs to {@link org.firstinspires.ftc.teamcode.vidar.VidarSession} or
+ * {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}. Effective tuning is merged in
+ * {@link org.firstinspires.ftc.teamcode.vidar.config.VidarSettings}. See
+ * {@link org.firstinspires.ftc.teamcode.VidarTeamConfig}.
  *
  * <p>Season tuning (elements, plates, fusion thresholds, AprilTags) lives in bundled
  * {@code default-season.json} / team {@code season.json}. Robot layout lives in
