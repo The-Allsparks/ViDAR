@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.vidar.tag.TagDecodeBudget;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarAdaptiveTagProcessor;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagDecodeWorker;
+import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagGate;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
 
