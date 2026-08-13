@@ -245,6 +245,9 @@ public final class VidarRuntime {
         if (updated.configSource != null) {
             this.configSource = updated.configSource;
         }
+        // OpMode recreate must rebind suppliers — FieldPoseContext / WorldModel outlive attachVision.
+        fieldPoseContext.setOdomSupplier(updated.odomSupplier);
+        world.setOdomSupplier(updated.odomSupplier);
     }
 
     private void observationTick() {

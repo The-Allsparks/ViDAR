@@ -269,6 +269,8 @@ create(hardwareMap): VidarSpatial
 create(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
 createWithBundledDefaults(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
 
+# create() rebinds odom/alliance onto the process VidarRuntime when reusing Auto→TeleOp
+
 update(): void                            // pin latest snapshot for this loop (call once per iteration)
 updateCorrected(): VidarCorrectedFrame    // when odom supplier configured
 snapshot(): VidarSpatialSnapshot          // same pinned snapshot as elements()/allies()/foes()

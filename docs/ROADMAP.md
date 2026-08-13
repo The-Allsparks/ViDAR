@@ -84,6 +84,7 @@ ViDAR **detects and remembers** in robot space; it does **not** own field pose. 
 | Runtime / attachment split (`VidarRuntime`, `VidarVisionAttachment`, `VidarFusionEngine`) | **Done** |
 | Background observation worker + snapshot-first API | **Done** |
 | `java-pure/` in CI | **Done** |
+| Auto→TeleOp odom/alliance supplier rebind | **Done** |
 
 ---
 

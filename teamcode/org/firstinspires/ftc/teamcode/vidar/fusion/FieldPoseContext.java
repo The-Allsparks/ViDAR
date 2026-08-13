@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  */
 public final class FieldPoseContext {
 
-    private final Supplier<Pose2D> odomSupplier;
+    private Supplier<Pose2D> odomSupplier;
     private Supplier<Pose2D> externalFieldPoseSupplier;
     private VidarVisionFusion vision;
 
@@ -20,6 +20,11 @@ public final class FieldPoseContext {
 
     public void bindVision(VidarVisionFusion vision) {
         this.vision = vision;
+    }
+
+    /** Rebind odom when a new OpMode recreates {@code VidarSpatial} against a live runtime. */
+    public void setOdomSupplier(Supplier<Pose2D> supplier) {
+        this.odomSupplier = supplier;
     }
 
     public void setExternalFieldPoseSupplier(Supplier<Pose2D> supplier) {

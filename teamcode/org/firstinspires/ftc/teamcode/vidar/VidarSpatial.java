@@ -236,7 +236,7 @@ public final class VidarSpatial {
 
     public VidarDistanceUnit distanceUnit() {
         VidarFusionEngine fusion = runtime.fusionEngine();
-        return fusion != null ? fusion.distanceUnit() : VidarDistanceUnit.INCHES;
+        return fusion != null ? fusion.distanceUnit() : VidarDistanceUnit.IN;
     }
 
     public int cameraCount() {

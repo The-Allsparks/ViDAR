@@ -61,10 +61,12 @@ flowchart TB
 RC start → VidarRuntime.getOrCreate()
 Auto INIT → attachVision() via VidarSpatial.create()
 Auto STOP → detachVision() via spatial.close()
-TeleOp INIT → attachVision() (runtime reused)
+TeleOp INIT → applyBootstrap (rebind odom/alliance) + attachVision (runtime reused)
 TeleOp STOP → detachVision()
 RC exit → VidarRuntime.shutdown() (optional)
 ```
+
+Each `VidarSpatial.create(...)` rebinds odom and alliance suppliers onto the live process runtime before re-attaching cameras, so Auto and TeleOp may pass different suppliers.
 
 ## Element detection — **Implemented**, **Tested in simulation**
 

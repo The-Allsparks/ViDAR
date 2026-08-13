@@ -52,7 +52,6 @@ sourceSets {
             exclude 'frame/VidarCorrectedFrame.java'
             exclude 'frame/VidarCorrectedPoint.java'
             exclude 'frame/VidarSpatialSnapshot.java'
-            exclude 'fusion/FieldPoseContext.java'
             exclude 'fusion/VidarPoseBackdate.java'
             exclude 'fusion/VidarOdomHistory.java'
             exclude 'runtime/VidarVision.java'

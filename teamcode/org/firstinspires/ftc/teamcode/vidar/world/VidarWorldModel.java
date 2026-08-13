@@ -26,7 +26,7 @@ public class VidarWorldModel {
     }
 
     private final List<VidarSpatialTrack> tracks = new ArrayList<>();
-    private final Supplier<Pose2D> odomSupplier;
+    private Supplier<Pose2D> odomSupplier;
     private Supplier<Pose2D> fieldPoseSupplier;
     private boolean motionTrackingEnabled = VidarConfig.WORLD_MOTION_TRACKING_ENABLED;
     private int nextTrackId = 1;
@@ -38,6 +38,15 @@ public class VidarWorldModel {
     public VidarWorldModel(Supplier<Pose2D> odomSupplier, Supplier<Pose2D> fieldPoseSupplier) {
         this.odomSupplier = odomSupplier;
         this.fieldPoseSupplier = fieldPoseSupplier;
+    }
+
+    /** Rebind odom when a new OpMode recreates {@code VidarSpatial} against a live runtime. */
+    public void setOdomSupplier(Supplier<Pose2D> odomSupplier) {
+        this.odomSupplier = odomSupplier;
+        if (!isMotionTrackingActive()) {
+            tracks.clear();
+            nextTrackId = 1;
+        }
     }
 
     public void setFieldPoseSupplier(Supplier<Pose2D> fieldPoseSupplier) {

@@ -288,6 +288,27 @@ In `VidarTagConfig`:
 
 Scout observations never pass these gates — they do not localize.
 
+## Do we need a Limelight-style web pipeline UI?
+
+**Short answer: no — not for the same job.** Limelight’s web UI edits *camera pipelines* (thresholds, fiducials, Python) on a coprocessor. ViDAR’s JSON is mostly **season geometry + robot mounts**, which a webcam cannot invent by itself.
+
+| Config piece | Source of truth | Autoconfigure from camera? |
+|--------------|-----------------|----------------------------|
+| Season elements / plates (size, HSV, shape gates) | Game manual + field lighting | **Partial** — HSV can be assisted from a sample frame; diameter/aspect cannot |
+| AprilTag field map | Season / FIRST map | **No** — world coordinates are external |
+| Camera `webcamName` / count | Driver Station config | **Yes** — discover connected UVC names at INIT |
+| Mount pose (`x/y/z`, pitch, bearing) | Tape measure / CAD | **No** — not in the image without a known target ritual |
+| Intrinsics (`focalLengthPx`) / floor LUT | Known-size or known-distance targets | **Assisted** — existing Discover / ROI / floor calibration OpModes |
+| ROIs / horizon | Mount geometry + FOV | **Assisted** — `VidarRoiCalibrationOpMode` |
+
+**Recommended path (current):**
+
+1. Copy season + robot templates → `assets/vidar/*.json` (or use bundled defaults).
+2. Measure mounts once; tune HSV / floor LUT with **ViDAR: Discover** and ROI calibration OpModes (Driver Station + Camera Stream — not a separate web app).
+3. Optional later: a **tuning OpMode that writes JSON** (or a laptop helper that samples frames) — still not Limelight’s pipeline-as-code model.
+
+**What cameras can autoconfigure today / soon:** enumerate webcams and warn on name mismatches; propose focal length from a known-diameter element at a measured distance; refresh floor LUT from marked distances. **What they cannot:** replace `robot.json` mount poses or invent season piece definitions.
+
 ## Simulator alignment
 
 `sim/vidar-tuning.json` mirrors Java tuning. Configuration names intentionally align where practical. Sim uses HSV for color-blob; Java default matches.

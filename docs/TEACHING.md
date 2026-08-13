@@ -89,13 +89,14 @@ Ideas in order of difficulty:
 | Drive toward a specific element | Iterate `spatial.elements()` → bearing + distance → your drivetrain |
 | Autonomous grab line | New `@Autonomous` OpMode, no gamepad |
 | Custom HSV color | Add or edit an entry in `config/seasons/*.json` |
-| Second camera | Second `VisionPortal` + second `VidarVision` instance (ports 5555-style not needed — USB on hub) |
+| Second / third / fourth camera | Raise `VidarConfig.CAMERA_COUNT`, name webcams `Webcam 1`…`N`, add mounts in `robot.json` (or bundled defaults) |
 
 ## File roles (teach students this map)
 
 ```
 VidarConfig.java / config/     ← tune camera, season elements, floor LUT
 VidarSpatial.java              ← recommended OpMode entry (update() + target lists)
+VidarRuntime.java              ← process singleton; attach/detach cameras across OpModes
 VidarFusionEngine.java         ← internal multi-camera fusion (via VidarRuntime; not team-constructible)
 VidarVision.java               ← portal wiring (contour + tag processors)
 VidarDiscoverOpMode            ← read-only test OpMode
@@ -114,10 +115,12 @@ Docs: [FTC Color Processing](https://ftc-docs.firstinspires.org/color-processing
 
 ## Scaling to 4 cameras
 
-Each USB webcam needs its own `VisionPortal`. Pass a different `VidarCameraProfile` per side:
+Multi-camera is configured, not hand-wired in the OpMode. Prefer:
 
-```java
-VidarVision front = new VidarVision(hardwareMap, "Webcam 1", VidarCameraProfile.FRONT);
-```
+1. Set `VidarConfig.CAMERA_COUNT` (1–4) and Driver Station names `Webcam 1` … `Webcam N`.
+2. Put per-camera mounts / ROIs / floor LUT in `assets/vidar/robot.json` (see [CONFIGURATION.md](CONFIGURATION.md)).
+3. Use `VidarSpatial.create(...)` — `VidarRuntime` attaches all portals via `VidarVisionAttachment`.
+
+Do **not** construct a second `VidarVision` in team OpModes for multi-cam; that bypasses fusion and the runtime/attachment split.
 
 See [ROADMAP.md](ROADMAP.md) for USB hub wiring and validation checklist.
