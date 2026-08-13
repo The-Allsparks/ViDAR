@@ -30,6 +30,12 @@ public final class VidarLocalizationFusion {
         return lastFusedFieldPose;
     }
 
+    /** Clear fused pose scratch between match periods (keeps field pose prior). */
+    public void resetMatchState() {
+        lastFusedFieldPose = null;
+        lastCorrectionNanos = 0;
+    }
+
     /**
      * Apply decoded tag correction with pose gates. Scout observations are ignored for pose fusion.
      */

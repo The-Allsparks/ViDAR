@@ -4,58 +4,70 @@ import org.firstinspires.ftc.teamcode.vidar.api.VidarDiagnostics;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedFrame;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarObservationFrame;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarSpatialSnapshot;
-import org.firstinspires.ftc.teamcode.vidar.fusion.FieldPoseContext;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarFusionEngine;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
-import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
+import org.firstinspires.ftc.teamcode.vidar.runtime.RuntimeBootstrap;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.VidarTeamConfig;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * Pedro-style facade for ViDAR spatial knowledge — one object, one {@link #update()} per loop.
+ * Pedro-style facade for ViDAR spatial knowledge — one {@link #update()} per robot loop.
  *
  * <p>Three spatial groups — {@link #elements()}, {@link #allies()}, {@link #foes()} — plus pose.
  * ViDAR never commands motors.
  *
+ * <p>Perception (camera poll, fusion, world model) runs continuously in a background worker.
+ * {@link #update()} pins the latest published snapshot so all getters are stable for one loop
+ * iteration — it does <em>not</em> drive perception on the robot thread.
+ *
  * <p>Motion-corrected track memory requires an odom supplier at {@link #create} and
  * {@link #setMotionTrackingEnabled(boolean)} true (default from {@link VidarConfig}).
- * Without odom, queries return live camera detections only.
  */
 public final class VidarSpatial {
 
-    private final VidarSession session;
+    private final VidarRuntime runtime;
     private VidarDiagnostics diagnostics = VidarDiagnostics.empty();
     private VidarSpatialSnapshot snapshot = VidarSpatialSnapshot.empty();
 
-    private VidarSpatial(VidarSession session) {
-        this.session = session;
-        refreshDiagnostics();
+    private VidarSpatial(VidarRuntime runtime) {
+        this.runtime = runtime;
+        update();
     }
 
     public static VidarSpatial create(HardwareMap hardwareMap) {
         return create(hardwareMap, null, null);
     }
 
-    /**
-     * Load team {@code assets/vidar/season.json} and {@code robot.json}.
-     *
-     * @throws VidarConfigException if assets are missing — use {@link #createWithBundledDefaults}
-     *         for bundled fallbacks during bring-up.
-     */
     public static VidarSpatial create(
             HardwareMap hardwareMap,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> allianceSupplier) {
-        return new VidarSpatial(VidarSession.create(hardwareMap, odomSupplier, allianceSupplier));
+        try {
+            return createInternal(
+                    hardwareMap,
+                    VidarTeamConfig.loadRobot(hardwareMap),
+                    VidarTeamConfig.loadSeason(hardwareMap),
+                    odomSupplier,
+                    allianceSupplier,
+                    VidarDiagnostics.ConfigSource.TEAM_ASSETS);
+        } catch (IOException e) {
+            throw new VidarConfigException(
+                    "Missing ViDAR config assets. Copy season.json and robot.json to "
+                            + "TeamCode/src/main/assets/vidar/ or call createWithBundledDefaults().",
+                    e);
+        }
     }
 
-    /** Explicit bundled defaults when team assets are not deployed yet. */
     public static VidarSpatial createWithBundledDefaults(HardwareMap hardwareMap) {
         return createWithBundledDefaults(hardwareMap, null, null);
     }
@@ -64,8 +76,13 @@ public final class VidarSpatial {
             HardwareMap hardwareMap,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> allianceSupplier) {
-        return new VidarSpatial(
-                VidarSession.createWithBundledDefaults(hardwareMap, odomSupplier, allianceSupplier));
+        return createInternal(
+                hardwareMap,
+                VidarTeamConfig.defaultRobot(),
+                VidarTeamConfig.defaultSeason(),
+                odomSupplier,
+                allianceSupplier,
+                VidarDiagnostics.ConfigSource.BUNDLED_DEFAULTS);
     }
 
     public static VidarSpatial create(
@@ -74,63 +91,74 @@ public final class VidarSpatial {
             VidarSeasonConfig season,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> allianceSupplier) {
-        return new VidarSpatial(
-                VidarSession.create(hardwareMap, robot, season, odomSupplier, allianceSupplier));
+        return createInternal(
+                hardwareMap,
+                robot,
+                season,
+                odomSupplier,
+                allianceSupplier,
+                VidarDiagnostics.ConfigSource.TEAM_ASSETS);
+    }
+
+    private static VidarSpatial createInternal(
+            HardwareMap hardwareMap,
+            VidarRobotConfig robot,
+            VidarSeasonConfig season,
+            Supplier<Pose2D> odomSupplier,
+            Supplier<VidarAlliance> allianceSupplier,
+            VidarDiagnostics.ConfigSource configSource) {
+        RuntimeBootstrap bootstrap = new RuntimeBootstrap(odomSupplier, allianceSupplier, configSource);
+        VidarRuntime runtime = VidarRuntime.getOrCreate(bootstrap);
+        runtime.attachVision(hardwareMap, robot, season);
+        return new VidarSpatial(runtime);
     }
 
     public void setFieldPoseSupplier(Supplier<Pose2D> supplier) {
-        session.setFieldPoseSupplier(supplier);
+        runtime.setFieldPoseSupplier(supplier);
     }
 
     public void setFieldPosePrior(Pose2D prior) {
-        session.setFieldPosePrior(prior);
+        runtime.setFieldPosePrior(prior);
     }
 
-    /** Enable/disable motion-corrected world tracks (no-op without odom supplier). */
     public void setMotionTrackingEnabled(boolean enabled) {
-        session.setMotionTrackingEnabled(enabled);
+        runtime.setMotionTrackingEnabled(enabled);
     }
 
     public boolean isMotionTrackingEnabled() {
-        return session.world().isMotionTrackingEnabled();
+        return runtime.world().isMotionTrackingEnabled();
     }
 
     public boolean isOdomConfigured() {
-        return session.fieldPoseContext().odomSupplier() != null;
+        return runtime.fieldPoseContext().odomSupplier() != null;
     }
 
-    /** True when world-model motion correction and track memory are active. */
     public boolean isMotionTrackingActive() {
-        return session.world().isMotionTrackingActive();
+        return runtime.world().isMotionTrackingActive();
     }
 
+    /**
+     * Pin the latest background snapshot and refresh diagnostics for this robot-loop iteration.
+     * Call once per {@code while (opModeIsActive())} loop before reading {@link #elements()} etc.
+     */
     public void update() {
-        session.update();
-        snapshot = VidarSpatialSnapshot.build(
-                session.vision(), session.world(), session.fieldPoseContext()::fieldPoseForSnapshot);
+        snapshot = runtime.pinSnapshot();
         refreshDiagnostics();
     }
 
     public VidarCorrectedFrame updateCorrected() {
-        if (session.fieldPoseContext().odomSupplier() != null) {
-            session.vision().recordOdom(session.fieldPoseContext().odomSupplier().get());
-        }
-        VidarCorrectedFrame corrected = session.vision().updateCorrected();
-        session.world().update(session.vision(), System.nanoTime());
-        snapshot = VidarSpatialSnapshot.build(
-                session.vision(), session.world(), session.fieldPoseContext()::fieldPoseForSnapshot);
-        refreshDiagnostics();
+        VidarCorrectedFrame corrected = runtime.updateCorrected();
+        update();
         return corrected;
     }
 
-    /** Immutable spatial groups from the last {@link #update()} — stable within one loop. */
+    /** Same pinned snapshot as {@link #elements()} — updated each {@link #update()}. */
     public VidarSpatialSnapshot snapshot() {
         return snapshot;
     }
 
-    /** Latest observation frame from the last vision update. */
     public VidarObservationFrame lastFrame() {
-        return session.vision().getLatestFrame();
+        return runtime.lastFrame();
     }
 
     public List<VidarSpatialPoint> elements() {
@@ -150,8 +178,8 @@ public final class VidarSpatial {
     }
 
     public VidarSpatialPoint nearestElement() {
-        if (session.world().isMotionTrackingActive()) {
-            return VidarSpatialPoint.fromTrack(session.world().nearestElement());
+        if (runtime.world().isMotionTrackingActive()) {
+            return VidarSpatialPoint.fromTrack(runtime.world().nearestElement());
         }
         return bestElement();
     }
@@ -166,8 +194,8 @@ public final class VidarSpatial {
     }
 
     public VidarSpatialPoint nearestFoe() {
-        if (session.world().isMotionTrackingActive()) {
-            return VidarSpatialPoint.fromTrack(session.world().nearestFoe());
+        if (runtime.world().isMotionTrackingActive()) {
+            return VidarSpatialPoint.fromTrack(runtime.world().nearestFoe());
         }
         return bestFoe();
     }
@@ -194,59 +222,48 @@ public final class VidarSpatial {
     }
 
     public Pose2D robotPose() {
-        Supplier<Pose2D> odom = session.fieldPoseContext().odomSupplier();
+        Supplier<Pose2D> odom = runtime.fieldPoseContext().odomSupplier();
         return odom != null ? odom.get() : null;
     }
 
-    /** Foe counts in left / center / right forward lanes from {@link #foes()}. */
     public VidarOffensiveLaneAnalysis offensiveLaneAnalysis() {
         return VidarOffensiveLaneAnalysis.fromFoes(foes());
     }
 
-    /** Lane with the fewest foes in the forward cone; tie-break center, then left. */
     public VidarOffensiveLane recommendOffensiveLane() {
         return offensiveLaneAnalysis().recommended;
     }
 
     public VidarDistanceUnit distanceUnit() {
-        return session.vision().distanceUnit();
+        VidarFusionEngine fusion = runtime.fusionEngine();
+        return fusion != null ? fusion.distanceUnit() : VidarDistanceUnit.INCHES;
     }
 
     public int cameraCount() {
-        return session.vision().getCameraCount();
+        return runtime.cameraCount();
     }
 
     public VidarDiagnostics diagnostics() {
         return diagnostics;
     }
 
-    /**
-     * @deprecated Prefer {@link #diagnostics()} and {@link #lastFrame()} for student-facing access.
-     */
-    @Deprecated
-    public VidarMultiVision vision() {
-        return session.vision();
+    public VidarRuntime runtime() {
+        return runtime;
     }
 
-    public VidarSession session() {
-        return session;
-    }
-
-    public VidarWorldModel worldModel() {
-        return session.world();
-    }
-
+    /** Detach FTC cameras — runtime persists for the next OpMode. */
     public void close() {
-        session.close();
+        runtime.detachVision();
     }
 
     private void refreshDiagnostics() {
         List<String> warnings = new ArrayList<>();
         int connected = 0;
+        int count = runtime.cameraCount();
         org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth[] health =
-                new org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth[cameraCount()];
-        for (int i = 0; i < cameraCount(); i++) {
-            org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision cam = session.vision().camera(i);
+                new org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth[count];
+        for (int i = 0; i < count; i++) {
+            org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision cam = runtime.camera(i);
             if (cam == null) {
                 warnings.add("Camera " + i + " failed to initialize — check Driver Station webcam name.");
                 health[i] = org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics.CameraHealth.FAILED;
@@ -260,10 +277,10 @@ public final class VidarSpatial {
                         + (err == null || err.isEmpty() ? "" : ": " + err));
             }
         }
-        if (session.configSource() == VidarDiagnostics.ConfigSource.BUNDLED_DEFAULTS) {
+        if (runtime.configSource() == VidarDiagnostics.ConfigSource.BUNDLED_DEFAULTS) {
             warnings.add(0, "Using bundled default season/robot JSON — deploy team assets for match tuning.");
         }
         diagnostics = new VidarDiagnostics(
-                session.configSource(), cameraCount(), connected, warnings, health);
+                runtime.configSource(), count, connected, warnings, health);
     }
 }

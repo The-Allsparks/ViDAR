@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Init-time and runtime diagnostic snapshot for student OpModes.
  *
- * <p>Populated by {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision} and exposed via
+ * <p>Populated by {@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime} and exposed via
  * {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial#diagnostics()}.
  */
 public final class VidarDiagnostics {

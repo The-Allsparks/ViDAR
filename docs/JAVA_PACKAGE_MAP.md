@@ -1,16 +1,11 @@
 # ViDAR Java package map
 
-Java source lives under `teamcode/org/firstinspires/ftc/teamcode/vidar/`. Copy the entire `vidar/` tree into your FTC SDK `TeamCode` module.
-
-## Stable team imports (`vidar` root)
-
-These stay at `org.firstinspires.ftc.teamcode.vidar` so existing OpModes keep working:
-
 | Class | Role |
 |-------|------|
-| `VidarSpatial` | Primary integration API |
-| `VidarSession` | Instance-scoped orchestrator (vision + world + workers) |
-| `VidarMultiVision` | Multi-camera vision coordination |
+| `VidarSpatial` | Primary integration API — `update()` pins snapshot each loop |
+| `VidarRuntime` | Process singleton — world model, fusion, workers, snapshots |
+| `VidarVisionAttachment` | Ephemeral FTC cameras (attach/detach per OpMode) |
+| `VidarFusionEngine` | Internal multi-camera poll + fuse (not constructed by teams) |
 | `VidarConfig` | Hardware / legacy constants (prefer `VidarSettings` + JSON) |
 | `VidarSpatialPoint`, `VidarElementObservation`, `VidarPlateObservation` | Public return types |
 | `VidarAlliance`, `VidarDistanceUnit`, `VidarElementDetectorType`, `VidarElementShape`, `VidarOffensiveLane` | Enums |
@@ -22,24 +17,30 @@ These stay at `org.firstinspires.ftc.teamcode.vidar` so existing OpModes keep wo
 
 | Package | Responsibility | Key classes |
 |---------|----------------|-------------|
+| `vidar.runtime` | Process runtime + camera attachment | `VidarRuntime`, `VidarVisionAttachment`, `VidarObservationWorker`, `RuntimeBootstrap`, `VidarVision`, `VidarRuntimeConfig` |
 | `vidar.api` | Student diagnostics | `VidarDiagnostics` |
 | `vidar.detect` | Contour / color-blob pipeline | `VidarContourProcessor`, `ElementDetector`, `PlateDetector` |
 | `vidar.tag` | AprilTag scout, crop decode, gates | `VidarAdaptiveTagProcessor`, `VidarTagDecodeWorker`, `TagDecodeBudget` |
-| `vidar.fusion` | Localization, temporal filter, multi-camera fusion | `VidarLocalizationFusion`, `MultiCameraFusion`, `FieldPoseContext` |
+| `vidar.fusion` | Localization, temporal filter, multi-camera fusion | `VidarFusionEngine`, `VidarLocalizationFusion`, `MultiCameraFusion`, `FieldPoseContext`, `VidarVisionFusion` |
 | `vidar.world` | Short-term track memory | `VidarWorldModel`, `VidarTrackAssociator` |
 | `vidar.frame` | Per-cycle immutable snapshots | `VidarObservationFrame`, `VidarSpatialSnapshot` |
-| `vidar.schedule` | CPU / camera scheduling | `VidarCameraScheduler`, `VidarResourceBudget` |
+| `vidar.schedule` | CPU / camera scheduling | `VidarCameraScheduler`, `VidarResourceBudget`, `VidarGlobalVisionWorker` |
 | `vidar.model` | Shared DTOs and measurements | `VidarRangeResult`, `VidarTagObservation` |
-| `vidar.runtime` | Per-camera vision unit | `VidarVision`, `CameraPipelineConfig` |
 | `vidar.config` | JSON season / robot specs | `VidarConfigLoader`, `VidarSettings`, bundled `default-*.json` |
 | `vidar.geometry` | 3D transforms, ground plane, range fusion | `VidarTransformRegistry`, `VidarGroundPlane`, `VidarRangeFusion` |
 
 ## Data flow
 
 ```
-OpMode → VidarSpatial → VidarSession → VidarMultiVision → VidarVision (runtime)
+OpMode → VidarSpatial → VidarRuntime (singleton)
                               ↓
-         detect / tag processors → frame + spatial snapshots → world tracks
+         VidarObservationWorker (background)
+                              ↓
+         VidarVisionAttachment → VidarVision (runtime) → detect / tag processors
+                              ↓
+         fusion + VidarSpatialSnapshot + world tracks
 ```
+
+**Lifecycle:** `VidarSpatial.create()` → `attachVision()`; `spatial.close()` → `detachVision()`; `VidarRuntime.shutdown()` on RC exit.
 
 See [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for pipeline detail.

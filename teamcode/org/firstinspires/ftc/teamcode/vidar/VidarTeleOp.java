@@ -39,6 +39,7 @@ public class VidarTeleOp extends VidarSpatialOpModeBase {
 
         while (opModeIsActive()) {
             alliance.pollRuntime(gamepad1);
+
             spatial.update();
 
             List<VidarSpatialPoint> elements = spatial.elements();

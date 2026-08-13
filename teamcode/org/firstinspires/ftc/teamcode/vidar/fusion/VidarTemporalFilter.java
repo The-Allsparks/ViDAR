@@ -136,4 +136,10 @@ public final class VidarTemporalFilter {
         VidarRuntimeConfig cfg = runtimeConfig;
         return cfg == null ? VidarConfig.TEMPORAL_MAX_JUMP : cfg.temporalMaxJump();
     }
+
+    /** Clear pending confirmation state between match periods. */
+    public void resetMatchState() {
+        elementPending.clear();
+        platePending.clear();
+    }
 }

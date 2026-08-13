@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.vidar.runtime;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarFusionEngine;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Cumulative run metrics for post-match review and bottleneck identification.
- * Call {@link #recordCycle(VidarMetrics[])} once per {@link VidarMultiVision#update()}.
+ * Call {@link #recordCycle(VidarMetrics[])} once per {@link VidarFusionEngine#update()}.
  */
 public final class VidarMetricsLogger {
 

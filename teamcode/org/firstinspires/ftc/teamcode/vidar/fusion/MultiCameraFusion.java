@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Pure multi-camera element rank fusion — extracted from {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}.
+ * Pure multi-camera element rank fusion — extracted from {@link VidarFusionEngine}.
  */
 public final class MultiCameraFusion {
 

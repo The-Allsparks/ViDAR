@@ -172,7 +172,7 @@ For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z =
 
 - **Browser sim:** enable **Calibration axes (robot / camera)** — axis triad overlay (X red, Y green, Z blue), forward ray, sample pixel markers.
 - **Hardware:** `VidarRoiCalibrationOpMode` for ROI/horizon (existing).
-- **Diagnostics:** `VidarCalibrationDiagnostics` — calibration profile, resolution, transform notation, observation age (`VidarMultiVision.calibrationDiagnostics()`, surfaced in **ViDAR: Discover**).
+- **Diagnostics:** `VidarCalibrationDiagnostics` — calibration profile, resolution, transform notation, observation age (`VidarSpatial.diagnostics()` / `lastFrame()`, surfaced in **ViDAR: Discover**).
 
 ---
 

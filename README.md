@@ -220,33 +220,36 @@ ViDAR **detects and remembers**. It does **not** own field pose or drive your ro
 
 ```
 vidar/
-├── VidarConfig.java / VidarRuntimeConfig.java
+├── VidarSpatial.java               ← primary API (snapshot-first)
+├── VidarConfig.java
+├── runtime/
+│   ├── VidarRuntime.java           ← process singleton
+│   ├── VidarVisionAttachment.java  ← FTC cameras (attach/detach)
+│   ├── VidarObservationWorker.java
+│   └── VidarVision.java            ← one camera
 ├── config/                         ← season + robot JSON loaders
-├── VidarCameraProfile.java / VidarCameraMount.java
-├── VidarGeometry.java / VidarFrameRegions.java / VidarFramePipeline.java
-├── VidarContourProcessor.java      ← unified element + plate detection
-├── VidarAdaptiveTagProcessor.java / VidarTagScoutRunner.java / VidarTagDecodeWorker.java
-├── VidarFrameMailbox.java          ← zero-copy frame handoff to worker thread
-├── VidarVision.java                ← one camera
-├── VidarMultiVision.java           ← 1–4 cameras fused
-├── VidarWorldModel.java            ← short-term spatial memory
-├── VidarSpatial.java               ← elements / allies / foes facade
-├── VidarDiscoverOpMode.java
-├── VidarTeleOp.java                ← ViDAR: Spatial
-└── VidarAutoSeekOpMode.java        ← ViDAR: Spatial Map
+├── detect/                         ← VidarContourProcessor
+├── tag/                            ← TagDecodeBudget, VidarTagDecodeWorker
+├── fusion/                         ← MultiCameraFusion, FieldPoseContext
+├── world/                          ← VidarWorldModel
+├── frame/                          ← VidarSpatialSnapshot
+└── VidarTeleOp / Discover / AutoSeek OpModes
 ```
 
 ```mermaid
 flowchart LR
   Cam["1-4 USB webcams"] --> Hub["Control Hub"]
-  Hub --> MV["VidarMultiVision"]
-  MV --> WM["VidarWorldModel"]
-  MV --> SP["VidarSpatial"]
-  WM --> SP
-  SP --> Op["OpMode or auto stack"]
+  Hub --> ATT["VidarVisionAttachment"]
+  ATT --> RT["VidarRuntime"]
+  RT --> SP["VidarSpatial"]
+  SP --> Op["OpMode"]
   Op -.-> PED["Optional pathing library"]
-  Sim["Browser sim"] -.-> MV
+  Sim["Browser sim"] -.-> RT
 ```
+
+**Auto → TeleOp:** `spatial.close()` detaches cameras; the next OpMode's `create()` reuses the runtime and attaches fresh VisionPortals.
+
+**Local JVM tests:** `cd java-pure && ./gradlew test` (26 tests — fusion, temporal filter, tag budget, config, range fusion).
 
 Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
 

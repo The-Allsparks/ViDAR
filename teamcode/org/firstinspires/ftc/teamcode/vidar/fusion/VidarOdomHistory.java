@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.fusion;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarFusionEngine;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedFrame;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarObservationFrame;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  * Ring buffer of odometry samples keyed by {@link System#nanoTime()}, for latency-compensated
  * vision correction (same role as timestamps in WPILib {@code addVisionMeasurement}).
  *
- * <p>Record once per OpMode loop — before or after {@link VidarMultiVision#update()}:
+ * <p>Record once per OpMode loop — before or after {@link VidarFusionEngine#update()}:
  * <pre>{@code
  * odomHistory.record(odom.getPose());
  * VidarObservationFrame raw = vision.update();

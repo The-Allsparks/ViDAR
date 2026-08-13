@@ -9,8 +9,8 @@ import android.util.Size;
  * ViDAR tuning constants — change these in one place when calibrating on the field.
  *
  * <b>Preferred:</b> teams load JSON via {@link org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader}
- * and pass configs to {@link org.firstinspires.ftc.teamcode.vidar.VidarSession} or
- * {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}. Effective tuning is merged in
+ * and pass configs to {@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime} via
+ * {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial}. Effective tuning is merged in
  * {@link org.firstinspires.ftc.teamcode.vidar.config.VidarSettings}. See
  * {@link org.firstinspires.ftc.teamcode.VidarTeamConfig}.
  *

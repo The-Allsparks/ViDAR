@@ -17,7 +17,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 
  * Per-season game-piece definitions (elements, plates, fusion thresholds) and field AprilTag map.
 
- * Teams load a JSON season file and pass it when constructing {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}.
+ * Teams load a JSON season file and pass it when creating {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial}.
 
  */
 

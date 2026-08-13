@@ -21,15 +21,14 @@ FtcRobotController/
     └── src/main/java/org/firstinspires/ftc/teamcode/
         └── vidar/          ← copy entire folder from this repo's teamcode/.../vidar/
             ├── VidarSpatial.java      ← team API (root package)
-            ├── VidarMultiVision.java
             ├── VidarConfig.java
             ├── VidarDiscoverOpMode.java
+            ├── runtime/               ← VidarRuntime, camera attachment, background worker
+            ├── fusion/                ← VidarFusionEngine (internal multi-camera fusion)
             ├── detect/                ← contour pipeline
             ├── tag/                   ← AprilTag scout + decode
-            ├── fusion/                ← localization + motion correction
             ├── world/                 ← track memory
             ├── frame/                 ← per-cycle snapshots
-            ├── runtime/               ← per-camera VidarVision
             ├── config/                ← JSON loaders
             └── geometry/              ← coordinate transforms
 ```
@@ -96,11 +95,8 @@ Ideas in order of difficulty:
 
 ```
 VidarConfig.java / config/     ← tune camera, season elements, floor LUT
-VidarSpatial.java              ← recommended OpMode entry (vision + world model + target lists)
-VidarCameraProfile.java        ← per-side bearing + horizon + calibration
-VidarContourProcessor          ← unified element + plate detection + range overlay
-VidarGeometry.java             ← size/floor fusion math (VidarRangeResult)
-VidarMultiVision.java          ← advanced multi-camera fusion
+VidarSpatial.java              ← recommended OpMode entry (update() + target lists)
+VidarFusionEngine.java         ← internal multi-camera fusion (via VidarRuntime; not team-constructible)
 VidarVision.java               ← portal wiring (contour + tag processors)
 VidarDiscoverOpMode            ← read-only test OpMode
 VidarTeleOp.java               ← ViDAR: Spatial (no motors)

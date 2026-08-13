@@ -8,7 +8,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 
 /**
- * Background AprilTag decode — one instance per {@link org.firstinspires.ftc.teamcode.vidar.VidarSession}.
+ * Background AprilTag decode — one instance per {@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime}.
  */
 public final class VidarTagDecodeWorker extends Thread {
 
@@ -74,9 +74,11 @@ public final class VidarTagDecodeWorker extends Thread {
         if (!VidarConfig.ASYNC_TAG_DECODE_ENABLED || !VidarTagConfig.ENABLED) {
             return;
         }
-        if (!started) {
-            started = true;
-            start();
+        synchronized (lock) {
+            if (!started) {
+                started = true;
+                start();
+            }
         }
     }
 
@@ -107,7 +109,11 @@ public final class VidarTagDecodeWorker extends Thread {
         synchronized (lock) {
             lock.notifyAll();
         }
-        if (started) {
+        boolean wasStarted;
+        synchronized (lock) {
+            wasStarted = started;
+        }
+        if (wasStarted) {
             try {
                 join(750);
             } catch (InterruptedException ignored) {
@@ -115,7 +121,9 @@ public final class VidarTagDecodeWorker extends Thread {
             }
         }
         releaseBuffers();
-        started = false;
+        synchronized (lock) {
+            started = false;
+        }
     }
 
     private void publish(

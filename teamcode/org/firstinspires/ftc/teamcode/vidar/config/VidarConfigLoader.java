@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
  *         VidarConfigLoader.readAsset(hardwareMap.appContext, "vidar/season.json"));
  * VidarRobotConfig robot = VidarConfigLoader.loadRobot(
  *         VidarConfigLoader.readAsset(hardwareMap.appContext, "vidar/robot.json"));
- * VidarMultiVision vision = new VidarMultiVision(hardwareMap, robot, season, odom, alliance);
+ * VidarSpatial spatial = VidarSpatial.create(hardwareMap, robot, season, odom, alliance);
  * }</pre>
  */
 public final class VidarConfigLoader {

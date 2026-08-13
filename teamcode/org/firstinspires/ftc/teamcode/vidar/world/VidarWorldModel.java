@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.world;
 
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarVisionFusion;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarRankedElementFrame;
@@ -60,7 +60,7 @@ public class VidarWorldModel {
         return motionTrackingEnabled && odomSupplier != null;
     }
 
-    public void update(VidarMultiVision vision, long nowNanos) {
+    public void update(VidarVisionFusion vision, long nowNanos) {
         if (!isMotionTrackingActive() || vision == null) {
             return;
         }
@@ -76,7 +76,7 @@ public class VidarWorldModel {
         nextTrackId = nextId[0];
     }
 
-    private List<VidarTrackDetection> collectDetections(VidarMultiVision vision) {
+    private List<VidarTrackDetection> collectDetections(VidarVisionFusion vision) {
         List<VidarTrackDetection> out = new ArrayList<>();
         List<VidarTrackDetection> elementDets = new ArrayList<>();
 
@@ -168,5 +168,11 @@ public class VidarWorldModel {
 
     public int trackCount() {
         return tracks.size();
+    }
+
+    /** Clear short-term tracks between match periods. */
+    public void resetMatchState() {
+        tracks.clear();
+        nextTrackId = 1;
     }
 }

@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 /**
- * Immutable snapshot of all fused ViDAR outputs from one {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision#update()} cycle.
+ * Immutable snapshot of all fused ViDAR outputs from one {@link org.firstinspires.ftc.teamcode.vidar.fusion.VidarFusionEngine#update()} cycle.
  *
  * <p>Every observation carries VisionPortal {@code frameCaptureNanos} as {@code captureTimeNanos}.
  * Prefer batch correction:

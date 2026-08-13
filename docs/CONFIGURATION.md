@@ -98,13 +98,13 @@ spatial.update();
 VidarSpatialPoint ball = spatial.bestElement();  // robotX, robotY in inches
 ```
 
-See [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md) before first match. Advanced / direct access:
+See [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md) before first match. Advanced / direct config access:
 
 ```java
 VidarSeasonConfig season = VidarTeamConfig.loadSeason(hardwareMap);
 VidarRobotConfig robot = VidarTeamConfig.loadRobot(hardwareMap);
-VidarMultiVision vision = new VidarMultiVision(
-        hardwareMap, robot, season, () -> odomPose, alliance::get);
+// Dimensions and camera layout come from robot JSON — no separate vision constructor.
+double lengthIn = robot.dimensions.length;
 ```
 
 Use `VidarTeamConfig.defaultSeason()` / `defaultRobot()` until assets are copied.
@@ -141,7 +141,7 @@ Define outer body size so downstream code can reason about reach and bounds:
 }
 ```
 
-Access via `VidarMultiVision.getRobotConfig().dimensions`.
+Access via `VidarTeamConfig.loadRobot(hardwareMap).dimensions`.
 
 ## Camera count and placement
 

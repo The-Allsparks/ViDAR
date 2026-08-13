@@ -1,49 +1,43 @@
-package org.firstinspires.ftc.teamcode.vidar;
+package org.firstinspires.ftc.teamcode.vidar.fusion;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarAlliance;
+import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
+import org.firstinspires.ftc.teamcode.vidar.VidarDistanceUnit;
+import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
+import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarCorrectedFrame;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarObservationFrame;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarRankedElementFrame;
-import org.firstinspires.ftc.teamcode.vidar.fusion.MultiCameraFusion;
-import org.firstinspires.ftc.teamcode.vidar.fusion.VidarLocalizationFusion;
-import org.firstinspires.ftc.teamcode.vidar.fusion.VidarMotionCorrection;
-import org.firstinspires.ftc.teamcode.vidar.fusion.VidarOdomHistory;
-import org.firstinspires.ftc.teamcode.vidar.fusion.VidarTemporalFilter;
-import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarCalibrationDiagnostics;
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarTransformRegistry;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
-import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraMount;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetricsLogger;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntimeConfig;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision;
 import org.firstinspires.ftc.teamcode.vidar.schedule.VidarCameraScheduler;
-import org.firstinspires.ftc.teamcode.vidar.schedule.VidarGlobalVisionWorker;
 import org.firstinspires.ftc.teamcode.vidar.schedule.VidarResourceBudget;
 import org.firstinspires.ftc.teamcode.vidar.tag.TagDecodeBudget;
-import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
-import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagDecodeWorker;
-import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
-import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
-import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
-import org.firstinspires.ftc.teamcode.vidar.geometry.VidarCalibrationDiagnostics;
-import org.firstinspires.ftc.teamcode.vidar.geometry.VidarTransformRegistry;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * 1–4 cameras at 640×480 with tic-toc processing and fused localization.
+ * Multi-camera fusion engine — polls cameras from {@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarVisionAttachment}
+ * and fuses observations. Owned by {@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime}; not constructed by teams.
  */
-public class VidarMultiVision {
+public final class VidarFusionEngine implements VidarVisionFusion {
 
     private final VidarVision[] cameras;
     private final int cameraCount;
@@ -55,15 +49,32 @@ public class VidarMultiVision {
     private final VidarRuntimeConfig runtimeConfig = new VidarRuntimeConfig();
     private final VidarTemporalFilter temporalFilter = new VidarTemporalFilter(runtimeConfig);
     private final VidarMetricsLogger metricsLogger = new VidarMetricsLogger();
-    private final VidarResourceBudget resourceBudget = new VidarResourceBudget();
+    private final VidarResourceBudget resourceBudget;
     private final VidarOdomHistory odomHistory = new VidarOdomHistory();
     private final VidarTransformRegistry transformRegistry;
     private final VidarCalibrationDiagnostics calibrationDiagnostics =
             new VidarCalibrationDiagnostics();
     private final TagDecodeBudget tagDecodeBudget;
-    private final VidarTagDecodeWorker tagDecodeWorker;
-    private final boolean ownsTagDecodeWorker;
-    private VidarGlobalVisionWorker globalWorker;
+
+    public static VidarFusionEngine create(
+            VidarVision[] cameras,
+            int cameraCount,
+            VidarRobotConfig robot,
+            VidarSeasonConfig season,
+            Supplier<Pose2D> odomSupplier,
+            Supplier<VidarAlliance> ourAlliance,
+            TagDecodeBudget tagDecodeBudget,
+            VidarResourceBudget resourceBudget) {
+        return new VidarFusionEngine(
+                cameras,
+                cameraCount,
+                robot,
+                season,
+                odomSupplier,
+                ourAlliance,
+                tagDecodeBudget,
+                resourceBudget);
+    }
 
     private Pose2D lastOdomSample;
     private long lastOdomNanos;
@@ -83,59 +94,17 @@ public class VidarMultiVision {
     private Pose2D odomAtLastFusedFieldPose;
     private volatile VidarObservationFrame latestFrame = VidarObservationFrame.empty();
 
-    public VidarMultiVision(com.qualcomm.robotcore.hardware.HardwareMap hardwareMap) {
-        this(hardwareMap, null, () -> VidarConfig.DEFAULT_ALLIANCE);
-    }
-
-    public VidarMultiVision(
-            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
-            Supplier<Pose2D> odomSupplier) {
-        this(hardwareMap, odomSupplier, () -> VidarConfig.DEFAULT_ALLIANCE);
-    }
-
-    public VidarMultiVision(
-            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
-            Supplier<Pose2D> odomSupplier,
-            Supplier<VidarAlliance> ourAlliance) {
-        this(hardwareMap, VidarConfigLoader.defaultRobot(), VidarConfigLoader.defaultSeason(),
-                odomSupplier, ourAlliance);
-    }
-
-    /**
-     * Preferred entry point — team-supplied JSON configs for robot layout and season game pieces.
-     */
-    public VidarMultiVision(
-            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
-            VidarRobotConfig robot,
-            VidarSeasonConfig season) {
-        this(hardwareMap, robot, season, null, () -> robot.defaultAlliance);
-    }
-
-    public VidarMultiVision(
-            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
-            VidarRobotConfig robot,
-            VidarSeasonConfig season,
-            Supplier<Pose2D> odomSupplier) {
-        this(hardwareMap, robot, season, odomSupplier, () -> robot.defaultAlliance);
-    }
-
-    public VidarMultiVision(
-            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
-            VidarRobotConfig robot,
-            VidarSeasonConfig season,
-            Supplier<Pose2D> odomSupplier,
-            Supplier<VidarAlliance> ourAlliance) {
-        this(hardwareMap, robot, season, odomSupplier, ourAlliance, null, null);
-    }
-
-    public VidarMultiVision(
-            com.qualcomm.robotcore.hardware.HardwareMap hardwareMap,
+    private VidarFusionEngine(
+            VidarVision[] cameras,
+            int cameraCount,
             VidarRobotConfig robot,
             VidarSeasonConfig season,
             Supplier<Pose2D> odomSupplier,
             Supplier<VidarAlliance> ourAlliance,
             TagDecodeBudget tagDecodeBudget,
-            VidarTagDecodeWorker tagDecodeWorker) {
+            VidarResourceBudget resourceBudget) {
+        this.cameras = cameras;
+        this.cameraCount = cameraCount;
         this.season = season != null ? season : VidarConfigLoader.defaultSeason();
         VidarRobotConfig activeRobot = robot != null ? robot : VidarConfigLoader.defaultRobot();
         this.robotConfig = activeRobot;
@@ -145,48 +114,8 @@ public class VidarMultiVision {
         this.ourAlliance = ourAlliance == null ? () -> activeRobot.defaultAlliance : ourAlliance;
         this.odomSupplier = odomSupplier;
         this.tagDecodeBudget = tagDecodeBudget != null ? tagDecodeBudget : new TagDecodeBudget();
-        if (tagDecodeWorker != null) {
-            this.tagDecodeWorker = tagDecodeWorker;
-            this.ownsTagDecodeWorker = false;
-        } else if (VidarTagConfig.ENABLED && VidarConfig.ASYNC_TAG_DECODE_ENABLED) {
-            this.tagDecodeWorker = new VidarTagDecodeWorker();
-            this.tagDecodeWorker.ensureStarted();
-            this.ownsTagDecodeWorker = true;
-        } else {
-            this.tagDecodeWorker = null;
-            this.ownsTagDecodeWorker = false;
-        }
+        this.resourceBudget = resourceBudget != null ? resourceBudget : new VidarResourceBudget();
         this.tagDecodeBudget.reset();
-        cameraCount = activeRobot.activeCameraCount();
-        cameras = new VidarVision[cameraCount];
-        for (int i = 0; i < cameraCount; i++) {
-            try {
-                VidarCameraMount mount = activeRobot.cameraMount(i);
-                cameras[i] = new VidarVision(
-                        hardwareMap,
-                        mount.webcamName,
-                        mount.profile,
-                        odomSupplier,
-                        mount.webcamName,
-                        null,
-                        this.season,
-                        resourceBudget,
-                        cameraCount,
-                        i,
-                        this.tagDecodeBudget,
-                        this.tagDecodeWorker);
-            } catch (RuntimeException ex) {
-                cameras[i] = null;
-            }
-        }
-        if (VidarConfig.useGlobalVisionWorker(cameraCount)) {
-            globalWorker = new VidarGlobalVisionWorker(cameras);
-            globalWorker.start();
-        }
-    }
-
-    public VidarGlobalVisionWorker globalVisionWorker() {
-        return globalWorker;
     }
 
     public void setFieldPosePrior(Pose2D prior) {
@@ -676,18 +605,23 @@ public class VidarMultiVision {
         return resourceBudget;
     }
 
-    public void close() {
-        if (globalWorker != null) {
-            globalWorker.shutdownAndJoin();
-            globalWorker = null;
-        }
-        if (ownsTagDecodeWorker && tagDecodeWorker != null) {
-            tagDecodeWorker.shutdownAndJoin();
-        }
-        for (VidarVision camera : cameras) {
-            if (camera != null) {
-                camera.close();
-            }
-        }
+    /** Clear fusion scratch and temporal filter between match periods. */
+    public void resetMatchState() {
+        temporalFilter.resetMatchState();
+        localization.resetMatchState();
+        bestElement = null;
+        fusedRankedElements = VidarRankedElementFrame.empty("fused", VidarConfig.FUSION_MAX_RANKED_ELEMENTS);
+        bestPlate = null;
+        bestFoe = null;
+        bestAlly = null;
+        latestTag = null;
+        latestScoutObservation = null;
+        lastTagScout = null;
+        fusedFieldPose = null;
+        odomAtLastFusedFieldPose = null;
+        latestFrame = VidarObservationFrame.empty();
+        lastOdomSample = null;
+        lastOdomNanos = 0;
+        speedInPerSec = 0;
     }
 }

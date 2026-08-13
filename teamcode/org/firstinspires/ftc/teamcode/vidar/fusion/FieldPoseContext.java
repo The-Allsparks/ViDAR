@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.fusion;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarVisionFusion;
 
 import java.util.function.Supplier;
 
@@ -12,13 +12,13 @@ public final class FieldPoseContext {
 
     private final Supplier<Pose2D> odomSupplier;
     private Supplier<Pose2D> externalFieldPoseSupplier;
-    private VidarMultiVision vision;
+    private VidarVisionFusion vision;
 
     public FieldPoseContext(Supplier<Pose2D> odomSupplier) {
         this.odomSupplier = odomSupplier;
     }
 
-    public void bindVision(VidarMultiVision vision) {
+    public void bindVision(VidarVisionFusion vision) {
         this.vision = vision;
     }
 

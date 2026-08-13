@@ -2,9 +2,9 @@ package org.firstinspires.ftc.teamcode.vidar.frame;
 
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
-import org.firstinspires.ftc.teamcode.vidar.VidarMultiVision;
 import org.firstinspires.ftc.teamcode.vidar.VidarPlateObservation;
 import org.firstinspires.ftc.teamcode.vidar.VidarSpatialPoint;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarVisionFusion;
 import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarElementOccurrenceRank;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * Immutable spatial query result for one {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial#update()}
- * cycle. Repeated getter calls within the same loop return identical lists.
+ * Immutable spatial query result published by {@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime}.
+ * Repeated getter calls within the same loop return identical lists when pinned via {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial#update()}.
  */
 public final class VidarSpatialSnapshot {
 
@@ -58,22 +58,20 @@ public final class VidarSpatialSnapshot {
     }
 
     public static VidarSpatialSnapshot build(
-            VidarMultiVision vision,
+            VidarVisionFusion vision,
             VidarWorldModel world,
             Supplier<Pose2D> fieldPoseSupplier) {
-        if (vision == null) {
-            return empty();
-        }
-
         List<VidarSpatialPoint> elementsOut = new ArrayList<>();
-        VidarRankedElementFrame ranked = vision.getRankedElements();
-        if (ranked != null) {
-            for (int i = 0; i < ranked.count(); i++) {
-                VidarElementObservation obs = ranked.at(i);
-                if (obs == null || obs.confidence < VidarConfig.MIN_ELEMENT_CONFIDENCE) {
-                    continue;
+        if (vision != null) {
+            VidarRankedElementFrame ranked = vision.getRankedElements();
+            if (ranked != null) {
+                for (int i = 0; i < ranked.count(); i++) {
+                    VidarElementObservation obs = ranked.at(i);
+                    if (obs == null || obs.confidence < VidarConfig.MIN_ELEMENT_CONFIDENCE) {
+                        continue;
+                    }
+                    addUnique(elementsOut, VidarSpatialPoint.fromElement(obs));
                 }
-                addUnique(elementsOut, VidarSpatialPoint.fromElement(obs));
             }
         }
         if (world != null && world.isMotionTrackingActive()) {
@@ -81,10 +79,15 @@ public final class VidarSpatialSnapshot {
                 addUnique(elementsOut, VidarSpatialPoint.fromTrack(track));
             }
         }
+        if (elementsOut.isEmpty() && vision == null && (world == null || !world.isMotionTrackingActive())) {
+            return empty();
+        }
         elementsOut = VidarElementOccurrenceRank.assignPerType(elementsOut);
 
         List<VidarSpatialPoint> alliesOut = new ArrayList<>();
-        addUnique(alliesOut, VidarSpatialPoint.fromPlate(vision.getBestAlly(), VidarSpatialPoint.Kind.ALLY));
+        if (vision != null) {
+            addUnique(alliesOut, VidarSpatialPoint.fromPlate(vision.getBestAlly(), VidarSpatialPoint.Kind.ALLY));
+        }
         if (world != null && world.isMotionTrackingActive()) {
             for (VidarSpatialTrack track : world.getTracks(VidarWorldModel.Kind.ALLY)) {
                 addUnique(alliesOut, VidarSpatialPoint.fromTrack(track));
@@ -93,7 +96,9 @@ public final class VidarSpatialSnapshot {
         sortByDistance(alliesOut);
 
         List<VidarSpatialPoint> foesOut = new ArrayList<>();
-        addUnique(foesOut, VidarSpatialPoint.fromPlate(vision.getBestFoe(), VidarSpatialPoint.Kind.FOE));
+        if (vision != null) {
+            addUnique(foesOut, VidarSpatialPoint.fromPlate(vision.getBestFoe(), VidarSpatialPoint.Kind.FOE));
+        }
         if (world != null && world.isMotionTrackingActive()) {
             for (VidarSpatialTrack track : world.getTracks(VidarWorldModel.Kind.FOE)) {
                 addUnique(foesOut, VidarSpatialPoint.fromTrack(track));
@@ -124,7 +129,7 @@ public final class VidarSpatialSnapshot {
     }
 
     private static Pose2D resolveFieldPose(
-            VidarMultiVision vision,
+            VidarVisionFusion vision,
             Supplier<Pose2D> fieldPoseSupplier) {
         if (fieldPoseSupplier != null) {
             Pose2D external = fieldPoseSupplier.get();
@@ -132,7 +137,7 @@ public final class VidarSpatialSnapshot {
                 return external;
             }
         }
-        return vision.getFusedFieldPose();
+        return vision == null ? null : vision.getFusedFieldPose();
     }
 
     private static void addUnique(List<VidarSpatialPoint> list, VidarSpatialPoint candidate) {

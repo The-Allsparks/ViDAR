@@ -65,16 +65,17 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
                     + "/" + spatial.diagnostics().cameraCount);
             telemetry.addData("Config", spatial.diagnostics().configSource);
             telemetry.addData("FPS cam1", spatial.cameraCount() > 0
-                    && spatial.session().vision().camera(0) != null
-                    ? String.format("%.1f", spatial.session().vision().camera(0).portalFps()) : "—");
+                    && spatial.runtime().camera(0) != null
+                    ? String.format("%.1f", spatial.runtime().camera(0).portalFps()) : "—");
             telemetry.addData("Alliance", alliance.formatStatus());
             telemetry.addData("Element", VidarBlobUtil.formatElement(element));
             telemetry.addData("Element detail", VidarBlobUtil.formatElementDetail(element));
             telemetry.addData("Spatial live", VidarBlobUtil.formatSpatialPoint(spatial.bestElement()));
             telemetry.addData("Spatial remembered", VidarBlobUtil.formatSpatialPoint(spatial.nearestElement()));
-            if (spatial.session().vision().calibrationDiagnostics() != null) {
+            if (spatial.runtime().fusionEngine() != null
+                    && spatial.runtime().fusionEngine().calibrationDiagnostics() != null) {
                 telemetry.addData("Calibration", VidarBlobUtil.formatCalibrationDiagnostics(
-                        spatial.session().vision().calibrationDiagnostics().toTelemetryMap()));
+                        spatial.runtime().fusionEngine().calibrationDiagnostics().toTelemetryMap()));
             }
             telemetry.addData("Plate", VidarBlobUtil.formatPlate(plate, ours));
             telemetry.addData("Plate detail", VidarBlobUtil.formatPlateDetail(plate));
@@ -87,10 +88,10 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
             telemetry.addData("Tag fix", VidarBlobUtil.formatTag(tag));
             telemetry.addData("Scout obs", VidarBlobUtil.formatScoutObservation(
                     frame == null ? null : frame.bestScoutObservation));
-            if (spatial.session().vision().camera(0) != null) {
+            if (spatial.runtime().camera(0) != null) {
                 telemetry.addData("Element reject",
-                        spatial.session().vision().camera(0).elementRejectionStats().summary());
-                telemetry.addData("Cam state", spatial.session().vision().camera(0).directionState().name());
+                        spatial.runtime().camera(0).elementRejectionStats().summary());
+                telemetry.addData("Cam state", spatial.runtime().camera(0).directionState().name());
             }
             telemetry.addData("Tag @capture", VidarBlobUtil.formatTagPose(tag));
             telemetry.addData("Field fused", formatFieldPose(fieldNow));
