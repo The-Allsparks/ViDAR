@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeResult;
 /**
  * Fused season game-element detection (ball, block, ring, pixel, …) with range and
  * robot-frame position.

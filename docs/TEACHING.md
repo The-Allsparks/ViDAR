@@ -13,25 +13,27 @@ End-to-end Java on the **Control Hub** using the official FTC SDK vision APIs. T
 
 ## Install ViDAR into your robot project
 
-Copy the whole package folder into your TeamCode tree:
+Copy the whole `vidar/` tree (all subpackages) into your TeamCode tree:
 
 ```
 FtcRobotController/
 └── TeamCode/
     └── src/main/java/org/firstinspires/ftc/teamcode/
-        └── vidar/          ← copy from this repo's teamcode/.../vidar/
+        └── vidar/          ← copy entire folder from this repo's teamcode/.../vidar/
+            ├── VidarSpatial.java      ← team API (root package)
             ├── VidarConfig.java
-            ├── VidarCameraProfile.java
-            ├── VidarGeometry.java
-            ├── VidarContourProcessor.java
-            ├── VidarElementObservation.java
-            ├── VidarMultiVision.java
-            ├── VidarWorldModel.java
-            ├── VidarVision.java
             ├── VidarDiscoverOpMode.java
-            ├── VidarTeleOp.java
-            └── VidarAutoSeekOpMode.java
+            ├── runtime/               ← VidarRuntime, camera attachment, background worker
+            ├── fusion/                ← VidarFusionEngine (internal multi-camera fusion)
+            ├── detect/                ← contour pipeline
+            ├── tag/                   ← AprilTag scout + decode
+            ├── world/                 ← track memory
+            ├── frame/                 ← per-cycle snapshots
+            ├── config/                ← JSON loaders
+            └── geometry/              ← coordinate transforms
 ```
+
+See [JAVA_PACKAGE_MAP.md](JAVA_PACKAGE_MAP.md) for the full package → responsibility table.
 
 Build and deploy to the Control Hub like any other OpMode.
 
@@ -87,17 +89,15 @@ Ideas in order of difficulty:
 | Drive toward a specific element | Iterate `spatial.elements()` → bearing + distance → your drivetrain |
 | Autonomous grab line | New `@Autonomous` OpMode, no gamepad |
 | Custom HSV color | Add or edit an entry in `config/seasons/*.json` |
-| Second camera | Second `VisionPortal` + second `VidarVision` instance (ports 5555-style not needed — USB on hub) |
+| Second / third / fourth camera | Raise `VidarConfig.CAMERA_COUNT`, name webcams `Webcam 1`…`N`, add mounts in `robot.json` (or bundled defaults) |
 
 ## File roles (teach students this map)
 
 ```
 VidarConfig.java / config/     ← tune camera, season elements, floor LUT
-VidarSpatial.java              ← recommended OpMode entry (vision + world model + target lists)
-VidarCameraProfile.java        ← per-side bearing + horizon + calibration
-VidarContourProcessor          ← unified element + plate detection + range overlay
-VidarGeometry.java             ← size/floor fusion math (VidarRangeResult)
-VidarMultiVision.java          ← advanced multi-camera fusion
+VidarSpatial.java              ← recommended OpMode entry (update() + target lists)
+VidarRuntime.java              ← process singleton; attach/detach cameras across OpModes
+VidarFusionEngine.java         ← internal multi-camera fusion (via VidarRuntime; not team-constructible)
 VidarVision.java               ← portal wiring (contour + tag processors)
 VidarDiscoverOpMode            ← read-only test OpMode
 VidarTeleOp.java               ← ViDAR: Spatial (no motors)
@@ -115,10 +115,12 @@ Docs: [FTC Color Processing](https://ftc-docs.firstinspires.org/color-processing
 
 ## Scaling to 4 cameras
 
-Each USB webcam needs its own `VisionPortal`. Pass a different `VidarCameraProfile` per side:
+Multi-camera is configured, not hand-wired in the OpMode. Prefer:
 
-```java
-VidarVision front = new VidarVision(hardwareMap, "Webcam 1", VidarCameraProfile.FRONT);
-```
+1. Set `VidarConfig.CAMERA_COUNT` (1–4) and Driver Station names `Webcam 1` … `Webcam N`.
+2. Put per-camera mounts / ROIs / floor LUT in `assets/vidar/robot.json` (see [CONFIGURATION.md](CONFIGURATION.md)).
+3. Use `VidarSpatial.create(...)` — `VidarRuntime` attaches all portals via `VidarVisionAttachment`.
+
+Do **not** construct a second `VidarVision` in team OpModes for multi-cam; that bypasses fusion and the runtime/attachment split.
 
 See [ROADMAP.md](ROADMAP.md) for USB hub wiring and validation checklist.

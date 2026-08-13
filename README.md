@@ -167,11 +167,12 @@ python -m pytest tests/ -v
 ### 2. Install on the Control Hub
 
 1. Clone the [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcRobotController) and open it in Android Studio.
-2. Copy `teamcode/org/firstinspires/ftc/teamcode/vidar/` → `TeamCode/src/main/java/.../vidar/`.
-3. Copy a robot template from [`config/robots/`](config/robots/README.md) to `TeamCode/src/main/assets/vidar/robot.json`.
-4. Configure USB webcams as **`Webcam 1`** … **`Webcam 4`** (see `VidarConfig.CAMERA_NAMES`).
-5. Set `VidarConfig.CAMERA_COUNT` (1–4). Alliance is set at runtime — see below.
-6. Run **ViDAR: Discover** → **ViDAR: Spatial** → **ViDAR: Spatial Map**.
+2. Copy the entire `teamcode/org/firstinspires/ftc/teamcode/vidar/` tree (including subpackages) → `TeamCode/src/main/java/.../vidar/`. See [docs/JAVA_PACKAGE_MAP.md](docs/JAVA_PACKAGE_MAP.md).
+3. Copy `teamcode/assets/vidar/` → `TeamCode/src/main/assets/vidar/` (includes `default-season.json` / `default-robot.json` fallbacks plus your `season.json` / `robot.json` overrides).
+4. Copy a robot template from [`config/robots/`](config/robots/README.md) to `TeamCode/src/main/assets/vidar/robot.json` (or edit the bundled default).
+5. Configure USB webcams as **`Webcam 1`** … **`Webcam 4`** (see `VidarConfig.CAMERA_NAMES`).
+6. Set `VidarConfig.CAMERA_COUNT` (1–4). Alliance is set at runtime — see below.
+7. Run **ViDAR: Discover** → **ViDAR: Spatial** → **ViDAR: Spatial Map**.
 
 ViDAR is a **spatial system only** — pose plus three groups (`elements()`, `allies()`, `foes()`). It never commands motors.
 
@@ -219,33 +220,36 @@ ViDAR **detects and remembers**. It does **not** own field pose or drive your ro
 
 ```
 vidar/
-├── VidarConfig.java / VidarRuntimeConfig.java
+├── VidarSpatial.java               ← primary API (snapshot-first)
+├── VidarConfig.java
+├── runtime/
+│   ├── VidarRuntime.java           ← process singleton
+│   ├── VidarVisionAttachment.java  ← FTC cameras (attach/detach)
+│   ├── VidarObservationWorker.java
+│   └── VidarVision.java            ← one camera
 ├── config/                         ← season + robot JSON loaders
-├── VidarCameraProfile.java / VidarCameraMount.java
-├── VidarGeometry.java / VidarFrameRegions.java / VidarFramePipeline.java
-├── VidarContourProcessor.java      ← unified element + plate detection
-├── VidarAdaptiveTagProcessor.java / VidarTagScoutRunner.java / VidarTagDecodeWorker.java
-├── VidarFrameMailbox.java          ← zero-copy frame handoff to worker thread
-├── VidarVision.java                ← one camera
-├── VidarMultiVision.java           ← 1–4 cameras fused
-├── VidarWorldModel.java            ← short-term spatial memory
-├── VidarSpatial.java               ← elements / allies / foes facade
-├── VidarDiscoverOpMode.java
-├── VidarTeleOp.java                ← ViDAR: Spatial
-└── VidarAutoSeekOpMode.java        ← ViDAR: Spatial Map
+├── detect/                         ← VidarContourProcessor
+├── tag/                            ← TagDecodeBudget, VidarTagDecodeWorker
+├── fusion/                         ← MultiCameraFusion, FieldPoseContext
+├── world/                          ← VidarWorldModel
+├── frame/                          ← VidarSpatialSnapshot
+└── VidarTeleOp / Discover / AutoSeek OpModes
 ```
 
 ```mermaid
 flowchart LR
   Cam["1-4 USB webcams"] --> Hub["Control Hub"]
-  Hub --> MV["VidarMultiVision"]
-  MV --> WM["VidarWorldModel"]
-  MV --> SP["VidarSpatial"]
-  WM --> SP
-  SP --> Op["OpMode or auto stack"]
+  Hub --> ATT["VidarVisionAttachment"]
+  ATT --> RT["VidarRuntime"]
+  RT --> SP["VidarSpatial"]
+  SP --> Op["OpMode"]
   Op -.-> PED["Optional pathing library"]
-  Sim["Browser sim"] -.-> MV
+  Sim["Browser sim"] -.-> RT
 ```
+
+**Auto → TeleOp:** `spatial.close()` detaches cameras; the next OpMode's `create()` reuses the runtime and attaches fresh VisionPortals.
+
+**Local JVM tests:** `cd java-pure && ./gradlew test` (26 tests — fusion, temporal filter, tag budget, config, range fusion).
 
 Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
 

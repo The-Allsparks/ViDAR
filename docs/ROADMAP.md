@@ -6,41 +6,33 @@ Phased plan for multi-camera deployment, robot-space situational awareness, opti
 
 ```mermaid
 flowchart TB
-  subgraph cameras [1 to 4 USB webcams]
-    C1[Front]
-    C2[Right]
-    C3[Back]
-    C4[Left]
-  end
-
-  subgraph vidar [ViDAR per camera]
-    VP[VisionPortal]
-    CP["VidarContourProcessor: elements and plates"]
-    Tags["Adaptive tags and non-localizing scout"]
-  end
-
-  subgraph fuse [Fusion layer]
-    MV[VidarMultiVision]
+  subgraph process [VidarRuntime_process_singleton]
+    OW[ObservationWorker]
     WM[VidarWorldModel]
+    SNAP[Snapshots]
   end
 
-  subgraph future [Separate systems]
-    LOC[Localization fusion]
-    PED[Pedro Pathing]
+  subgraph attach [VidarVisionAttachment_per_OpMode]
+    VP[VisionPortal_1_to_4]
+    CP[VidarContourProcessor]
+    Tags[Adaptive_tags_and_scout]
   end
 
-  cameras --> VP
+  subgraph student [Student_API]
+    SP[VidarSpatial]
+  end
+
   VP --> CP
   VP --> Tags
-  CP --> MV
-  Tags --> MV
-  MV --> WM
-  MV --> LOC
-  WM --> PED
-  LOC --> PED
+  CP --> OW
+  Tags --> OW
+  OW --> WM
+  OW --> SNAP
+  SP -->|"snapshot read-only"| SNAP
+  attach -->|"attachVision / detachVision"| process
 ```
 
-ViDAR **detects and remembers** in robot space; it does **not** own field pose. A separate localization module should fuse Pinpoint/odom/IMU with sparse ViDAR tag fixes, then feed your autonomous stack (Pedro, Road Runner, or custom). Pathing libraries are optional consumers, not requirements.
+ViDAR **detects and remembers** in robot space; it does **not** own field pose. The runtime survives Auto → TeleOp; VisionPortals attach and detach per OpMode. A separate localization module should fuse Pinpoint/odom/IMU with sparse ViDAR tag fixes, then feed your autonomous stack (Pedro, Road Runner, or custom). Pathing libraries are optional consumers, not requirements.
 
 ---
 
@@ -50,7 +42,7 @@ ViDAR **detects and remembers** in robot space; it does **not** own field pose. 
 |------|--------|
 | `VidarConfig.CAMERA_COUNT` (1–4) | Done |
 | `VidarCameraProfile` mount bearing + `mountX`/`mountY` | Done |
-| `VidarMultiVision` global element/plate/tag pick | Done |
+| `VidarFusionEngine` global element/plate/tag pick | Done |
 | Per-camera calibration OpMode | Done (`VidarRoiCalibrationOpMode`) |
 | Sim multi-cam preview | Backlog (deferred — not blocking) |
 
@@ -81,6 +73,18 @@ ViDAR **detects and remembers** in robot space; it does **not** own field pose. 
 | Browser sim: `elementId`, motion tracks, offensive lane | **Done** — see [sim/README-SIM.md](../sim/README-SIM.md) |
 | Offensive lane helper on `VidarSpatial` | **Done** (`VidarOffensiveLaneAnalysis`) |
 | Four-camera USB stress validation | **Open — requires hardware** |
+| `java-pure/` JVM test harness | **Done** |
+| `VidarSpatialSnapshot` (stable per-loop queries) | **Done** |
+| `VidarFusionEngine` + instance tag decode worker | **Done** |
+| `MultiCameraFusion` extraction | **Done** |
+| `VidarSettings` + JSON tuning path | **Done** (constants remain as fallbacks) |
+| `ElementDetector` / `PlateDetector` split | **Done** |
+| Deprecate `spatial.vision()` | **Done** — use `diagnostics()` + `lastFrame()` |
+| Remove `.refactor-staging/` duplicate tree | **Done** |
+| Runtime / attachment split (`VidarRuntime`, `VidarVisionAttachment`, `VidarFusionEngine`) | **Done** |
+| Background observation worker + snapshot-first API | **Done** |
+| `java-pure/` in CI | **Done** |
+| Auto→TeleOp odom/alliance supplier rebind | **Done** |
 
 ---
 
@@ -288,7 +292,7 @@ If experimenting: run TFOD on **one** camera at low resolution, **not** alongsid
 
 | File | Role |
 |------|------|
-| `VidarMultiVision` | 1–4 camera fusion |
+| `VidarFusionEngine` | Multi-camera poll + fuse (internal) |
 | `VidarCameraProfile` | Mount bearing + offsets + LUT |
 | `VidarContourProcessor` | Season elements + friend/foe plates |
 | `VidarWorldModel` | Short-term spatial memory |

@@ -1,6 +1,10 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import org.firstinspires.ftc.teamcode.vidar.detect.VidarBlobUtil;
+import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -17,7 +21,7 @@ import java.util.List;
  * <p>INIT: color sensor on own sign auto-sets alliance; hold Y/B to override.
  */
 @TeleOp(name = "ViDAR: Spatial Map", group = "ViDAR")
-public class VidarAutoSeekOpMode extends LinearOpMode {
+public class VidarAutoSeekOpMode extends VidarSpatialOpModeBase {
 
     private static final int TELEMETRY_CAP = 4;
 
@@ -27,22 +31,22 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
     @Override
     public void runOpMode() {
         alliance = new VidarAllianceSelector(hardwareMap);
-        spatial = VidarSpatial.create(hardwareMap, null, alliance::get);
+        spatial = VidarSpatial.createWithBundledDefaults(hardwareMap, null, alliance::get);
 
         telemetry.addLine("ViDAR Spatial Map — three groups (no motors)");
         telemetry.addLine("Calibrate robot.json — docs/CALIBRATION_CHECKLIST.md");
+        if (!spatial.diagnostics().warnings.isEmpty()) {
+            telemetry.addLine(spatial.diagnostics().warnings.get(0));
+        }
         telemetry.update();
 
-        while (!isStarted() && !isStopRequested()) {
-            alliance.pollInit(gamepad1);
-            telemetry.addData("Alliance", alliance.formatStatus());
-            telemetry.update();
-        }
+        pollAllianceInit(alliance, gamepad1);
 
         waitForStart();
 
         while (opModeIsActive()) {
             alliance.pollRuntime(gamepad1);
+
             spatial.update();
 
             List<VidarSpatialPoint> elements = spatial.elements();
@@ -52,11 +56,7 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
 
             telemetry.addData("Alliance", alliance.formatStatus());
             telemetry.addData("Motion tracks", spatial.isMotionTrackingActive());
-            telemetry.addData("Field pose", field == null ? "—"
-                    : String.format("(%.1f, %.1f) %.0f°",
-                    field.getX(DistanceUnit.INCH),
-                    field.getY(DistanceUnit.INCH),
-                    field.getHeading(AngleUnit.DEGREES)));
+            telemetry.addData("Field pose", formatFieldPose(field));
             telemetry.addData("Elements", VidarBlobUtil.formatSpatialPointList(elements, TELEMETRY_CAP));
             telemetry.addData("Allies", VidarBlobUtil.formatSpatialPointList(allies, TELEMETRY_CAP));
             telemetry.addData("Foes", VidarBlobUtil.formatSpatialPointList(foes, TELEMETRY_CAP));
@@ -71,7 +71,7 @@ public class VidarAutoSeekOpMode extends LinearOpMode {
             telemetry.addData("Tracks", spatial.trackCount());
             if (spatial.isMotionTrackingActive() && spatial.trackCount() > 0) {
                 List<VidarSpatialTrack> elementTracks =
-                        spatial.worldModel().getTracks(VidarWorldModel.Kind.ELEMENT);
+                        spatial.runtime().world().getTracks(VidarWorldModel.Kind.ELEMENT);
                 if (!elementTracks.isEmpty()) {
                     telemetry.addData("Sample track",
                             VidarBlobUtil.formatWorldTrack(elementTracks.get(0)));

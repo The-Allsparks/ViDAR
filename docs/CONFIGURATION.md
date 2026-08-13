@@ -29,6 +29,23 @@ See [`config/robots/README.md`](../config/robots/README.md) for camera selection
 
 Copy the file for your active season to `TeamCode/src/main/assets/vidar/season.json`. HSV and filter values in older-season templates are **starting points** — tune on field before competition.
 
+## Bundled defaults (no team JSON required)
+
+When teams omit custom assets, `VidarConfigLoader.defaultSeason()` and `defaultRobot()` load built-in JSON:
+
+| Location | Used by |
+|----------|---------|
+| `vidar/config/bundled/default-*.json` (Java classpath) | On-robot `VidarConfigLoader` |
+| `teamcode/assets/vidar/default-*.json` | Python tests (`tests/test_config_defaults.py`) |
+
+Both copies must stay identical. Regenerate from `VidarConfig` constants:
+
+```bash
+python scripts/generate_default_config_assets.py
+```
+
+The script writes both paths. Run it after changing defaults in `VidarConfig.java` or `VidarCameraProfile.java`.
+
 ## Distance units
 
 ViDAR supports **inches (default)**, **meters (SI)**, and **centimeters** via JSON `"distanceUnit"`.
@@ -81,13 +98,13 @@ spatial.update();
 VidarSpatialPoint ball = spatial.bestElement();  // robotX, robotY in inches
 ```
 
-See [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md) before first match. Advanced / direct access:
+See [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md) before first match. Advanced / direct config access:
 
 ```java
 VidarSeasonConfig season = VidarTeamConfig.loadSeason(hardwareMap);
 VidarRobotConfig robot = VidarTeamConfig.loadRobot(hardwareMap);
-VidarMultiVision vision = new VidarMultiVision(
-        hardwareMap, robot, season, () -> odomPose, alliance::get);
+// Dimensions and camera layout come from robot JSON — no separate vision constructor.
+double lengthIn = robot.dimensions.length;
 ```
 
 Use `VidarTeamConfig.defaultSeason()` / `defaultRobot()` until assets are copied.
@@ -124,7 +141,7 @@ Define outer body size so downstream code can reason about reach and bounds:
 }
 ```
 
-Access via `VidarMultiVision.getRobotConfig().dimensions`.
+Access via `VidarTeamConfig.loadRobot(hardwareMap).dimensions`.
 
 ## Camera count and placement
 
@@ -270,6 +287,27 @@ In `VidarTagConfig`:
 | `CORRECTION_COOLDOWN_MS` | 750 | Minimum time between fixes |
 
 Scout observations never pass these gates — they do not localize.
+
+## Do we need a Limelight-style web pipeline UI?
+
+**Short answer: no — not for the same job.** Limelight’s web UI edits *camera pipelines* (thresholds, fiducials, Python) on a coprocessor. ViDAR’s JSON is mostly **season geometry + robot mounts**, which a webcam cannot invent by itself.
+
+| Config piece | Source of truth | Autoconfigure from camera? |
+|--------------|-----------------|----------------------------|
+| Season elements / plates (size, HSV, shape gates) | Game manual + field lighting | **Partial** — HSV can be assisted from a sample frame; diameter/aspect cannot |
+| AprilTag field map | Season / FIRST map | **No** — world coordinates are external |
+| Camera `webcamName` / count | Driver Station config | **Yes** — discover connected UVC names at INIT |
+| Mount pose (`x/y/z`, pitch, bearing) | Tape measure / CAD | **No** — not in the image without a known target ritual |
+| Intrinsics (`focalLengthPx`) / floor LUT | Known-size or known-distance targets | **Assisted** — existing Discover / ROI / floor calibration OpModes |
+| ROIs / horizon | Mount geometry + FOV | **Assisted** — `VidarRoiCalibrationOpMode` |
+
+**Recommended path (current):**
+
+1. Copy season + robot templates → `assets/vidar/*.json` (or use bundled defaults).
+2. Measure mounts once; tune HSV / floor LUT with **ViDAR: Discover** and ROI calibration OpModes (Driver Station + Camera Stream — not a separate web app).
+3. Optional later: a **tuning OpMode that writes JSON** (or a laptop helper that samples frames) — still not Limelight’s pipeline-as-code model.
+
+**What cameras can autoconfigure today / soon:** enumerate webcams and warn on name mismatches; propose focal length from a known-diameter element at a measured distance; refresh floor LUT from marked distances. **What they cannot:** replace `robot.json` mount poses or invent season piece definitions.
 
 ## Simulator alignment
 

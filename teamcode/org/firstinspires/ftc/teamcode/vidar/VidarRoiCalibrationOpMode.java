@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraRoiConfig;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRoiRect;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 

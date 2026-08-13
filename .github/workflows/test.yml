@@ -37,3 +37,17 @@ jobs:
           cd /tmp/ftc
           chmod +x gradlew
           ./gradlew :TeamCode:compileDebugJavaWithJavac --no-daemon
+
+  java-pure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Run java-pure unit tests
+        run: |
+          cd java-pure
+          chmod +x gradlew
+          ./gradlew test --no-daemon

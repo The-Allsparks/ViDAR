@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarCameraProfile;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 
 import java.util.ArrayList;
 import java.util.List;

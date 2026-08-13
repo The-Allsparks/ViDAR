@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar.config;
 
-
-
+import org.firstinspires.ftc.teamcode.vidar.VidarDistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -18,7 +17,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 
  * Per-season game-piece definitions (elements, plates, fusion thresholds) and field AprilTag map.
 
- * Teams load a JSON season file and pass it when constructing {@link org.firstinspires.ftc.teamcode.vidar.VidarMultiVision}.
+ * Teams load a JSON season file and pass it when creating {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial}.
 
  */
 

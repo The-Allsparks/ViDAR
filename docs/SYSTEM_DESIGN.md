@@ -13,19 +13,64 @@ Status labels used throughout ViDAR documentation:
 | **Hardware validated** | Sustained Control Hub USB + CPU stress test passed |
 | **Planned** | Documented but not implemented |
 
-## Architecture (preserved)
+## Architecture
+
+ViDAR separates **long-lived perception** from **ephemeral FTC camera resources**:
+
+```mermaid
+flowchart TB
+    subgraph process [RobotControllerProcess]
+        RT[VidarRuntime_singleton]
+        OW[VidarObservationWorker]
+        WM[VidarWorldModel]
+        SNAP[PublishedSnapshots]
+    end
+
+    subgraph opmode [OpModeLifecycle]
+        ATT[VidarVisionAttachment]
+        VP[VisionPortal_per_camera]
+    end
+
+    OpMode -->|"create / attachVision"| ATT
+    OpMode -->|"close / detachVision"| ATT
+    ATT --> VP
+    VP -->|"mailbox publish"| OW
+    OW --> WM
+    OW --> SNAP
+    Student[VidarSpatial] -->|"snapshot read-only"| SNAP
+```
+
+| Owner | Resources |
+|-------|-----------|
+| **`VidarRuntime`** (process singleton) | world model, fusion engine, tag decode worker, observation worker, snapshot publication, field pose context |
+| **`VidarVisionAttachment`** (per attach) | VisionPortal, FTC processors, mailboxes, global vision worker |
+
+**Threading:**
+
+| Thread | Role |
+|--------|------|
+| VisionPortal callback | Publish frame to mailbox only |
+| `VidarGlobalVisionWorker` | Round-robin async contour/tag scout processing |
+| `VidarTagDecodeWorker` | Async AprilTag crop decode (≤ 1/s) |
+| `VidarObservationWorker` | Poll cameras, fuse, update world model, publish snapshots |
+| Robot / OpMode loop | Read immutable `snapshot()` — never advances perception |
+
+**FTC lifecycle (Auto → TeleOp):**
 
 ```
-Per-camera detection → Multi-camera fusion → Short-term world model (robot space)
-                              ↓
-                    AprilTag observations (localization separate)
-                              ↓
-                    Your OpMode / optional auto stack (Pedro, Road Runner, custom)
+RC start → VidarRuntime.getOrCreate()
+Auto INIT → attachVision() via VidarSpatial.create()
+Auto STOP → detachVision() via spatial.close()
+TeleOp INIT → applyBootstrap (rebind odom/alliance) + attachVision (runtime reused)
+TeleOp STOP → detachVision()
+RC exit → VidarRuntime.shutdown() (optional)
 ```
+
+Each `VidarSpatial.create(...)` rebinds odom and alliance suppliers onto the live process runtime before re-attaching cameras, so Auto and TeleOp may pass different suppliers.
 
 ## Element detection — **Implemented**, **Tested in simulation**
 
-Unified pipeline: `VidarContourProcessor` (season `elements[]` + `plates[]` in one scaled ROI pass).
+Unified pipeline: `vidar.detect.VidarContourProcessor` (season `elements[]` + `plates[]` in one scaled ROI pass).
 
 1. Crop to per-camera element ROI (default: lower 65% of frame)
 2. HSV threshold per configured element or plate
@@ -68,7 +113,7 @@ Health tracking: `VidarMetrics.CameraHealth` (CONFIGURED → CONNECTED → STREA
 - Scout (`VidarTagScoutRunner`) identifies probable tag regions on a dedicated worker thread
 - Scout observations (`VidarTagScoutObservation`) **never alter absolute pose**
 - Async crop decode via `VidarTagDecodeWorker` + `VidarFrameMailbox` buffer swap
-- Decode budget: `VidarDecodeArbiter` (1 decode / second global)
+- Decode budget: `TagDecodeBudget` (1 decode / second global, per runtime)
 - Pose gates in `VidarLocalizationFusion`
 
 ## Plate ranging — **Implemented**, **Tested in simulation**
@@ -87,16 +132,17 @@ Component estimates exposed as `source0`, `source1`, and `sourceCount` (up to 3)
 
 ## World model — **Implemented**, **Tested in simulation**
 
-`VidarWorldModel` motion-corrects tracks using odom delta (translation + rotation) or field-pose reprojection when available.
+`VidarWorldModel` motion-corrects tracks using odom delta (translation + rotation) or field-pose reprojection when available. Owned by `VidarRuntime` and persists across camera detach.
 
 ## Spatial facade — **Implemented**, **Tested in simulation**
 
-`VidarSpatial` is the Pedro-style entry point: one `update()` per loop, no motor output.
+`VidarSpatial` is the Pedro-style entry point. Perception advances in the background; read `snapshot()` each loop.
 
 | Output | Role |
 |--------|------|
+| `snapshot()` | Immutable elements / allies / foes / pose for this moment |
 | `fieldPose()` / `robotPose()` | Pose estimates (tag fusion + optional odom supplier) |
-| `elements()` | Season game elements (ranked live + remembered when motion tracking active) |
+| `elements()` | Pinned spatial groups (legacy — prefer `snapshot()`) |
 | `allies()` | Friendly alliance plates |
 | `foes()` | Opponent plates |
 | `intakeBlocked()` | Spatial hint — foe in intake cone |
@@ -107,11 +153,15 @@ Motion-corrected tracks run only when `isMotionTrackingActive()` (odom supplier 
 
 ## Multi-camera — **Implemented**, not **Hardware validated**
 
-Architecturally supports 1–4 cameras. Four simultaneous cameras require USB hub validation on the actual Control Hub — configuration success does not guarantee USB stability.
+Architecturally supports 1–4 cameras via `VidarVisionAttachment`. Four simultaneous cameras require USB hub validation on the actual Control Hub — configuration success does not guarantee USB stability.
 
 ## Resource budgeting — **Implemented**
 
 `VidarResourceBudget` degrades tag frequency, plates, and secondary cameras based on measured loop CPU.
+
+## JVM unit tests — **Implemented**
+
+Pure-logic tests run locally via `cd java-pure && ./gradlew test` (TagDecodeBudget, MultiCameraFusion, VidarTemporalFilter, config, range fusion). CI runs these on Ubuntu.
 
 ## Simulator parity — **Tested in simulation**
 

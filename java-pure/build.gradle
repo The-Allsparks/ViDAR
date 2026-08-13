@@ -1,0 +1,100 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.firstinspires.ftc.teamcode.vidar'
+version = '0.2.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.json:json:20240303'
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+def teamcodeVidar = file("${rootDir}/../teamcode/org/firstinspires/ftc/teamcode/vidar")
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/stub/java'
+            srcDir teamcodeVidar
+            exclude 'detect/**'
+            exclude 'schedule/**'
+            exclude 'world/**'
+            exclude '**/*OpMode.java'
+            exclude 'geometry/VidarObservationSpatial.java'
+            exclude 'geometry/VidarPoseLookup.java'
+            exclude 'geometry/VidarCalibrationDataset.java'
+            exclude 'VidarTeleOp.java'
+            exclude 'VidarDiscoverOpMode.java'
+            exclude 'VidarAutoSeekOpMode.java'
+            exclude 'VidarRoiCalibrationOpMode.java'
+            exclude 'fusion/VidarFusionEngine.java'
+            exclude 'VidarSpatialPoint.java'
+            exclude 'VidarSpatial.java'
+            exclude 'VidarSpatialOpModeBase.java'
+            exclude 'VidarObservationMapper.java'
+            exclude 'VidarOffensiveLane.java'
+            exclude 'VidarScoutLandmarkFix.java'
+            exclude 'VidarScoutLandmarkObservation.java'
+            exclude 'frame/VidarFrameMailbox.java'
+            exclude 'frame/VidarFramePipeline.java'
+            exclude 'frame/VidarObservationFrame.java'
+            exclude 'frame/VidarCorrectedFrame.java'
+            exclude 'frame/VidarCorrectedPoint.java'
+            exclude 'frame/VidarSpatialSnapshot.java'
+            exclude 'fusion/VidarPoseBackdate.java'
+            exclude 'fusion/VidarOdomHistory.java'
+            exclude 'runtime/VidarVision.java'
+            exclude 'runtime/CameraPipelineConfig.java'
+            exclude 'runtime/VidarRuntime.java'
+            exclude 'runtime/VidarVisionAttachment.java'
+            exclude 'runtime/VidarObservationWorker.java'
+            exclude 'runtime/RuntimeBootstrap.java'
+            exclude 'runtime/VidarMetrics.java'
+            exclude 'runtime/VidarMetricsLogger.java'
+            exclude 'runtime/VidarAllianceSelector.java'
+            exclude 'model/VidarElementDensityMap.java'
+            exclude 'model/VidarElementOccurrenceRank.java'
+            exclude 'model/VidarElementRejectionStats.java'
+            exclude 'model/VidarOffensiveLaneAnalysis.java'
+            exclude 'api/VidarDiagnostics.java'
+            exclude 'model/VidarVisionMeasurement.java'
+            exclude 'tag/VidarAdaptiveTagProcessor.java'
+            exclude 'tag/VidarTagDecodeWorker.java'
+            exclude 'tag/VidarTagScoutRunner.java'
+            exclude 'tag/VidarTagCropDecoder.java'
+            exclude 'tag/VidarTagCropPlanner.java'
+            exclude 'tag/VidarTagGate.java'
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+        }
+        resources {
+            srcDir 'src/test/resources'
+            srcDir "${rootDir}/../config"
+            srcDir "${rootDir}/../teamcode/assets/vidar"
+        }
+    }
+}
+
+processResources {
+    from("${teamcodeVidar}/config/bundled") {
+        into 'org/firstinspires/ftc/teamcode/vidar/config/bundled'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

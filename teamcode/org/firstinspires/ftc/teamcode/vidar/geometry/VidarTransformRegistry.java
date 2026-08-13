@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
-import org.firstinspires.ftc.teamcode.vidar.VidarCameraProfile;
-import org.firstinspires.ftc.teamcode.vidar.VidarRoiRect;
+import org.firstinspires.ftc.teamcode.vidar.frame.VidarFrameRegions;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRoiRect;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarRobotConfig;
 
 /**
@@ -137,7 +138,7 @@ public final class VidarTransformRegistry {
             int fullWidth,
             int fullHeight,
             double processScale) {
-        VidarRoiRect roi = org.firstinspires.ftc.teamcode.vidar.VidarFrameRegions.elementRoi(
+        VidarRoiRect roi = VidarFrameRegions.elementRoi(
                 profile, fullWidth, fullHeight);
         if (!roi.enabled || processScale <= 0) {
             return VidarImageTransform.identity(fullWidth, fullHeight);

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
+import org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack;
 /**
  * Robot-frame spatial sample (+X forward, +Y left) in the active distance unit.
  *
@@ -66,11 +68,11 @@ public final class VidarSpatialPoint {
     }
 
     public double bearingDeg() {
-        return Math.toDegrees(Math.atan2(robotY, robotX));
+        return VidarRobotPose2D.bearingDeg(robotX, robotY);
     }
 
     public double distance() {
-        return Math.hypot(robotX, robotY);
+        return VidarRobotPose2D.distance(robotX, robotY);
     }
 
     public double speedFieldInPerSec() {

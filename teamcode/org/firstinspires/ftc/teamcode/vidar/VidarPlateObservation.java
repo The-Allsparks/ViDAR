@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.vidar;
 
+import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeResult;
 import org.opencv.core.RotatedRect;
 
 /**

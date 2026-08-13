@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.vidar.config.VidarConfigLoader;
@@ -13,7 +14,9 @@ import java.io.IOException;
  *
  * <p>Copy templates from the ViDAR repo into your Android project:
  * <ul>
- *   <li>{@code config/seasons/&lt;year&gt;-&lt;game&gt;.json} (e.g. {@code 2025-decode.json}, {@code 2026-biobuzz.json}) → {@code TeamCode/src/main/assets/vidar/season.json}</li>
+ *   <li>{@code teamcode/assets/vidar/default-season.json} and {@code default-robot.json}
+ *       → bundled fallbacks (also copied with the Java tree under {@code config/bundled/})</li>
+ *   <li>{@code config/seasons/&lt;year&gt;-&lt;game&gt;.json} → {@code TeamCode/src/main/assets/vidar/season.json}</li>
  *   <li>{@code config/robots/example-robot.json} → {@code TeamCode/src/main/assets/vidar/robot.json}</li>
  * </ul>
  *

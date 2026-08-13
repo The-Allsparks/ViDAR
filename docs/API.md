@@ -260,42 +260,51 @@ processFrame(frame, captureTimeNanos) // Java VisionProcessor entry
 
 ## Spatial facade (Java — recommended for OpModes)
 
-Pedro-style entry point: one object, one `update()` per loop. Wraps `VidarMultiVision` + `VidarWorldModel`. Does **not** require Pedro Pathing.
+Pedro-style entry point: one object, one `update()` per loop. Backed by `VidarRuntime` + background perception. Does **not** require Pedro Pathing.
 
 ### `VidarSpatial`
 
 ```
 create(hardwareMap): VidarSpatial
 create(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
-create(hardwareMap, robot, season, odomSupplier, allianceSupplier): VidarSpatial
+createWithBundledDefaults(hardwareMap, odomSupplier, allianceSupplier): VidarSpatial
 
-update(): void
+# create() rebinds odom/alliance onto the process VidarRuntime when reusing Auto→TeleOp
+
+update(): void                            // pin latest snapshot for this loop (call once per iteration)
 updateCorrected(): VidarCorrectedFrame    // when odom supplier configured
+snapshot(): VidarSpatialSnapshot          // same pinned snapshot as elements()/allies()/foes()
+lastFrame(): VidarObservationFrame
+diagnostics(): VidarDiagnostics
+runtime(): VidarRuntime
+close(): void                             // detachVision — runtime persists for next OpMode
+```
 
-bestElement(): VidarSpatialPoint | null       // LIVE
-nearestElement(): VidarSpatialPoint | null    // REMEMBERED when motion tracking active
-elements(): List<VidarSpatialPoint>           // ranked live + remembered tracks
-allies(): List<VidarSpatialPoint>
-foes(): List<VidarSpatialPoint>
-bestFoe() / nearestFoe() / bestAlly(): VidarSpatialPoint | null
-intakeBlocked(): bool
-offensiveLaneAnalysis(): VidarOffensiveLaneAnalysis
-recommendOffensiveLane(): VidarOffensiveLane   // LEFT | CENTER | RIGHT
-trackCount(): int                               // 0 when motion tracking inactive
-fieldPose(): Pose2D | null
-robotPose(): Pose2D | null
-isOdomConfigured(): bool
-isMotionTrackingEnabled(): bool
-isMotionTrackingActive(): bool                // enabled && odom supplier
-setMotionTrackingEnabled(enabled): void
-distanceUnit(): DistanceUnit
-cameraCount(): int
+### `VidarRuntime` (advanced lifecycle)
 
-setFieldPosePrior(pose): void
-setFieldPoseSupplier(supplier): void          // e.g. Pedro follower pose for world tracks
-vision(): VidarMultiVision                    // advanced escape hatch
-worldModel(): VidarWorldModel
-close(): void
+```
+getOrCreate(bootstrap): VidarRuntime          // process singleton
+attachVision(hardwareMap, robot, season): void
+detachVision(): void
+resetMatchState(): void
+shutdown(): void                              // full teardown + clear singleton
+snapshot(): VidarSpatialSnapshot
+lastFrame(): VidarObservationFrame
+```
+
+**Typical OpMode pattern:**
+
+```java
+VidarSpatial vidar = VidarSpatial.createWithBundledDefaults(hardwareMap, odom, alliance);
+try {
+    waitForStart();
+    while (opModeIsActive()) {
+        vidar.update();
+        // drive from vidar.elements(), vidar.foes(), vidar.fieldPose()
+    }
+} finally {
+    vidar.close();  // detach cameras — runtime survives for TeleOp
+}
 ```
 
 **Setup:** copy `config/robots/*.json` → `assets/vidar/robot.json` — see [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md).
@@ -318,7 +327,7 @@ Motion-corrected tracks require an odom supplier at `create()`. Field pose for t
 | `bearingDeg()` | float | 0° = ahead, + = left |
 | `distance()` | float | `hypot(robotX, robotY)` |
 
-**Team integration:** after `spatial.update()`, read pose and iterate `elements()`, `allies()`, `foes()`. Use `recommendOffensiveLane()` for Phase 3 offensive lane choice (lowest foe density in forward cone). Motion-corrected tracks require an odom supplier and `isMotionTrackingActive()`. ViDAR never outputs motor commands.
+**Team integration:** read `spatial.snapshot()` each loop (or legacy `update()` to pin a snapshot for helper methods). Use `recommendOffensiveLane()` for Phase 3 offensive lane choice (lowest foe density in forward cone). Motion-corrected tracks require an odom supplier and `isMotionTrackingActive()`. ViDAR never outputs motor commands.
 
 ### `VidarOffensiveLaneAnalysis`
 
@@ -335,19 +344,20 @@ Motion-corrected tracks require an odom supplier at `create()`. Field pose for t
 
 Python/sim implement subsets; full fusion lives in Java today.
 
-### `VidarMultiVision` integration loop
+### Student loop (`VidarSpatial`)
+
+Perception runs in a background worker. Your OpMode calls `update()` once per loop to pin the latest snapshot:
 
 ```
-vision.recordOdom(odomPose)
-frame = vision.update()                    // VidarObservationFrame
-corrected = vision.updateCorrected()       // VidarCorrectedFrame
+spatial.update()
+frame = spatial.lastFrame()                // VidarObservationFrame
 
-frame.bestElement
-frame.bestPlate / bestFoe / bestAlly
-frame.bestTag / bestScout
-frame.rankedElements
-frame.rankedForCamera(index)
+spatial.elements() / allies() / foes()
+spatial.fieldPose()
+spatial.bestElement() / nearestFoe()
 ```
+
+Advanced: `spatial.updateCorrected()` when odom is configured.
 
 ### `VidarObservationFrame`
 
@@ -358,8 +368,8 @@ frame.rankedForCamera(index)
 | `bestElement` | `ElementObservation` |
 | `bestPlate`, `bestFoe`, `bestAlly` | `PlateObservation` |
 | `bestTag` | `VidarTagObservation` |
-| `bestScout` | `VidarTagScoutObservation` |
-| `bestScoutResult` | `VidarTagScoutResult` |
+| `bestScoutObservation` | `VidarTagScoutObservation` — enriched scout (bearing, confidence) |
+| `bestScoutHit` | `VidarTagScoutObservation` — raw scout hit before enrichment |
 | `rankedByCamera` | `RankedElementFrame[]` |
 | `tagsByCamera` | `VidarTagObservation[]` |
 

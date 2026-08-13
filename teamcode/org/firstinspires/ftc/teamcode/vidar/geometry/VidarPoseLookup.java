@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.geometry;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.vidar.VidarOdomHistory;
+import org.firstinspires.ftc.teamcode.vidar.fusion.VidarOdomHistory;
 
 /**
  * Timestamped robot field-pose lookup with explicit stale-sample behavior.
