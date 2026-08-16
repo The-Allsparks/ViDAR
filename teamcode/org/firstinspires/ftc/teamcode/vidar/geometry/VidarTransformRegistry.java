@@ -77,19 +77,22 @@ public final class VidarTransformRegistry {
     }
 
     /**
-     * Builds {@code robot_T_cameraOptical} matching legacy {@link org.firstinspires.ftc.teamcode.vidar.VidarGeometry#rayDirectionRobotFrame}.
+     * Builds {@code robot_T_cameraOptical} from mount extrinsics.
      *
-     * <p>Rotation chain on optical axes: {@code Rz(bearing+yaw) * Rx(pitch) * Rz(roll) * R_optical_base}.
+     * <p>{@code Rz(bearing+yaw) * Ry(pitch_rh) * Rx(roll) * R_optical_base}, with Vitelli axes
+     * (roll +X, pitch +Y, yaw +Z). Config {@code pitchDeg} is aviation-signed
+     * (negative = look down) so {@code pitch_rh = -pitchDeg}.
      */
     public static CameraTransforms buildForProfile(
             VidarCameraProfile profile, int frameWidth, int frameHeight) {
         if (profile == null) {
             return null;
         }
-        VidarRotation3D mountRot = VidarRotation3D.rotateZ(
-                        Math.toRadians(profile.bearingDeg + profile.mountYawDeg))
-                .times(VidarRotation3D.rotateX(Math.toRadians(profile.mountPitchDeg)))
-                .times(VidarRotation3D.rotateZ(Math.toRadians(profile.mountRollDeg)));
+        // Config pitchDeg: negative = look down. Vitelli/RH pitch: positive = look down.
+        VidarRotation3D mountRot = VidarRotation3D.fromRollPitchYawDeg(
+                profile.mountRollDeg,
+                -profile.mountPitchDeg,
+                profile.bearingDeg + profile.mountYawDeg);
         VidarRotation3D rot = mountRot.times(VidarRotation3D.opticalToRobotBase());
         VidarVec3 trans = new VidarVec3(profile.mountX, profile.mountY, profile.mountZ);
         VidarTransform3D robotTCamera = new VidarTransform3D(

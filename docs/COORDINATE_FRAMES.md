@@ -86,15 +86,24 @@ Examples:
 
 Implementation: `teamcode/.../vidar/geometry/VidarTransform3D.java` (Python: `src/vidar/transforms.py`).
 
-### Rotation order (documented and tested)
+### Rotation order (Vitelli axes)
 
-Mount rotation uses **intrinsic** roll-pitch-yaw with multiply order:
+Mount rotation uses roll about +X, pitch about +Y, yaw about +Z (right-handed), composed as intrinsic yaw → pitch → roll so side-camera pitch still nods the lens:
 
 ```
-R = Rz(yaw) * Rx(pitch) * Rz(roll)
+R = Rz(bearing + yaw) * Ry(pitch_rh) * Rx(roll) * R_optical_to_robot_base
 ```
 
-Camera pipeline applies `Rz(bearing + mountYaw) * Rx(mountPitch) * Rz(mountRoll)` after a fixed optical-to-robot-base mapping. This matches legacy `VidarGeometry.rayDirectionRobotFrame()`.
+| Config field | Axis | Effect |
+|--------------|------|--------|
+| `rollDeg` | +X | Bank about optical forward (after base map) |
+| `pitchDeg` | +Y | Nod; **negative = looking down** (aviation sign → `pitch_rh = -pitchDeg`) |
+| `yawDeg` | +Z | Small pan offset, added to `bearingDeg` |
+| `bearingDeg` | +Z | Compass facing (0 front, 90 right, …) |
+
+`R_optical_to_robot_base` maps OpenCV optical (+X right, +Y down, +Z forward) to robot (+X forward, +Y left, +Z up) at zero mount angles.
+
+Canonical tests: `tests/test_coordinate_frames.py` (`TestMountRotationConvention`) and `java-pure/.../MountRotationConventionTest.java`.
 
 ---
 

@@ -28,6 +28,9 @@ from vidar.transforms import (
     intersect_ground_plane,
     optical_to_robot_base,
     ray_direction_robot_frame,
+    _rotate_x,
+    _rotate_y,
+    _rotate_z,
 )
 from vidar.geometry import ray_direction_robot_frame as legacy_ray  # noqa: F401 — import side test
 
@@ -243,3 +246,111 @@ class TestPropertyLoops:
         assert abs(back.x - v.x) < 1e-6
         assert abs(back.y - v.y) < 1e-6
         assert abs(back.z - v.z) < 1e-6
+
+
+def _mount_profile(
+    *,
+    bearing: float = 0.0,
+    yaw: float = 0.0,
+    pitch: float = 0.0,
+    roll: float = 0.0,
+) -> CameraProfile:
+    return CameraProfile(
+        name="test",
+        bearing_deg=bearing,
+        horizon_row_px=12,
+        focal_length_px=340,
+        floor_cy_px=(95,),
+        floor_dist=(12,),
+        mount_x=0.0,
+        mount_y=0.0,
+        mount_z=9.0,
+        mount_yaw_deg=yaw,
+        mount_pitch_deg=pitch,
+        mount_roll_deg=roll,
+        calibration_width=640,
+        calibration_height=480,
+    )
+
+
+def _optical_axes(profile: CameraProfile) -> tuple[Vec3, Vec3, Vec3]:
+    ct = build_robot_t_camera(profile)
+    r = ct.robot_t_camera.rotation
+    return (
+        r.rotate(Vec3(0, 0, 1)),  # optical forward
+        r.rotate(Vec3(1, 0, 0)),  # optical right
+        r.rotate(Vec3(0, 1, 0)),  # optical down
+    )
+
+
+def _approx_vec(v: Vec3, xyz: tuple[float, float, float]) -> None:
+    assert (v.x, v.y, v.z) == pytest.approx(xyz, abs=1e-9)
+
+
+class TestMountRotationConvention:
+    """Vitelli axes: Rz(yaw)*Ry(pitch)*Rx(roll); config pitch negative = look down."""
+
+    def test_optical_to_robot_base(self):
+        r = Rotation3D(optical_to_robot_base())
+        _approx_vec(r.rotate(Vec3(0, 0, 1)), (1, 0, 0))
+        _approx_vec(r.rotate(Vec3(1, 0, 0)), (0, -1, 0))
+        _approx_vec(r.rotate(Vec3(0, 1, 0)), (0, 0, -1))
+
+    def test_identity_mount_level_forward(self):
+        fwd, right, down = _optical_axes(_mount_profile())
+        _approx_vec(fwd, (1, 0, 0))
+        _approx_vec(right, (0, -1, 0))
+        _approx_vec(down, (0, 0, -1))
+
+    def test_negative_pitch_nods_forward_down(self):
+        fwd, right, down = _optical_axes(_mount_profile(pitch=-30))
+        s30, c30 = math.sin(math.radians(30)), math.cos(math.radians(30))
+        _approx_vec(fwd, (c30, 0, -s30))
+        _approx_vec(right, (0, -1, 0))
+        _approx_vec(down, (-s30, 0, -c30))
+
+    def test_roll_banks_about_optical_forward(self):
+        fwd, right, down = _optical_axes(_mount_profile(roll=30))
+        s30, c30 = math.sin(math.radians(30)), math.cos(math.radians(30))
+        _approx_vec(fwd, (1, 0, 0))
+        _approx_vec(right, (0, -c30, -s30))
+        _approx_vec(down, (0, s30, -c30))
+
+    def test_yaw_and_bearing_pan_about_vertical(self):
+        fwd_yaw, _, _ = _optical_axes(_mount_profile(yaw=30))
+        fwd_bearing, _, _ = _optical_axes(_mount_profile(bearing=30))
+        s30, c30 = math.sin(math.radians(30)), math.cos(math.radians(30))
+        _approx_vec(fwd_yaw, (c30, s30, 0))
+        _approx_vec(fwd_bearing, (c30, s30, 0))
+
+    def test_roll_and_yaw_are_independent(self):
+        fwd_roll, _, _ = _optical_axes(_mount_profile(roll=30))
+        fwd_yaw, _, _ = _optical_axes(_mount_profile(yaw=30))
+        assert fwd_roll.x == pytest.approx(1.0)
+        assert abs(fwd_yaw.y) > 0.4
+        assert abs(fwd_roll.y - fwd_yaw.y) > 0.1
+
+    def test_bearing_90_faces_plus_y(self):
+        fwd, right, down = _optical_axes(_mount_profile(bearing=90))
+        _approx_vec(fwd, (0, 1, 0))
+        _approx_vec(right, (1, 0, 0))
+        _approx_vec(down, (0, 0, -1))
+
+    def test_bearing_90_with_pitch_down(self):
+        fwd, _, _ = _optical_axes(_mount_profile(bearing=90, pitch=-30))
+        s30, c30 = math.sin(math.radians(30)), math.cos(math.radians(30))
+        _approx_vec(fwd, (0, c30, -s30))
+
+    def test_default_minus_12_pitch_depresses_forward(self):
+        fwd, _, _ = _optical_axes(_mount_profile(pitch=-12))
+        assert fwd.z < -0.15
+        assert fwd.y == pytest.approx(0.0)
+
+    def test_from_roll_pitch_yaw_is_vitelli_xyz(self):
+        r = Rotation3D.from_roll_pitch_yaw_deg(10, -20, 30)
+        expected = (
+            Rotation3D(_rotate_z(math.radians(30)))
+            .times(Rotation3D(_rotate_y(math.radians(-20))))
+            .times(Rotation3D(_rotate_x(math.radians(10))))
+        )
+        assert r.m == pytest.approx(expected.m)

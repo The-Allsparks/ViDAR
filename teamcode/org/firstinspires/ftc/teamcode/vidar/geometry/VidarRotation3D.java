@@ -3,11 +3,14 @@ package org.firstinspires.ftc.teamcode.vidar.geometry;
 /**
  * 3D rotation stored as an orthonormal 3×3 matrix (row-major, no heap allocs after construction).
  *
- * <p>ViDAR uses <b>intrinsic</b> roll-pitch-yaw about fixed body axes in this multiply order:
- * {@code R = Rz(yaw) * Rx(pitch) * Rz(roll)} applied as {@code v_out = R * v_in}.
+ * <p>Mount / body orientation uses Vitelli axes — roll about +X, pitch about +Y, yaw about +Z —
+ * with intrinsic yaw-then-pitch-then-roll composition:
+ * {@code R = Rz(yaw) * Ry(pitch) * Rx(roll)} applied as {@code v_out = R * v_in}.
+ * That keeps "pitch down" meaningful after a non-zero bearing (side cameras).
  *
- * <p>Camera mount rotations compose on top of a fixed optical-to-robot-base mapping; see
- * {@link VidarTransformRegistry}.
+ * <p>Camera mounts compose that rotation on top of {@link #opticalToRobotBase()}; see
+ * {@link VidarTransformRegistry}. Config {@code pitchDeg} uses aviation sign
+ * (negative = look down); the registry converts to right-handed pitch.
  */
 public final class VidarRotation3D {
 
@@ -27,12 +30,13 @@ public final class VidarRotation3D {
     }
 
     /**
-     * Intrinsic roll (about +Z), pitch (about +X), yaw (about +Z) in degrees.
-     * Multiply order: {@code Rz(yaw) * Rx(pitch) * Rz(roll)}.
+     * Roll-pitch-yaw in degrees about robot +X / +Y / +Z (right-handed).
+     * Multiply order: {@code Rz(yaw) * Ry(pitch) * Rx(roll)} (intrinsic yaw → pitch → roll).
+     * Positive pitch about +Y moves robot +X toward −Z (look down).
      */
     public static VidarRotation3D fromRollPitchYawDeg(double rollDeg, double pitchDeg, double yawDeg) {
-        VidarRotation3D rRoll = rotateZ(Math.toRadians(rollDeg));
-        VidarRotation3D rPitch = rotateX(Math.toRadians(pitchDeg));
+        VidarRotation3D rRoll = rotateX(Math.toRadians(rollDeg));
+        VidarRotation3D rPitch = rotateY(Math.toRadians(pitchDeg));
         VidarRotation3D rYaw = rotateZ(Math.toRadians(yawDeg));
         return rYaw.times(rPitch).times(rRoll);
     }
@@ -44,6 +48,16 @@ public final class VidarRotation3D {
                 1, 0, 0,
                 0, c, -s,
                 0, s, c
+        });
+    }
+
+    public static VidarRotation3D rotateY(double rad) {
+        double c = Math.cos(rad);
+        double s = Math.sin(rad);
+        return new VidarRotation3D(new double[] {
+                c, 0, s,
+                0, 1, 0,
+                -s, 0, c
         });
     }
 
