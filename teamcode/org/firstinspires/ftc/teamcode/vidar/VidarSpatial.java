@@ -221,6 +221,40 @@ public final class VidarSpatial {
         return snapshot.fieldPose;
     }
 
+    /**
+     * Last gate-accepted tag fused pose (freeze at fuse-time). Never uses
+     * {@link #setFieldPoseSupplier} — safe as a Pedro novelty / telemetry anchor when Pedro is
+     * also wired as the continuous field supplier. Pinned with {@link #update()}.
+     */
+    public Pose2D fusedFieldPose() {
+        return snapshot.fusedFieldPose;
+    }
+
+    /**
+     * {@link System#nanoTime()} of the last gate-accepted tag correction (0 = none). Use with
+     * {@link org.firstinspires.ftc.teamcode.vidar.integration.VidarPedroCorrectionTracker} so
+     * novelty is event-based, not pose-epsilon based. Pinned with {@link #update()}.
+     */
+    public long lastTagCorrectionNanos() {
+        return snapshot.lastTagCorrectionNanos;
+    }
+
+    /**
+     * Gated tag-fused field pose re-propagated to the odom sample at the last publish.
+     *
+     * <p>Unlike {@link #fieldPose()}, this advances the last <em>gate-accepted</em> fix from
+     * odom-at-fuse to odom-at-publish. It bypasses {@link #setFieldPoseSupplier} so Pedro can
+     * still supply continuous pose for world tracks while corrections stay ViDAR-derived. Use for
+     * {@code follower.setPose} — see
+     * {@link org.firstinspires.ftc.teamcode.vidar.integration.VidarPedroCorrectionTracker}.
+     *
+     * <p>Pinned with {@link #update()} so a mid-loop worker tick cannot change the inject pose.
+     * Returns {@code null} until a tag fix has passed localization gates.
+     */
+    public Pose2D tagCorrectedFieldPoseNow() {
+        return snapshot.tagCorrectedFieldPoseNow;
+    }
+
     public Pose2D robotPose() {
         Supplier<Pose2D> odom = runtime.fieldPoseContext().odomSupplier();
         return odom != null ? odom.get() : null;

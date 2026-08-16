@@ -257,21 +257,24 @@ public final class VidarFusionEngine implements VidarVisionFusion {
             return;
         }
         Pose2D odomNow = odomSupplier.get();
-        Pose2D odomAtCapture = null;
         if (latestTag != null && latestTag.captureTimeNanos > 0) {
-            odomAtCapture = odomHistory.at(latestTag.captureTimeNanos);
+            Pose2D odomAtCapture = odomHistory.at(latestTag.captureTimeNanos);
+            if (odomAtCapture == null) {
+                // Cannot latency-compensate — keep prior fused; do not stamp odom-at-fuse.
+                fusedFieldPose = localization.lastFusedFieldPose();
+                return;
+            }
+            VidarLocalizationFusion.Result result = localization.fusedFieldPoseNow(
+                    latestTag, latestScoutObservation, odomAtCapture, odomNow);
+            fusedFieldPose = result.pose;
+            // Only stamp odom when a gate-accepted correction lands — otherwise fuse→setPose
+            // re-propagation collapses to (now - now) on the next worker tick.
+            if (result.acceptedNewCorrection) {
+                odomAtLastFusedFieldPose = odomNow;
+            }
+            return;
         }
-        if (odomAtCapture == null) {
-            odomAtCapture = odomNow;
-        }
-        Pose2D fused = localization.fusedFieldPoseNow(
-                latestTag, latestScoutObservation, odomAtCapture, odomNow);
-        if (fused != null) {
-            fusedFieldPose = fused;
-            odomAtLastFusedFieldPose = odomNow;
-        } else {
-            fusedFieldPose = localization.lastFusedFieldPose();
-        }
+        fusedFieldPose = localization.lastFusedFieldPose();
     }
 
     /**
@@ -581,9 +584,35 @@ public final class VidarFusionEngine implements VidarVisionFusion {
         return latestScoutObservation;
     }
 
-    /** Latest localization fusion result (tag + team odom). */
+    /** Latest localization fusion result (tag + team odom). Never uses external Pedro supplier. */
     public Pose2D getFusedFieldPose() {
         return fusedFieldPose;
+    }
+
+    /** {@link System#nanoTime()} when the last gate-accepted tag correction was applied (0 = none). */
+    public long lastTagCorrectionNanos() {
+        return localization.lastCorrectionNanos();
+    }
+
+    /**
+     * Gated tag fix re-propagated to the current odom sample — safe for {@code follower.setPose}.
+     *
+     * <p>Unlike {@link #getFieldPoseForMotionTracking()}, this never uses an ungated {@code latestTag}
+     * and never falls back to raw odom. Returns {@code null} until a pose gate has accepted a fix.
+     */
+    public Pose2D getGatedTagCorrectedFieldPoseNow() {
+        Pose2D anchor = localization.lastFusedFieldPose();
+        if (anchor == null) {
+            return null;
+        }
+        if (odomSupplier == null) {
+            return anchor;
+        }
+        Pose2D odomNow = odomSupplier.get();
+        if (odomNow == null || odomAtLastFusedFieldPose == null) {
+            return anchor;
+        }
+        return VidarMotionCorrection.robotFieldPoseNow(anchor, odomAtLastFusedFieldPose, odomNow);
     }
 
     /**

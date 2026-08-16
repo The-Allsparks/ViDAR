@@ -80,6 +80,7 @@ Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DES
 | [Coordinate frames](docs/COORDINATE_FRAMES.md) | Frames, transforms, intrinsics, validation |
 | [Teaching guide](docs/TEACHING.md) | Java lessons for Control Hub development |
 | [Roadmap](docs/ROADMAP.md) | Multi-cam USB wiring, validation, optional pathing integration |
+| [Pedro integration](docs/PEDRO_INTEGRATION.md) | Pose bridge + sparse tag correction with Pedro Pathing |
 | [Browser simulator](#browser-simulator) | Tune ROIs and colors before deploying to the hub |
 | [Robot templates](config/robots/README.md) | SVPRO vs C920 example `robot.json` files |
 | [Pedro Pathing](https://pedropathing.com/) | Optional: one supported autonomous stack (not required) |

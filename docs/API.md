@@ -311,6 +311,27 @@ try {
 
 Motion-corrected tracks require an odom supplier at `create()`. Field pose for tracks extrapolates from odom between tag fixes; optional `setFieldPoseSupplier()` for Pedro-primary pose.
 
+### Pedro Pathing (optional)
+
+No Pedro dependency in ViDAR. Use `vidar.integration`:
+
+```
+VidarPedroPoseBridge.fromPose2D / toPose2D / asPose2DSupplier(...)
+// Gate on correction event id; inject pose re-propagated to current odom
+VidarPedroCorrectionTracker.poll(
+    spatial.lastTagCorrectionNanos(),
+    spatial.tagCorrectedFieldPoseNow())
+```
+
+| Method | Use |
+|--------|-----|
+| `fieldPose()` | Snapshot field (Pedro if `setFieldPoseSupplier` set) |
+| `fusedFieldPose()` | Gate-accepted tag fix at fuse-time (never Pedro; pinned) |
+| `lastTagCorrectionNanos()` | Novelty event id for the tracker (pinned) |
+| `tagCorrectedFieldPoseNow()` | Fused fix advanced to odom at `update()` — for `follower.setPose` |
+
+See [PEDRO_INTEGRATION.md](PEDRO_INTEGRATION.md) and OpMode **ViDAR: Pedro Bridge Sample**.
+
 ### `VidarSpatialPoint`
 
 | Field | Type | Notes |

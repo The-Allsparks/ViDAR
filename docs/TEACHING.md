@@ -90,6 +90,7 @@ Ideas in order of difficulty:
 | Autonomous grab line | New `@Autonomous` OpMode, no gamepad |
 | Custom HSV color | Add or edit an entry in `config/seasons/*.json` |
 | Second / third / fourth camera | Raise `VidarConfig.CAMERA_COUNT`, name webcams `Webcam 1`…`N`, add mounts in `robot.json` (or bundled defaults) |
+| Pedro Pathing bridge | Copy loop from [PEDRO_INTEGRATION.md](PEDRO_INTEGRATION.md) / **ViDAR: Pedro Bridge Sample** |
 
 ## File roles (teach students this map)
 

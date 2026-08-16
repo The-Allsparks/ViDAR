@@ -123,18 +123,20 @@ ViDAR outputs:
 - `VidarTagObservation` + `getBackdatedFieldPose(odomNow)` — sparse absolute fixes
 - `VidarWorldModel` — robot-relative obstacles and game elements
 
-Suggested split:
+**Bridge (in-repo):** `vidar.integration` — `VidarPedroPoseBridge` + `VidarPedroCorrectionTracker` + sample OpMode. See [PEDRO_INTEGRATION.md](PEDRO_INTEGRATION.md). No Pedro Maven dependency.
+
+Suggested team split (optional beyond the bridge):
 
 ```
 teamcode/.../localization/
   RobotPoseFusion.java    // odom + IMU + optional Pinpoint
-  TagCorrection.java      // consumes ViDAR tag fixes
+  TagCorrection.java      // thin wrapper around VidarPedroCorrectionTracker
   FieldPoseProvider.java  // single Pose2D for Pedro
 ```
 
-Pedro consumes `FieldPoseProvider.get()` for path following; assisted modes read `VidarWorldModel` for reactive overrides (slow near foe, abort intake if blocked).
+Pedro consumes continuous localizer pose for path following; assisted modes read `VidarWorldModel` / `VidarSpatial` for reactive overrides (slow near foe, abort intake if blocked).
 
-**Do not** run full AprilTag decode inside Pedro’s control loop — keep ViDAR’s 2 s gate.
+**Do not** run full AprilTag decode inside Pedro’s control loop — keep ViDAR’s decode budget / gates.
 
 ---
 
