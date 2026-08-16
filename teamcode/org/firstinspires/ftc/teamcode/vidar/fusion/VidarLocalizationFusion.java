@@ -14,6 +14,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
  */
 public final class VidarLocalizationFusion {
 
+    /** Outcome of one fusion attempt. */
+    public static final class Result {
+        public final Pose2D pose;
+        /** True only when this call accepted a new gated tag correction. */
+        public final boolean acceptedNewCorrection;
+        public final long correctionNanos;
+
+        public Result(Pose2D pose, boolean acceptedNewCorrection, long correctionNanos) {
+            this.pose = pose;
+            this.acceptedNewCorrection = acceptedNewCorrection;
+            this.correctionNanos = correctionNanos;
+        }
+    }
+
     private Pose2D fieldPosePrior;
     private Pose2D lastFusedFieldPose;
     private long lastCorrectionNanos;
@@ -30,6 +44,11 @@ public final class VidarLocalizationFusion {
         return lastFusedFieldPose;
     }
 
+    /** Monotonic id of the last gate-accepted correction ({@link System#nanoTime()} at accept). */
+    public long lastCorrectionNanos() {
+        return lastCorrectionNanos;
+    }
+
     /** Clear fused pose scratch between match periods (keeps field pose prior). */
     public void resetMatchState() {
         lastFusedFieldPose = null;
@@ -38,8 +57,10 @@ public final class VidarLocalizationFusion {
 
     /**
      * Apply decoded tag correction with pose gates. Scout observations are ignored for pose fusion.
+     *
+     * @return pose + whether a <em>new</em> correction was accepted (for odom stamping)
      */
-    public Pose2D fusedFieldPoseNow(
+    public Result fusedFieldPoseNow(
             VidarTagObservation decoded,
             VidarTagScoutObservation scout,
             Pose2D odomAtCapture,
@@ -49,10 +70,10 @@ public final class VidarLocalizationFusion {
             if (passesPoseGates(decoded, candidate, odomNow)) {
                 lastFusedFieldPose = applyCorrectionLimit(candidate);
                 lastCorrectionNanos = System.nanoTime();
+                return new Result(lastFusedFieldPose, true, lastCorrectionNanos);
             }
-            return lastFusedFieldPose;
         }
-        return lastFusedFieldPose;
+        return new Result(lastFusedFieldPose, false, lastCorrectionNanos);
     }
 
     private boolean passesPoseGates(VidarTagObservation tag, Pose2D candidate, Pose2D odomNow) {
@@ -123,5 +144,4 @@ public final class VidarLocalizationFusion {
     public boolean wouldScoutAlterPose(VidarTagScoutObservation scout) {
         return false;
     }
-
 }

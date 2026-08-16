@@ -18,4 +18,10 @@ public interface VidarVisionFusion {
     Pose2D getFusedFieldPose();
 
     Pose2D getFieldPoseForMotionTracking();
+
+    /** Gated tag fix re-propagated to current odom; null until a pose gate accepts a fix. */
+    Pose2D getGatedTagCorrectedFieldPoseNow();
+
+    /** {@link System#nanoTime()} of last gate-accepted correction (0 = none). */
+    long lastTagCorrectionNanos();
 }

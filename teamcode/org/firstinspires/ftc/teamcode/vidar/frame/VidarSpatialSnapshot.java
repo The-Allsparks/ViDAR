@@ -29,7 +29,10 @@ public final class VidarSpatialSnapshot {
             Collections.emptyList(),
             false,
             null,
-            0);
+            0,
+            null,
+            null,
+            0L);
 
     public final List<VidarSpatialPoint> elements;
     public final List<VidarSpatialPoint> allies;
@@ -37,6 +40,11 @@ public final class VidarSpatialSnapshot {
     public final boolean intakeBlocked;
     public final Pose2D fieldPose;
     public final int trackCount;
+    /** Gate-accepted tag fuse at fuse-time (never external Pedro supplier). */
+    public final Pose2D fusedFieldPose;
+    /** Fused fix re-propagated to odom-at-publish; stable for one {@code update()} pin. */
+    public final Pose2D tagCorrectedFieldPoseNow;
+    public final long lastTagCorrectionNanos;
 
     public VidarSpatialSnapshot(
             List<VidarSpatialPoint> elements,
@@ -44,17 +52,33 @@ public final class VidarSpatialSnapshot {
             List<VidarSpatialPoint> foes,
             boolean intakeBlocked,
             Pose2D fieldPose,
-            int trackCount) {
+            int trackCount,
+            Pose2D fusedFieldPose,
+            Pose2D tagCorrectedFieldPoseNow,
+            long lastTagCorrectionNanos) {
         this.elements = Collections.unmodifiableList(new ArrayList<>(elements));
         this.allies = Collections.unmodifiableList(new ArrayList<>(allies));
         this.foes = Collections.unmodifiableList(new ArrayList<>(foes));
         this.intakeBlocked = intakeBlocked;
         this.fieldPose = fieldPose;
         this.trackCount = trackCount;
+        this.fusedFieldPose = fusedFieldPose;
+        this.tagCorrectedFieldPoseNow = tagCorrectedFieldPoseNow;
+        this.lastTagCorrectionNanos = lastTagCorrectionNanos;
     }
 
     public static VidarSpatialSnapshot empty() {
         return EMPTY;
+    }
+
+    /** Copy with refreshed tag-correction fields (used when pinning an OpMode loop). */
+    public VidarSpatialSnapshot withCorrections(
+            Pose2D fusedFieldPose,
+            Pose2D tagCorrectedFieldPoseNow,
+            long lastTagCorrectionNanos) {
+        return new VidarSpatialSnapshot(
+                elements, allies, foes, intakeBlocked, fieldPose, trackCount,
+                fusedFieldPose, tagCorrectedFieldPoseNow, lastTagCorrectionNanos);
     }
 
     public static VidarSpatialSnapshot build(
@@ -109,7 +133,12 @@ public final class VidarSpatialSnapshot {
         boolean blocked = computeIntakeBlocked(world, foesOut);
         Pose2D fieldPose = resolveFieldPose(vision, fieldPoseSupplier);
         int tracks = world != null && world.isMotionTrackingActive() ? world.trackCount() : 0;
-        return new VidarSpatialSnapshot(elementsOut, alliesOut, foesOut, blocked, fieldPose, tracks);
+        Pose2D fused = vision == null ? null : vision.getFusedFieldPose();
+        Pose2D correctedNow = vision == null ? null : vision.getGatedTagCorrectedFieldPoseNow();
+        long correctionNanos = vision == null ? 0L : vision.lastTagCorrectionNanos();
+        return new VidarSpatialSnapshot(
+                elementsOut, alliesOut, foesOut, blocked, fieldPose, tracks,
+                fused, correctedNow, correctionNanos);
     }
 
     private static boolean computeIntakeBlocked(VidarWorldModel world, List<VidarSpatialPoint> foes) {

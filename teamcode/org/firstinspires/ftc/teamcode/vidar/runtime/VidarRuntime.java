@@ -164,7 +164,22 @@ public final class VidarRuntime {
 
     /** Pin the latest published snapshot for one robot-loop iteration (legacy {@code update()}). */
     public VidarSpatialSnapshot pinSnapshot() {
-        return publishedSnapshot.get();
+        synchronized (this) {
+            VidarSpatialSnapshot base = publishedSnapshot.get();
+            VidarFusionEngine engine = fusionEngine;
+            if (engine == null) {
+                return base;
+            }
+            // Refresh odom + correction fields under the runtime lock so OpMode getters stay
+            // consistent for one loop and fuse→now uses the latest follower sample.
+            if (fieldPoseContext.odomSupplier() != null) {
+                engine.recordOdom(fieldPoseContext.odomSupplier().get());
+            }
+            return base.withCorrections(
+                    engine.getFusedFieldPose(),
+                    engine.getGatedTagCorrectedFieldPoseNow(),
+                    engine.lastTagCorrectionNanos());
+        }
     }
 
     public VidarCorrectedFrame updateCorrected() {

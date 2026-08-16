@@ -11,7 +11,7 @@
 | `VidarAlliance`, `VidarDistanceUnit`, `VidarElementDetectorType`, `VidarElementShape`, `VidarOffensiveLane` | Enums |
 | `VidarGeometry`, `VidarCoordinateFrames` | Range and field/robot transforms |
 | `VidarSpatialOpModeBase` | Shared OpMode helpers (alliance init, telemetry) |
-| `VidarTeleOp`, `VidarDiscoverOpMode`, `VidarAutoSeekOpMode`, `VidarRoiCalibrationOpMode` | Built-in OpModes |
+| `VidarTeleOp`, `VidarDiscoverOpMode`, `VidarAutoSeekOpMode`, `VidarRoiCalibrationOpMode`, `VidarPedroBridgeSampleOpMode` | Built-in OpModes |
 
 ## Subpackages
 
@@ -19,6 +19,7 @@
 |---------|----------------|-------------|
 | `vidar.runtime` | Process runtime + camera attachment | `VidarRuntime`, `VidarVisionAttachment`, `VidarObservationWorker`, `RuntimeBootstrap`, `VidarVision`, `VidarRuntimeConfig` |
 | `vidar.api` | Student diagnostics | `VidarDiagnostics` |
+| `vidar.integration` | Optional pathing bridges (no hard deps) | `VidarPedroPose`, `VidarPedroPoseBridge`, `VidarPedroCorrectionTracker` |
 | `vidar.detect` | Contour / color-blob pipeline | `VidarContourProcessor`, `ElementDetector`, `PlateDetector` |
 | `vidar.tag` | AprilTag scout, crop decode, gates | `VidarAdaptiveTagProcessor`, `VidarTagDecodeWorker`, `TagDecodeBudget` |
 | `vidar.fusion` | Localization, temporal filter, multi-camera fusion | `VidarFusionEngine`, `VidarLocalizationFusion`, `MultiCameraFusion`, `FieldPoseContext`, `VidarVisionFusion` |
