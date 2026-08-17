@@ -166,9 +166,9 @@ Each camera mount is a position plus orientation in robot frame:
 |-------|---------|
 | `bearingDeg` | Horizontal look direction: 0 = front, 90 = right, 180 = back, 270 = left |
 | `xIn`, `yIn`, `zIn` | Lens position from robot center (+X forward, +Y left, +Z up from floor) |
-| `pitchDeg` | Inclination; **negative = looking down** (typical field view) |
-| `rollDeg` | Roll about optical axis (bumps / sideways tilt) |
-| `yawDeg` | Small twist about optical axis (usually 0) |
+| `pitchDeg` | Inclination about robot +Y; **negative = looking down** (typical field view) |
+| `rollDeg` | Bank about robot +X / optical forward |
+| `yawDeg` | Small pan about robot +Z (added to `bearingDeg`; usually 0) |
 
 Nested form is also accepted:
 

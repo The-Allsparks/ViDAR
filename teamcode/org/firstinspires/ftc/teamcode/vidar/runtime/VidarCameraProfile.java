@@ -31,7 +31,11 @@ public final class VidarCameraProfile {
     public final double mountX;
     public final double mountY;
     public final double mountZ;
-    /** Mount orientation: yaw about optical axis, pitch (negative = inclined down), roll. */
+    /**
+     * Mount orientation (degrees) in robot frame after optical→robot base.
+     * Vitelli XYZ: roll about +X, pitch about +Y, yaw about +Z (with {@code bearingDeg}).
+     * {@code mountPitchDeg} is aviation-signed: <b>negative = looking down</b>.
+     */
     public final double mountYawDeg;
     public final double mountPitchDeg;
     public final double mountRollDeg;

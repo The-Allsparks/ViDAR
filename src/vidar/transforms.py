@@ -65,6 +65,11 @@ def _rotate_x(rad: float) -> tuple[float, ...]:
     return (1, 0, 0, 0, c, -s, 0, s, c)
 
 
+def _rotate_y(rad: float) -> tuple[float, ...]:
+    c, s = math.cos(rad), math.sin(rad)
+    return (c, 0, s, 0, 1, 0, -s, 0, c)
+
+
 def _rotate_z(rad: float) -> tuple[float, ...]:
     c, s = math.cos(rad), math.sin(rad)
     return (c, -s, 0, s, c, 0, 0, 0, 1)
@@ -84,8 +89,9 @@ class Rotation3D:
 
     @staticmethod
     def from_roll_pitch_yaw_deg(roll_deg: float, pitch_deg: float, yaw_deg: float) -> Rotation3D:
-        r_roll = _rotate_z(math.radians(roll_deg))
-        r_pitch = _rotate_x(math.radians(pitch_deg))
+        """Vitelli axes: R = Rz(yaw) * Ry(pitch) * Rx(roll). Positive pitch looks down (+X→−Z)."""
+        r_roll = _rotate_x(math.radians(roll_deg))
+        r_pitch = _rotate_y(math.radians(pitch_deg))
         r_yaw = _rotate_z(math.radians(yaw_deg))
         return Rotation3D(_mat3_mul(_mat3_mul(r_yaw, r_pitch), r_roll))
 
@@ -275,10 +281,11 @@ class CameraTransforms:
 
 
 def build_robot_t_camera(profile: CameraProfile) -> CameraTransforms:
-    mount_rot = (
-        Rotation3D(_rotate_z(math.radians(profile.bearing_deg + profile.mount_yaw_deg)))
-        .times(Rotation3D(_rotate_x(math.radians(profile.mount_pitch_deg))))
-        .times(Rotation3D(_rotate_z(math.radians(profile.mount_roll_deg))))
+    # Config pitchDeg: negative = look down. Vitelli/RH pitch: positive = look down.
+    mount_rot = Rotation3D.from_roll_pitch_yaw_deg(
+        profile.mount_roll_deg,
+        -profile.mount_pitch_deg,
+        profile.bearing_deg + profile.mount_yaw_deg,
     )
     rot = mount_rot.times(Rotation3D(optical_to_robot_base()))
     trans = Vec3(profile.mount_x, profile.mount_y, profile.mount_z)
