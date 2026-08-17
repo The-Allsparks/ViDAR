@@ -84,9 +84,9 @@ rejected(source, reason): RangeEstimate
 distance: float
 uncertainty: float
 confidence: float       // 0–1
-source0: RangeEstimate | null
-source1: RangeEstimate | null
-sourceCount: int        // 0–2 valid slots used
+source0: RangeEstimate | null   // telemetry slot (typically GROUND_PLANE when valid)
+source1: RangeEstimate | null   // telemetry slot (best heuristic, if any)
+sourceCount: int        // 0–3 valid contributing estimates (clamped; slots still only store two)
 
 isValid(): bool         // distance > 0 && confidence > 0
 invalid(): RangeResult
