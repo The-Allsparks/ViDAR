@@ -48,7 +48,39 @@ class RangeFusionTest {
         VidarRangeResult result = VidarRangeFusion.fuseRangeWeighted(size, floor, ground);
         assertTrue(result.isValid());
         assertEquals(3, result.sourceCount);
-        assertTrue(result.distance > 23 && result.distance < 26);
+        assertEquals(24.5, result.distance, 1e-9);
+        assertTrue(result.confidence > 0.7);
+        assertEquals(VidarRangeEstimate.Source.GROUND_PLANE, result.source0.source);
+    }
+
+    @Test
+    void geometryDisagreementKeepsGroundDistance() {
+        VidarRangeEstimate size = VidarRangeFusion.buildSizeEstimate(23, 20, 0.9, false, false);
+        VidarRangeEstimate floor = VidarRangeFusion.buildFloorEstimate(23, 60, 0.8, false);
+        VidarRangeEstimate ground = VidarRangeFusion.buildGroundPlaneEstimate(42, 200, 0.8, false);
+        VidarRangeResult result = VidarRangeFusion.fuseRangeWeighted(size, floor, ground);
+        assertTrue(result.isValid());
+        assertEquals(42.0, result.distance, 1e-9);
+        assertTrue(result.confidence < 0.5);
+        assertTrue(result.distance > 35);
+    }
+
+    @Test
+    void geometryOnlyUsesGroundPlane() {
+        VidarRangeEstimate ground = VidarRangeFusion.buildGroundPlaneEstimate(36, 200, 0.8, false);
+        VidarRangeResult result = VidarRangeFusion.fuseRangeWeighted(ground);
+        assertTrue(result.isValid());
+        assertEquals(36.0, result.distance, 1e-9);
+        assertEquals(VidarRangeEstimate.Source.GROUND_PLANE, result.source0.source);
+    }
+
+    @Test
+    void heuristicsOnlyStillWeighted() {
+        VidarRangeEstimate size = VidarRangeFusion.buildSizeEstimate(36, 20, 0.9, false, false);
+        VidarRangeEstimate floor = VidarRangeFusion.buildFloorEstimate(38, 60, 0.8, false);
+        VidarRangeResult result = VidarRangeFusion.fuseRangeWeighted(size, floor);
+        assertTrue(result.isValid());
+        assertTrue(result.distance > 34 && result.distance < 40);
     }
 
     @Test

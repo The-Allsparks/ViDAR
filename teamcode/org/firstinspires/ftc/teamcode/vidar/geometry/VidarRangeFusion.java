@@ -5,7 +5,8 @@ import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeEstimate;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarRangeResult;
 
 /**
- * Uncertainty-weighted range fusion and per-source estimate builders.
+ * Range fusion: projective ground-plane geometry is authoritative when valid;
+ * size / floor LUT / plate-width are cross-checks and fallbacks.
  */
 public final class VidarRangeFusion {
 
@@ -104,9 +105,14 @@ public final class VidarRangeFusion {
         return fuseRangeWeighted(VidarConfig.MAX_RANGE_MISMATCH_RATIO, estimates);
     }
 
+    /**
+     * When {@link VidarRangeEstimate.Source#GROUND_PLANE} is valid, its distance is authoritative.
+     * Heuristics that disagree lower confidence instead of pulling the fused range toward a midpoint.
+     * Without a valid ground-plane estimate, falls back to inverse-variance weighting among heuristics.
+     */
     public static VidarRangeResult fuseRangeWeighted(
             double maxRangeMismatchRatio, VidarRangeEstimate... estimates) {
-        VidarRangeEstimate[] valid = new VidarRangeEstimate[3];
+        VidarRangeEstimate[] valid = new VidarRangeEstimate[4];
         VidarRangeEstimate firstAny = null;
         VidarRangeEstimate secondAny = null;
         int validCount = 0;
@@ -141,6 +147,74 @@ public final class VidarRangeFusion {
             return new VidarRangeResult(Double.NaN, Double.NaN, 0, firstAny, secondAny, 2);
         }
 
+        VidarRangeEstimate ground = null;
+        VidarRangeEstimate[] heuristics = new VidarRangeEstimate[4];
+        int heuristicCount = 0;
+        for (int i = 0; i < validCount; i++) {
+            VidarRangeEstimate est = valid[i];
+            if (est.source == VidarRangeEstimate.Source.GROUND_PLANE) {
+                ground = est;
+            } else if (heuristicCount < heuristics.length) {
+                heuristics[heuristicCount++] = est;
+            }
+        }
+
+        if (ground != null) {
+            return fuseGeometryPrimary(ground, heuristics, heuristicCount, maxRangeMismatchRatio);
+        }
+        return fuseHeuristicsWeighted(valid, validCount, maxRangeMismatchRatio);
+    }
+
+    private static VidarRangeResult fuseGeometryPrimary(
+            VidarRangeEstimate ground,
+            VidarRangeEstimate[] heuristics,
+            int heuristicCount,
+            double maxRangeMismatchRatio) {
+        double maxDiffVsGround = 0;
+        int agreeCount = 0;
+        int disagreeCount = 0;
+        VidarRangeEstimate bestHeuristic = null;
+        for (int i = 0; i < heuristicCount; i++) {
+            VidarRangeEstimate h = heuristics[i];
+            double denom = Math.max(ground.distance, h.distance);
+            double rel = denom > 0 ? Math.abs(ground.distance - h.distance) / denom : 0;
+            maxDiffVsGround = Math.max(maxDiffVsGround, rel);
+            if (rel <= maxRangeMismatchRatio) {
+                agreeCount++;
+            } else {
+                disagreeCount++;
+            }
+            if (bestHeuristic == null || h.weight > bestHeuristic.weight) {
+                bestHeuristic = h;
+            }
+        }
+
+        double confidence;
+        double uncertainty = ground.uncertainty;
+        if (heuristicCount == 0) {
+            confidence = Math.min(0.75, Math.max(0.35, 0.55 * Math.min(1.0, ground.weight)));
+        } else if (disagreeCount > 0 && maxDiffVsGround > maxRangeMismatchRatio) {
+            // Keep geometry distance; do not average toward bad heuristics.
+            confidence = Math.max(0.15, 0.7 * (1.0 - maxDiffVsGround));
+            uncertainty = ground.uncertainty * (1.0 + maxDiffVsGround);
+        } else {
+            // Cross-checks agree — geometry remains the range; confidence rises with support.
+            confidence = Math.min(1.0, 0.65 + 0.12 * agreeCount);
+        }
+
+        return new VidarRangeResult(
+                ground.distance,
+                uncertainty,
+                confidence,
+                ground,
+                bestHeuristic,
+                1 + heuristicCount);
+    }
+
+    private static VidarRangeResult fuseHeuristicsWeighted(
+            VidarRangeEstimate[] valid,
+            int validCount,
+            double maxRangeMismatchRatio) {
         double weightSum = 0;
         double weightedDist = 0;
         double varianceSum = 0;

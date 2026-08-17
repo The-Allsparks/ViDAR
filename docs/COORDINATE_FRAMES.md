@@ -173,7 +173,9 @@ ViDAR uses the SDK pose directly in `VidarTagObservation.fieldPoseAtCapture`. `V
 
 ## Ground-plane intersection
 
-For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z = 0** in robot frame (plates) or **z = diameter/2** for ball-center element fusion. Rejects parallel rays and rays pointing away from the floor. `VidarGeometry.floorPointInRobot()` uses `robot_T_camera` on the primary path; floor LUT remains a fusion fallback.
+For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z = 0** in robot frame (plates) or **z = diameter/2** for ball-center element fusion. Rejects parallel rays and rays pointing away from the floor. `VidarGeometry.floorPointInRobot()` uses `robot_T_camera` on the primary path.
+
+**Range fusion:** when the ground-plane estimate is valid, its slant range is **authoritative**. Size / floor LUT / plate-width estimates are cross-checks (raise or lower confidence) or fallbacks when geometry is rejected — they are not equal votes that average away from geometry.
 
 ---
 

@@ -94,12 +94,15 @@ sourceDistance(source: RangeSource): float
 sourceWeight(source: RangeSource): float
 ```
 
-**Fusion** (up to three estimates for elements: SIZE + FLOOR LUT + GROUND_PLANE, no list allocation):
+**Fusion** (elements: SIZE + FLOOR LUT + GROUND_PLANE; plates: WIDTH + FLOOR + GROUND_PLANE):
 
 ```
 fuseRangeWeighted(maxRangeMismatchRatio, ...estimates): RangeResult
-fusedDistance = Σ(weight × distance) / Σ(weight)
 ```
+
+- When `GROUND_PLANE` is valid, **fused distance = ground-plane distance** (projective geometry is authoritative).
+- Heuristics that agree raise confidence; heuristics that disagree lower confidence — they do **not** pull the range toward a midpoint.
+- Without a valid ground-plane estimate, inverse-variance weighting among heuristics (legacy path).
 
 Default `maxRangeMismatchRatio = 0.28`.
 

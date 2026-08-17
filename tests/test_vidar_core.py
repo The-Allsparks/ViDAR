@@ -6,6 +6,8 @@ import math
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tests" / "pure"))
 
@@ -64,8 +66,26 @@ class TestRangeFusion:
         result = fuse_range_weighted(size, floor, ground)
         assert result.is_valid
         assert result.source_count == 3
-        assert 23 < result.distance < 26
-        assert result.confidence > 0
+        assert result.distance == pytest.approx(24.5)
+        assert result.confidence > 0.7
+        assert result.source0.source.value == "GROUND_PLANE"
+
+    def test_geometry_disagreement_keeps_ground_distance(self):
+        size = build_size_estimate(23, 20, 0.9, False, False)
+        floor = build_floor_estimate(23, 60, 0.8, False)
+        ground = build_ground_plane_estimate(42, 200, 0.8, False)
+        result = fuse_range_weighted(size, floor, ground)
+        assert result.is_valid
+        assert result.distance == pytest.approx(42.0)
+        assert result.confidence < 0.5
+        assert result.distance > 35
+
+    def test_geometry_only_uses_ground_plane(self):
+        ground = build_ground_plane_estimate(36, 200, 0.8, False)
+        result = fuse_range_weighted(ground)
+        assert result.is_valid
+        assert result.distance == pytest.approx(36.0)
+        assert result.source0.source.value == "GROUND_PLANE"
 
     def test_ground_plane_range_with_mount(self):
         profile = CameraProfile(
