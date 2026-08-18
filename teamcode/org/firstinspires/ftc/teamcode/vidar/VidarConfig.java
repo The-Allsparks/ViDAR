@@ -272,6 +272,11 @@ public final class VidarConfig {
     // --- Short-term world model (VidarWorldModel) ---
     /** When false, skip motion correction and track memory (live vision only). */
     public static final boolean WORLD_MOTION_TRACKING_ENABLED = true;
+    /**
+     * Associate/coast on new observation capture times, not 1 ms worker ticks.
+     * Set false to restore last-blob re-association every tick (rollback).
+     */
+    public static final boolean WORLD_ASSOCIATE_ON_NEW_FRAME_ONLY = true;
     public static final double WORLD_ELEMENT_TTL_SEC = 2.5;
     public static final double WORLD_FOE_TTL_SEC = 3.0;
     public static final double WORLD_ALLY_TTL_SEC = 4.0;

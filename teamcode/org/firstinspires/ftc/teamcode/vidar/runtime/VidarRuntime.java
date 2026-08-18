@@ -279,6 +279,8 @@ public final class VidarRuntime {
                 }
                 engine.update();
                 world.update(engine, System.nanoTime());
+            } else {
+                world.update(null, System.nanoTime());
             }
         }
         if (engine != null) {

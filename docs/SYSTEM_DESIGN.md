@@ -132,6 +132,8 @@ Component estimates exposed as `source0`, `source1`, and `sourceCount` (up to 3)
 
 `VidarWorldModel` motion-corrects tracks using odom delta (translation + rotation) or field-pose reprojection when available. Owned by `VidarRuntime` and persists across camera detach.
 
+Association and TTL clock off **observation capture time**, not the ~1 ms observation-worker tick. Repeating the same fused detections (same `captureTimeNanos`) is a miss/coast: `lastSeenNanos` is not refreshed from stale blobs. `update(null, now)` also coasts so `detachVision()` ages tracks. After `WORLD_*_TTL_SEC` with no new frame, tracks are pruned and `intakeBlocked()` goes false. Tracks expose `lastSeenNanos` and `missCount` — treat high miss count or age as stale. Set `WORLD_ASSOCIATE_ON_NEW_FRAME_ONLY` false to restore last-blob re-association every tick.
+
 ## Spatial facade — **Implemented**, **Tested in simulation**
 
 `VidarSpatial` is the Pedro-style entry point. Perception advances in the background; read `snapshot()` each loop.

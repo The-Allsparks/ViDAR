@@ -17,20 +17,20 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#20](https://github.com/The-Allsparks/ViDAR/issues/20) |
-| Why highest priority | Silent worker exceptions hide dead perception behind last-good snapshots |
-| Why ready | #13/#18 merged; no hardware required; acceptance is JVM-testable |
+| Selected issue | [#21](https://github.com/The-Allsparks/ViDAR/issues/21) |
+| Why highest priority | Last-blob re-association on 1 ms ticks never fires TTL; detach freezes tracks |
+| Why ready | #20 merged; no hardware required; acceptance is JVM-testable |
 | Dependencies | None |
-| Expected deliverable | Worker records last error + count; `VidarDiagnostics` / Discover show it; worker stays alive |
-| Expected validation | java-pure worker test + CI |
+| Expected deliverable | Associate/coast/prune on capture time; detach ages tracks; java-pure world tests |
+| Expected validation | `cd java-pure && ./gradlew.bat test --no-daemon` |
 | Hardware required | No |
-| Branch | `fix/observation-worker-failure-visibility` (planned) |
+| Branch | `fix/frame-gated-world-association` |
 | Pull request | not opened yet |
 | CI status | — |
 | Merge status | — |
-| Last delivered | [#13](https://github.com/The-Allsparks/ViDAR/issues/13) via [#18](https://github.com/The-Allsparks/ViDAR/pull/18) merge `65af3c2` |
+| Last delivered | [#20](https://github.com/The-Allsparks/ViDAR/issues/20) via [#31](https://github.com/The-Allsparks/ViDAR/pull/31) merge `2c2b7d7` |
 
-#18 is merged. One implementation issue at a time: #20 next.
+#20 is merged. One implementation issue at a time: #21 next.
 
 ## Ledger
 
@@ -38,8 +38,8 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 |-------|----------|-----------|--------------|--------|----------|--------|----|----|-------|---------|-------------|
 | #19 Roadmap epic | P0 process | Active | — | Open | orchestrator | `docs/initial-deep-audit` | docs PR this cycle | — | — | — | Keep ledger in sync |
 | #13 Geometry-authoritative ranging | P0 | Done | #17 done | **Merged** | review | `feature/geometry-authoritative-ranging` | #18 | pass | **merged** `65af3c2` | — | Closed |
-| #20 Worker failure visibility (S3) | P1 | **Ready** | #18 done | Selected | pending | `fix/observation-worker-failure-visibility` | — | — | — | — | Implement |
-| #21 Frame-generation association (A2/C4) | P1 | Ready | #18 done | Open | — | — | — | — | — | Wait for #20 PR | After #20 |
+| #20 Worker failure visibility (S3) | P1 | Done | #18 done | **Merged** | review | `fix/observation-worker-failure-visibility` | #31 | pass | **merged** `2c2b7d7` | — | Closed |
+| #21 Frame-generation association (A2/C4) | P1 | Ready | #20 done | In progress | implement | `fix/frame-gated-world-association` | — | — | — | — | Implement / push |
 | #22 Sim range-fusion parity (C2) | P1 | Ready | #13/#18 done | Open | — | — | — | — | — | Wait for #20 PR | After #20/#21 |
 | #23 Runtime/world java-pure tests (T1) | P2 | Blocked | #21 preferred first | Filed | — | — | — | — | — | #21 | After #21 or same slice |
 | #24 java-pure required check (T2) | P2 | Ready (settings) | None | Filed | — | — | — | — | — | Settings | After current implementation PR |
