@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.vidar.model.VidarElementOccurrenceRank;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -16,6 +17,11 @@ import java.util.function.Supplier;
  * Short-term spatial memory with predict/gate/associate tracking.
  *
  * <p>When {@link #isMotionTrackingActive()} is false, {@link #update} is a no-op — live vision only.
+ *
+ * <p>Association clocks on observation {@code captureTimeNanos}, not observation-worker ticks.
+ * Repeating the same fused detections is a miss; {@code update(null, now)} coasts so detach ages
+ * tracks. Consumers should treat high {@link VidarSpatialTrack#missCount} or old
+ * {@link VidarSpatialTrack#lastSeenNanos} as stale.
  */
 public class VidarWorldModel {
 
@@ -30,6 +36,10 @@ public class VidarWorldModel {
     private Supplier<Pose2D> fieldPoseSupplier;
     private boolean motionTrackingEnabled = VidarConfig.WORLD_MOTION_TRACKING_ENABLED;
     private int nextTrackId = 1;
+    /** Max captureTimeNanos from the last fused frame that was treated as new. */
+    private long lastObservationCaptureNanos;
+    /** Wall-clock of the last associate/coast so 1 ms ticks do not count as miss frames. */
+    private long lastAssociateNanos;
 
     public VidarWorldModel() {
         this(null, null);
@@ -44,8 +54,7 @@ public class VidarWorldModel {
     public void setOdomSupplier(Supplier<Pose2D> odomSupplier) {
         this.odomSupplier = odomSupplier;
         if (!isMotionTrackingActive()) {
-            tracks.clear();
-            nextTrackId = 1;
+            clearTracks();
         }
     }
 
@@ -56,8 +65,7 @@ public class VidarWorldModel {
     public void setMotionTrackingEnabled(boolean enabled) {
         this.motionTrackingEnabled = enabled;
         if (!isMotionTrackingActive()) {
-            tracks.clear();
-            nextTrackId = 1;
+            clearTracks();
         }
     }
 
@@ -70,19 +78,72 @@ public class VidarWorldModel {
     }
 
     public void update(VidarVisionFusion vision, long nowNanos) {
-        if (!isMotionTrackingActive() || vision == null) {
+        if (!isMotionTrackingActive()) {
             return;
         }
 
+        List<VidarTrackDetection> detections = vision == null
+                ? Collections.emptyList()
+                : collectDetections(vision);
+        updateFromDetections(detections, maxCaptureNanos(detections), nowNanos);
+    }
+
+    /**
+     * Associate, coast, or prune using an explicit detection list and observation capture time.
+     * Package-visible so java-pure tests can drive the world model without a fusion engine.
+     */
+    void updateFromDetections(
+            List<VidarTrackDetection> detections, long observationCaptureNanos, long nowNanos) {
+        List<VidarTrackDetection> toAssociate =
+                detections == null ? Collections.emptyList() : detections;
+
+        boolean staleFrame = VidarConfig.WORLD_ASSOCIATE_ON_NEW_FRAME_ONLY
+                && observationCaptureNanos != 0
+                && observationCaptureNanos == lastObservationCaptureNanos;
+        if (staleFrame) {
+            toAssociate = Collections.emptyList();
+        }
+
+        boolean newFrame = observationCaptureNanos != 0
+                && observationCaptureNanos != lastObservationCaptureNanos;
+        if (toAssociate.isEmpty() && shouldSkipIdleCoast(nowNanos)) {
+            return;
+        }
+
+        if (newFrame) {
+            lastObservationCaptureNanos = observationCaptureNanos;
+        }
+        lastAssociateNanos = nowNanos;
+
         Pose2D fieldPose = fieldPoseSupplier == null ? null : fieldPoseSupplier.get();
-        List<VidarTrackDetection> detections = collectDetections(vision);
         List<VidarSpatialTrack> current = new ArrayList<>(tracks);
         int[] nextId = { nextTrackId };
         List<VidarSpatialTrack> associated = VidarTrackAssociator.associate(
-                current, detections, fieldPose, nowNanos, nextId);
+                current, toAssociate, fieldPose, nowNanos, nextId);
         tracks.clear();
         tracks.addAll(associated);
         nextTrackId = nextId[0];
+    }
+
+    private boolean shouldSkipIdleCoast(long nowNanos) {
+        if (lastAssociateNanos <= 0) {
+            return false;
+        }
+        return VidarSpatialTrack.dtSeconds(lastAssociateNanos, nowNanos)
+                < VidarConfig.WORLD_TRACK_MIN_DT_SEC;
+    }
+
+    private static long maxCaptureNanos(List<VidarTrackDetection> detections) {
+        long max = 0L;
+        if (detections == null) {
+            return max;
+        }
+        for (VidarTrackDetection detection : detections) {
+            if (detection != null && detection.captureTimeNanos > max) {
+                max = detection.captureTimeNanos;
+            }
+        }
+        return max;
     }
 
     private List<VidarTrackDetection> collectDetections(VidarVisionFusion vision) {
@@ -181,7 +242,13 @@ public class VidarWorldModel {
 
     /** Clear short-term tracks between match periods. */
     public void resetMatchState() {
+        clearTracks();
+    }
+
+    private void clearTracks() {
         tracks.clear();
         nextTrackId = 1;
+        lastObservationCaptureNanos = 0L;
+        lastAssociateNanos = 0L;
     }
 }

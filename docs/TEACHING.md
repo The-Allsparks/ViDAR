@@ -65,6 +65,8 @@ Build and deploy to the Control Hub like any other OpMode.
 
 **Goal:** See every remembered element and foe track after `update()`. **No motors** — map lists to Pedro or your follower in team code.
 
+Remembered tracks age with **new camera frames**. Replaying the last blob on the 1 ms worker does not keep a track alive. High `missCount` or old `lastSeenNanos` means the memory is stale.
+
 Calibrate first: [CALIBRATION_CHECKLIST.md](CALIBRATION_CHECKLIST.md).
 
 Try the same logic in the **browser sim** first — sidebar shows range and spatial overlays.

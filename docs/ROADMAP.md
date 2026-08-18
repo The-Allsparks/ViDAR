@@ -105,7 +105,7 @@ Pipeline: **HSV mask → contour → `minAreaRect` → white-digit ratio → wid
 
 ## Phase 3 — World model & assisted behaviors ✅ foundation
 
-`VidarWorldModel` keeps short-term tracks (elements, allies, foes) with TTL merge.
+`VidarWorldModel` keeps short-term tracks (elements, allies, foes) with TTL merge. Association clocks on new vision capture times, not 1 ms worker ticks.
 
 | Behavior | Uses |
 |----------|------|

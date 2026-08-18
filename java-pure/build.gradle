@@ -29,7 +29,6 @@ sourceSets {
             srcDir teamcodeVidar
             exclude 'detect/**'
             exclude 'schedule/**'
-            exclude 'world/**'
             exclude '**/*OpMode.java'
             exclude 'geometry/VidarObservationSpatial.java'
             exclude 'geometry/VidarPoseLookup.java'
@@ -39,7 +38,6 @@ sourceSets {
             exclude 'VidarAutoSeekOpMode.java'
             exclude 'VidarRoiCalibrationOpMode.java'
             exclude 'fusion/VidarFusionEngine.java'
-            exclude 'VidarSpatialPoint.java'
             exclude 'VidarSpatial.java'
             exclude 'VidarSpatialOpModeBase.java'
             exclude 'VidarObservationMapper.java'
@@ -63,7 +61,6 @@ sourceSets {
             exclude 'runtime/VidarMetricsLogger.java'
             exclude 'runtime/VidarAllianceSelector.java'
             exclude 'model/VidarElementDensityMap.java'
-            exclude 'model/VidarElementOccurrenceRank.java'
             exclude 'model/VidarElementRejectionStats.java'
             exclude 'model/VidarOffensiveLaneAnalysis.java'
             exclude 'api/VidarDiagnostics.java'
