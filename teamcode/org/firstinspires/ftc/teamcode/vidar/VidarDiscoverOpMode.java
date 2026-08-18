@@ -64,6 +64,14 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
             telemetry.addData("Cameras", spatial.diagnostics().connectedCameras
                     + "/" + spatial.diagnostics().cameraCount);
             telemetry.addData("Config", spatial.diagnostics().configSource);
+            if (spatial.diagnostics().observationWorkerTotalFailures > 0) {
+                telemetry.addData("Worker", "failures="
+                        + spatial.diagnostics().observationWorkerTotalFailures
+                        + " consecutive="
+                        + spatial.diagnostics().observationWorkerConsecutiveFailures
+                        + (spatial.diagnostics().observationWorkerLastError.isEmpty()
+                                ? "" : ": " + spatial.diagnostics().observationWorkerLastError));
+            }
             telemetry.addData("FPS cam1", spatial.cameraCount() > 0
                     && spatial.runtime().camera(0) != null
                     ? String.format("%.1f", spatial.runtime().camera(0).portalFps()) : "—");
@@ -96,6 +104,9 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
             telemetry.addData("Tag @capture", VidarBlobUtil.formatTagPose(tag));
             telemetry.addData("Field fused", formatFieldPose(fieldNow));
             for (String warning : spatial.diagnostics().warnings) {
+                if (warning.startsWith("Observation worker failures=")) {
+                    continue;
+                }
                 telemetry.addLine("⚠ " + warning);
             }
             telemetry.update();

@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.vidar.frame.VidarSpatialSnapshot;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarFusionEngine;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
 import org.firstinspires.ftc.teamcode.vidar.runtime.RuntimeBootstrap;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarObservationWorker;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -314,7 +315,17 @@ public final class VidarSpatial {
         if (runtime.configSource() == VidarDiagnostics.ConfigSource.BUNDLED_DEFAULTS) {
             warnings.add(0, "Using bundled default season/robot JSON — deploy team assets for match tuning.");
         }
+        VidarObservationWorker worker = runtime.observationWorker();
+        String workerError = worker.lastErrorMessage();
+        int workerConsecutive = worker.consecutiveFailureCount();
+        int workerTotal = worker.totalFailureCount();
+        if (workerTotal > 0) {
+            warnings.add("Observation worker failures=" + workerTotal
+                    + " consecutive=" + workerConsecutive
+                    + (workerError.isEmpty() ? "" : ": " + workerError));
+        }
         diagnostics = new VidarDiagnostics(
-                runtime.configSource(), count, connected, warnings, health);
+                runtime.configSource(), count, connected, warnings, health,
+                workerError, workerConsecutive, workerTotal);
     }
 }

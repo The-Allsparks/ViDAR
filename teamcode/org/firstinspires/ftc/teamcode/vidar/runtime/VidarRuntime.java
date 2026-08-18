@@ -239,6 +239,10 @@ public final class VidarRuntime {
         return configSource;
     }
 
+    public VidarObservationWorker observationWorker() {
+        return observationWorker;
+    }
+
     public VidarGlobalVisionWorker globalVisionWorker() {
         return attachment == null ? null : attachment.globalVisionWorker();
     }
