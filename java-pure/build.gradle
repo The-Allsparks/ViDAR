@@ -58,7 +58,6 @@ sourceSets {
             exclude 'runtime/CameraPipelineConfig.java'
             exclude 'runtime/VidarRuntime.java'
             exclude 'runtime/VidarVisionAttachment.java'
-            exclude 'runtime/VidarObservationWorker.java'
             exclude 'runtime/RuntimeBootstrap.java'
             exclude 'runtime/VidarMetrics.java'
             exclude 'runtime/VidarMetricsLogger.java'

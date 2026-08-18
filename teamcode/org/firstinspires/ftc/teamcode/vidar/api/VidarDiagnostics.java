@@ -24,6 +24,9 @@ public final class VidarDiagnostics {
     public final int connectedCameras;
     public final List<String> warnings;
     public final VidarMetrics.CameraHealth[] cameraHealth;
+    public final String observationWorkerLastError;
+    public final int observationWorkerConsecutiveFailures;
+    public final int observationWorkerTotalFailures;
 
     public VidarDiagnostics(
             ConfigSource configSource,
@@ -31,6 +34,18 @@ public final class VidarDiagnostics {
             int connectedCameras,
             List<String> warnings,
             VidarMetrics.CameraHealth[] cameraHealth) {
+        this(configSource, cameraCount, connectedCameras, warnings, cameraHealth, "", 0, 0);
+    }
+
+    public VidarDiagnostics(
+            ConfigSource configSource,
+            int cameraCount,
+            int connectedCameras,
+            List<String> warnings,
+            VidarMetrics.CameraHealth[] cameraHealth,
+            String observationWorkerLastError,
+            int observationWorkerConsecutiveFailures,
+            int observationWorkerTotalFailures) {
         this.configSource = configSource;
         this.cameraCount = cameraCount;
         this.connectedCameras = connectedCameras;
@@ -38,6 +53,10 @@ public final class VidarDiagnostics {
                 ? Collections.emptyList()
                 : Collections.unmodifiableList(new ArrayList<>(warnings));
         this.cameraHealth = cameraHealth == null ? new VidarMetrics.CameraHealth[0] : cameraHealth;
+        this.observationWorkerLastError =
+                observationWorkerLastError == null ? "" : observationWorkerLastError;
+        this.observationWorkerConsecutiveFailures = observationWorkerConsecutiveFailures;
+        this.observationWorkerTotalFailures = observationWorkerTotalFailures;
     }
 
     public static VidarDiagnostics empty() {
@@ -54,6 +73,9 @@ public final class VidarDiagnostics {
         sb.append(" cameras=").append(connectedCameras).append('/').append(cameraCount);
         if (!warnings.isEmpty()) {
             sb.append(" warnings=").append(warnings.size());
+        }
+        if (observationWorkerTotalFailures > 0) {
+            sb.append(" workerFailures=").append(observationWorkerTotalFailures);
         }
         return sb.toString();
     }

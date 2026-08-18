@@ -52,7 +52,7 @@ flowchart TB
 | VisionPortal callback | Publish frame to mailbox only |
 | `VidarGlobalVisionWorker` | Round-robin async contour/tag scout processing |
 | `VidarTagDecodeWorker` | Async AprilTag crop decode (≤ 1/s) |
-| `VidarObservationWorker` | Poll cameras, fuse, update world model, publish snapshots |
+| `VidarObservationWorker` | Poll cameras, fuse, update world model, publish snapshots. Tick failures are recorded (last error, consecutive/total counts) and visible in `VidarDiagnostics`; the worker stays alive. |
 | Robot / OpMode loop | Read immutable `snapshot()` — never advances perception |
 
 **FTC lifecycle (Auto → TeleOp):**

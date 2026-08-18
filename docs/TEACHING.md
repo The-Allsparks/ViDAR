@@ -125,3 +125,7 @@ Multi-camera is configured, not hand-wired in the OpMode. Prefer:
 Do **not** construct a second `VidarVision` in team OpModes for multi-cam; that bypasses fusion and the runtime/attachment split.
 
 See [ROADMAP.md](ROADMAP.md) for USB hub wiring and validation checklist.
+
+## Troubleshooting
+
+If **ViDAR: Discover** shows `Worker failures=…`, the background observation tick threw. Snapshots may be stale; the worker stays alive and does not restart cameras — read the last error on that telemetry line.
