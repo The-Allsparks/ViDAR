@@ -2,6 +2,8 @@
 
 Phased plan for multi-camera deployment, robot-space situational awareness, optional pathing integration, and field validation.
 
+Orchestrator snapshot (2026-08-17): [initial deep audit](audits/initial-deep-audit.md) · [priority ledger](audits/priority-ledger.md). GitHub milestones and issues are authoritative for work order.
+
 ## Architecture (current)
 
 ```mermaid
