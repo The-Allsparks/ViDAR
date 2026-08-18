@@ -208,6 +208,7 @@ def fuse_range_weighted(
     *estimates: RangeEstimate | None,
     max_range_mismatch_ratio: float = MAX_RANGE_MISMATCH_RATIO,
 ) -> RangeResult:
+    """Ground-plane range is authoritative when valid; heuristics cross-check or fall back."""
     valid: list[RangeEstimate] = []
     first_any: RangeEstimate | None = None
     second_any: RangeEstimate | None = None
@@ -222,7 +223,7 @@ def fuse_range_weighted(
         elif any_count == 1:
             second_any = est
             any_count = 2
-        if est.is_valid and len(valid) < 3:
+        if est.is_valid and len(valid) < 4:
             valid.append(est)
 
     if not valid:
@@ -232,6 +233,56 @@ def fuse_range_weighted(
             return RangeResult(float("nan"), float("nan"), 0.0, first_any, None, 1)
         return RangeResult(float("nan"), float("nan"), 0.0, first_any, second_any, 2)
 
+    ground = next((e for e in valid if e.source == RangeSource.GROUND_PLANE), None)
+    heuristics = [e for e in valid if e.source != RangeSource.GROUND_PLANE]
+    if ground is not None:
+        return _fuse_geometry_primary(ground, heuristics, max_range_mismatch_ratio)
+    return _fuse_heuristics_weighted(valid, max_range_mismatch_ratio)
+
+
+def _fuse_geometry_primary(
+    ground: RangeEstimate,
+    heuristics: list[RangeEstimate],
+    max_range_mismatch_ratio: float,
+) -> RangeResult:
+    max_diff_vs_ground = 0.0
+    agree_count = 0
+    disagree_count = 0
+    best_heuristic: RangeEstimate | None = None
+    for h in heuristics:
+        denom = max(ground.distance, h.distance)
+        rel = abs(ground.distance - h.distance) / denom if denom > 0 else 0.0
+        max_diff_vs_ground = max(max_diff_vs_ground, rel)
+        if rel <= max_range_mismatch_ratio:
+            agree_count += 1
+        else:
+            disagree_count += 1
+        if best_heuristic is None or h.weight > best_heuristic.weight:
+            best_heuristic = h
+
+    uncertainty = ground.uncertainty
+    if not heuristics:
+        confidence = min(0.75, max(0.35, 0.55 * min(1.0, ground.weight)))
+    elif disagree_count > 0 and max_diff_vs_ground > max_range_mismatch_ratio:
+        confidence = max(0.15, 0.7 * (1.0 - max_diff_vs_ground))
+        uncertainty = ground.uncertainty * (1.0 + max_diff_vs_ground)
+    else:
+        confidence = min(1.0, 0.65 + 0.12 * agree_count)
+
+    return RangeResult(
+        ground.distance,
+        uncertainty,
+        confidence,
+        ground,
+        best_heuristic,
+        1 + len(heuristics),
+    )
+
+
+def _fuse_heuristics_weighted(
+    valid: list[RangeEstimate],
+    max_range_mismatch_ratio: float,
+) -> RangeResult:
     weight_sum = sum(e.weight for e in valid)
     weighted_dist = sum(e.weight * e.distance for e in valid)
     variance_sum = sum(e.weight * e.uncertainty * e.uncertainty for e in valid)

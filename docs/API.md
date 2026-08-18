@@ -84,9 +84,9 @@ rejected(source, reason): RangeEstimate
 distance: float
 uncertainty: float
 confidence: float       // 0–1
-source0: RangeEstimate | null
-source1: RangeEstimate | null
-sourceCount: int        // 0–2 valid slots used
+source0: RangeEstimate | null   // telemetry slot (typically GROUND_PLANE when valid)
+source1: RangeEstimate | null   // telemetry slot (best heuristic, if any)
+sourceCount: int        // 0–3 valid contributing estimates (clamped; slots still only store two)
 
 isValid(): bool         // distance > 0 && confidence > 0
 invalid(): RangeResult
@@ -94,12 +94,15 @@ sourceDistance(source: RangeSource): float
 sourceWeight(source: RangeSource): float
 ```
 
-**Fusion** (up to three estimates for elements: SIZE + FLOOR LUT + GROUND_PLANE, no list allocation):
+**Fusion** (elements: SIZE + FLOOR LUT + GROUND_PLANE; plates: WIDTH + FLOOR + GROUND_PLANE):
 
 ```
 fuseRangeWeighted(maxRangeMismatchRatio, ...estimates): RangeResult
-fusedDistance = Σ(weight × distance) / Σ(weight)
 ```
+
+- When `GROUND_PLANE` is valid, **fused distance = ground-plane distance** (projective geometry is authoritative).
+- Heuristics that agree raise confidence; heuristics that disagree lower confidence — they do **not** pull the range toward a midpoint.
+- Without a valid ground-plane estimate, inverse-variance weighting among heuristics (legacy path).
 
 Default `maxRangeMismatchRatio = 0.28`.
 

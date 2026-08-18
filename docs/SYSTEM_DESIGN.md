@@ -124,9 +124,7 @@ Floor LUT used only as secondary consistency check when geometry supports it.
 
 ## Range fusion — **Implemented**, **Tested in simulation**
 
-`VidarRangeResult` with uncertainty-weighted fusion (up to **three** estimates: elements = SIZE + FLOOR + GROUND_PLANE; plates = width + floor + ground @ z=0):
-
-`fusedDistance = Σ(weight × distance) / Σ(weight)`
+`VidarRangeResult` with geometry-authoritative fusion (elements = SIZE + FLOOR + GROUND_PLANE; plates = width + floor + ground @ z=0). Valid ground-plane range wins the distance; heuristics cross-check confidence or fill in when geometry is rejected.
 
 Component estimates exposed as `source0`, `source1`, and `sourceCount` (up to 3) for telemetry. **ViDAR: Discover** logs `size` / `floor` / `ground` on the element detail line.
 
