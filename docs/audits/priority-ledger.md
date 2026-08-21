@@ -2,9 +2,8 @@
 
 Living ledger for orchestrator selection. GitHub issues are authoritative; this file is the in-repo snapshot.
 
-**Updated:** 2026-08-18  
+**Updated:** 2026-08-20  
 **Identity:** `TA-C-GHill`  
-**Automatic merge:** authorized this cycle by “proceed” after #18 gates passed  
 **Max active implementation PRs:** 1
 
 ## Priority model
@@ -13,57 +12,54 @@ Score ready issues by: safety, correctness, dependency-unblocking, architectural
 
 Default order: safety blockers → correctness blockers → CI/build → multi-issue blockers → architectural seams → tests for upcoming work → small user-facing slices → measured performance → docs → optional advanced → cosmetic.
 
+**FTC readiness gate:** [#33](https://github.com/The-Allsparks/ViDAR/issues/33) is the first implementation/readiness priority (org-wide with [FORGE#4](https://github.com/The-Allsparks/FORGE/issues/4)). Do not claim FTC readiness from desktop tests alone. ViDAR remains passive (no drivetrain command).
+
 ## Current cycle
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#21](https://github.com/The-Allsparks/ViDAR/issues/21) |
-| Why highest priority | Last-blob re-association on 1 ms ticks never fires TTL; detach freezes tracks |
-| Why ready | #20 merged; no hardware required; acceptance is JVM-testable |
-| Dependencies | None |
-| Expected deliverable | Associate/coast/prune on capture time; detach ages tracks; java-pure world tests |
-| Expected validation | `cd java-pure && ./gradlew.bat test --no-daemon` |
-| Hardware required | No |
-| Branch | `fix/frame-gated-world-association` |
-| Pull request | not opened yet |
-| CI status | — |
-| Merge status | — |
-| Last delivered | [#20](https://github.com/The-Allsparks/ViDAR/issues/20) via [#31](https://github.com/The-Allsparks/ViDAR/pull/31) merge `2c2b7d7` |
-
-#20 is merged. One implementation issue at a time: #21 next.
+| Selected issue | [#34](https://github.com/The-Allsparks/ViDAR/issues/34) then [#29](https://github.com/The-Allsparks/ViDAR/issues/29) as first #33 child |
+| Why highest priority | #33 is the P0 FTC packaging/lifecycle epic; ledger must list it first; SDK pin is the smallest non-hardware child |
+| Why ready | Docs-only (#34); CI pin (#29) needs no Control Hub |
+| Dependencies | None for #34; #29 is a child of #33 |
+| Expected deliverable | Ledger/ROADMAP list #33 first; then pinned FTC SDK in `java-compile` |
+| Hardware required | No for this cycle |
+| Last delivered | [#21](https://github.com/The-Allsparks/ViDAR/issues/21) via [#32](https://github.com/The-Allsparks/ViDAR/pull/32) merge `e6006b0` |
 
 ## Ledger
 
-| Issue | Priority | Readiness | Dependencies | Status | Subagent | Branch | PR | CI | Merge | Blocker | Next action |
-|-------|----------|-----------|--------------|--------|----------|--------|----|----|-------|---------|-------------|
-| #19 Roadmap epic | P0 process | Active | — | Open | orchestrator | `docs/initial-deep-audit` | docs PR this cycle | — | — | — | Keep ledger in sync |
-| #13 Geometry-authoritative ranging | P0 | Done | #17 done | **Merged** | review | `feature/geometry-authoritative-ranging` | #18 | pass | **merged** `65af3c2` | — | Closed |
-| #20 Worker failure visibility (S3) | P1 | Done | #18 done | **Merged** | review | `fix/observation-worker-failure-visibility` | #31 | pass | **merged** `2c2b7d7` | — | Closed |
-| #21 Frame-generation association (A2/C4) | P1 | Ready | #20 done | In progress | implement | `fix/frame-gated-world-association` | — | — | — | — | Implement / push |
-| #22 Sim range-fusion parity (C2) | P1 | Ready | #13/#18 done | Open | — | — | — | — | — | Wait for #20 PR | After #20/#21 |
-| #23 Runtime/world java-pure tests (T1) | P2 | Blocked | #21 preferred first | Filed | — | — | — | — | — | #21 | After #21 or same slice |
-| #24 java-pure required check (T2) | P2 | Ready (settings) | None | Filed | — | — | — | — | — | Settings | After current implementation PR |
-| #25 Actions permissions + pins (Dep1) | P2 | Ready | #18 done | Open | — | — | — | — | — | Wait for #20 PR | After P1 |
-| #16 Calibration visualization | P3 | Ready | #17 done | Open | — | — | — | — | — | After P1 | After P1 slices |
-| #14 Intrinsics quality metadata | P3 | Ready | None hard | Open | — | — | — | — | — | After P1 | After #16 or with docs |
-| #26 Hardware validation log | P3 | Blocked | Hardware | Filed | — | — | — | — | — | No Control Hub | Do not invent results |
-| #27 Control Hub / desktop benchmarks | P3 | Partial | Hardware for hub | Filed | — | — | — | — | — | Hardware | Desktop after P1 |
-| #15 Ceres extrinsic optimizer | P5 | Not ready | #13 done; needs #14 | Open / later | — | — | — | — | — | Readiness gate | Keep deferred |
-| #28 Repo hygiene templates | P4 | Ready | #18 done | Open | — | — | — | — | — | After P1 | After P1 |
-| #29 Pin FTC SDK in java-compile | P4 | Ready | #18 done | Open | — | — | — | — | — | After P1 | After P1 |
-| API `sourceCount` 0–3 | P0 docs | Done | #18 | **Merged** | review | same as #13 | #18 | pass | merged | — | Closed with #13 |
+| Issue | Priority | Readiness | Dependencies | Status | Branch / PR | Blocker | Next action |
+|-------|----------|-----------|--------------|--------|-------------|---------|-------------|
+| **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 (combined) | Open | — | Hardware for USB rows | Split children; start with #29 |
+| #34 Record #33 as first priority | P0 docs | Ready | #33 | This PR | `docs/ftc-integration-priority-ledger` | — | Merge |
+| #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
+| #29 Pin FTC SDK in java-compile | P0 child of #33 | Ready | #33 | Open | — | — | Implement after #34 |
+| #13 Geometry-authoritative ranging | Done | Done | #17 | **Merged** #18 | — | — | Closed |
+| #20 Worker failure visibility | Done | Done | #18 | **Merged** #31 | — | — | Closed |
+| #21 Frame-gated world association | Done | Done | #20 | **Merged** #32 `e6006b0` | — | — | Closed |
+| #22 Sim range-fusion parity | P2 | Ready | #13 done | Open | — | Behind #33 gate for readiness claims | After first #33 children |
+| #23 java-pure world/runtime tests | P2 | Partial | #21 done | Open | — | — | Close or extend after review |
+| #24 java-pure required check | P2 | Ready (settings) | None | Open | — | Settings | After current PR |
+| #25 Actions permissions + pins | P2 | Ready | None | Open | — | — | After #29 or with it |
+| #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |
+| #27 Control Hub / desktop benches | P1 under #33 | Partial | Hardware for hub | Open | — | Hardware | Desktop OK later |
+| #16 Calibration visualization | P3 | Ready | #17 done | Open | — | Behind #33 | After packaging gate |
+| #14 Intrinsics quality metadata | P3 | Ready | None hard | Open | — | Behind #33 | After #16 |
+| #28 Repo hygiene templates | P4 | Ready | None | Open | — | — | After P0 children |
+| #15 Ceres extrinsic optimizer | P5 | Not ready | #14 | Open / later | — | Readiness gate | Keep deferred |
 
 ## Roadmap phases (adapted)
 
 ```
-Foundation                 — packages, runtime/attachment split, JSON config (done)
-Safety and correctness     — #13, worker failures, frame-gated tracks (current)
-Architecture stabilization — association clock, java-pure coverage of runtime
-Passive observability      — sim parity, calibration visualization (#16)
-Testing and simulation     — required java-pure, lifecycle tests, benches
-Basic integration          — Pedro bridge (done); field validation
-Advanced integration       — TRACE/HELM contracts (not in this repo)
-Active behavior            — out of scope for ViDAR
-Performance optimization   — only with measurements (P1)
-Release readiness          — versioning, SECURITY, templates, first release
+P0 FTC packaging & lifecycle (#33)  — versioned install, SDK pin, stop()/VisionPortal, Hub validation
+Foundation                          — packages, runtime/attachment, JSON (done)
+Safety and correctness              — #13, #20, #21 (done on main)
+Architecture stabilization          — association clock done; more lifecycle tests open
+Passive observability               — sim parity (#22), calibration viz (#16)
+Testing and simulation              — required java-pure, benches
+Basic integration                   — Pedro bridge (done); field validation (#26)
+Advanced integration                — BEACON/HELM/ECHO/TRACE contracts under #33
+Active behavior                     — out of scope for ViDAR
+Performance optimization            — only with measurements (#27)
+Release readiness                   — SECURITY, templates, first release
 ```

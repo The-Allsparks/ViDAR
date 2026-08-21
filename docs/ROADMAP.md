@@ -2,7 +2,25 @@
 
 Phased plan for multi-camera deployment, robot-space situational awareness, optional pathing integration, and field validation.
 
-Orchestrator snapshot (2026-08-17): [initial deep audit](audits/initial-deep-audit.md) · [priority ledger](audits/priority-ledger.md). GitHub milestones and issues are authoritative for work order.
+Orchestrator snapshot: [initial deep audit](audits/initial-deep-audit.md) · [priority ledger](audits/priority-ledger.md). GitHub milestones and issues are authoritative for work order.
+
+## P0 — FTC packaging and lifecycle ([#33](https://github.com/The-Allsparks/ViDAR/issues/33))
+
+**First readiness priority** for claiming FTC integration (org gate: [FORGE#4](https://github.com/The-Allsparks/FORGE/issues/4)).
+
+ViDAR already ships TeamCode sources, `java-pure` tests, and FTC-oriented CI. That work stays. What is still missing for readiness:
+
+| Gap | Tracking |
+|-----|----------|
+| Versioned install (source-copy may remain supported) | #33 |
+| Pinned FTC SDK in `java-compile` CI | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) (child of #33) |
+| Documented VisionPortal ownership + `stop()` release across OpMode transitions | #33 |
+| Control Hub 1–4 camera / USB validation log | [#26](https://github.com/The-Allsparks/ViDAR/issues/26), [#27](https://github.com/The-Allsparks/ViDAR/issues/27) |
+| Narrow adapter contracts for BEACON / HELM / ECHO / TRACE | #33 |
+
+ViDAR remains **passive** — it must not command the drivetrain. Do not treat unpinned SDK clones or desktop-only tests as Hub validation.
+
+Phases below (multi-cam, plates, world model, Pedro bridge, USB wiring, field validation) remain the product roadmap; **#33 gates “FTC-ready” claims**.
 
 ## Architecture (current)
 
