@@ -35,7 +35,7 @@ Or run everything:
 python scripts/run_tests.py
 ```
 
-`java-pure` runs in GitHub Actions. Make it a **required** check on `main` (issue #24) so a red JVM suite cannot merge. Today branch protection requires `test (ubuntu-latest)`, `test (windows-latest)`, and `java-compile` against FTC SDK `v11.2.1`.
+`java-pure` is a **required** GitHub Actions check on `main`, along with Python `test` (Ubuntu + Windows) and `java-compile` against FTC SDK `v11.2.1`.
 
 ## Browser simulator
 

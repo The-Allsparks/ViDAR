@@ -34,7 +34,7 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 | Open | — | Hardware for USB rows | Continue children |
 | #37 Quality/CI epic | P1 | Active | This audit | Open | `chore/quality-performance-ci-baseline` | — | Merge CI PR; then children |
 | #25 Actions permissions + pins | P2 | In this PR | None | Open | same branch | — | Merge |
-| #24 java-pure required check | P2 | Ready (settings) | Admin | Open | settings | Protection API not applied here | Add `java-pure` to required checks |
+| #24 java-pure required check | P2 | **Done** | Admin | **Closed** | settings | — | `java-pure` required on `main` |
 | #38 Package cycles | P1 | Ready | #37 | Open | — | — | After CI PR |
 | #44 Metrics percentiles | P1 | Ready | #37 | Open | — | — | Unblocks honest #27/#40 |
 | #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #44 |
