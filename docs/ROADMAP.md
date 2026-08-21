@@ -13,7 +13,7 @@ ViDAR already ships TeamCode sources, `java-pure` tests, and FTC-oriented CI. Th
 | Gap | Tracking |
 |-----|----------|
 | Versioned install (source-copy may remain supported) | #33 |
-| Pinned FTC SDK in `java-compile` CI | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) (child of #33) |
+| Pinned FTC SDK in `java-compile` CI | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) (child of #33) — pin target `v11.2.1` |
 | Documented VisionPortal ownership + `stop()` release across OpMode transitions | #33 |
 | Control Hub 1–4 camera / USB validation log | [#26](https://github.com/The-Allsparks/ViDAR/issues/26), [#27](https://github.com/The-Allsparks/ViDAR/issues/27) |
 | Narrow adapter contracts for BEACON / HELM / ECHO / TRACE | #33 |
