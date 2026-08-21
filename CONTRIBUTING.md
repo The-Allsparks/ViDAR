@@ -52,6 +52,17 @@ teamcode/org/firstinspires/ftc/teamcode/vidar/
 
 See [README.md](README.md) for OpMode names and configuration.
 
+### Supported FTC SDK
+
+CI `java-compile` clones [FtcRobotController](https://github.com/FIRST-Tech-Challenge/FtcRobotController) at a **pinned tag**, not `main` tip.
+
+| Field | Value |
+|-------|--------|
+| **Supported tag** | `v11.2.1` |
+| **Workflow env** | `FTC_SDK_REF` in `.github/workflows/test.yml` |
+
+Bump the pin deliberately when validating a newer SDK; do not treat an unpinned clone as compatibility proof. Desktop `java-pure` tests do **not** claim Control Hub readiness.
+
 ## Do not commit
 
 - `.env` or credentials

@@ -25,8 +25,12 @@ jobs:
           distribution: temurin
           java-version: "17"
       - name: Compile ViDAR Java against FTC SDK
+        env:
+          # Keep in sync with README / CONTRIBUTING "Supported FTC SDK".
+          FTC_SDK_REF: v11.2.1
         run: |
-          git clone --depth 1 https://github.com/FIRST-Tech-Challenge/FtcRobotController.git /tmp/ftc
+          git clone --depth 1 --branch "$FTC_SDK_REF" \
+            https://github.com/FIRST-Tech-Challenge/FtcRobotController.git /tmp/ftc
           mkdir -p /tmp/ftc/TeamCode/src/main/java/org/firstinspires/ftc/teamcode
           cp -r teamcode/org/firstinspires/ftc/teamcode/vidar \
             /tmp/ftc/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
@@ -37,6 +41,7 @@ jobs:
           cd /tmp/ftc
           chmod +x gradlew
           ./gradlew :TeamCode:compileDebugJavaWithJavac --no-daemon
+          echo "Compiled against FTC SDK $FTC_SDK_REF"
 
   java-pure:
     runs-on: ubuntu-latest
