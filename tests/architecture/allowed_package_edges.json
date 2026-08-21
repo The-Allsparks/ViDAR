@@ -1,9 +1,9 @@
 {
-  "_comment": "Frozen 2026-08-20 package import graph. New edges fail CI. Removing an edge is allowed. Update this file in the same PR as an intentional new dependency, and explain why in the PR.",
+  "_comment": "Frozen 2026-08-20 package import graph; shrunk 2026-08-21 (removed frame→detect). New edges fail CI. Removing an edge is allowed. Update this file in the same PR as an intentional new dependency, and explain why in the PR.",
   "api": ["runtime"],
   "config": ["root", "runtime"],
   "detect": ["config", "frame", "fusion", "model", "root", "runtime", "schedule", "world"],
-  "frame": ["detect", "fusion", "geometry", "model", "root", "runtime", "schedule", "tag", "world"],
+  "frame": ["fusion", "geometry", "model", "root", "runtime", "schedule", "tag", "world"],
   "fusion": ["config", "frame", "geometry", "model", "root", "runtime", "schedule", "tag"],
   "geometry": ["config", "frame", "fusion", "model", "root", "runtime"],
   "integration": ["fusion"],

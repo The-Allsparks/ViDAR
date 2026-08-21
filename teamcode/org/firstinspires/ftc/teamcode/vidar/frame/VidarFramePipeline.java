@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.vidar.frame;
 
-import org.firstinspires.ftc.teamcode.vidar.detect.VidarContourProcessor;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarCameraProfile;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRoiRect;
 import org.opencv.core.Mat;
@@ -90,7 +89,7 @@ public final class VidarFramePipeline {
         return roiScaled(frame, roi, scale);
     }
 
-    /** Shared element + plate ROI for {@link VidarContourProcessor}. */
+    /** Shared element + plate ROI for the unified contour detection pass. */
     public static ScaledRoi detectionScaled(Mat frame, VidarCameraProfile profile, double scale) {
         VidarRoiRect roi = VidarFrameRegions.detectionRoi(profile, frame.cols(), frame.rows());
         return roiScaled(frame, roi, scale);
