@@ -10,6 +10,14 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+tasks.withType(JavaCompile).configureEach {
+    // Surface unchecked/deprecation issues without -Werror: generated FTC stubs
+    // and Android/OpenCV types make a hard fail impractical until the exclude
+    // list shrinks. New warnings should still be treated as defects in review.
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+    options.deprecation = true
+}
+
 repositories {
     mavenCentral()
 }
@@ -27,23 +35,23 @@ sourceSets {
         java {
             srcDir 'src/stub/java'
             srcDir teamcodeVidar
+            // OpenCV VisionProcessor + Mat pipelines — need EasyOpenCV, not JVM stubs.
             exclude 'detect/**'
             exclude 'schedule/**'
             exclude '**/*OpMode.java'
-            exclude 'geometry/VidarObservationSpatial.java'
-            exclude 'geometry/VidarPoseLookup.java'
-            exclude 'geometry/VidarCalibrationDataset.java'
             exclude 'VidarTeleOp.java'
             exclude 'VidarDiscoverOpMode.java'
             exclude 'VidarAutoSeekOpMode.java'
             exclude 'VidarRoiCalibrationOpMode.java'
-            exclude 'fusion/VidarFusionEngine.java'
-            exclude 'VidarSpatial.java'
             exclude 'VidarSpatialOpModeBase.java'
-            exclude 'VidarObservationMapper.java'
+            // Spatial facade / fusion engine pull HardwareMap, VisionPortal, and excluded frame types.
+            exclude 'VidarSpatial.java'
+            exclude 'fusion/VidarFusionEngine.java'
+            exclude 'geometry/VidarObservationSpatial.java'
+            exclude 'geometry/VidarPoseLookup.java'
+            exclude 'geometry/VidarCalibrationDataset.java'
             exclude 'VidarOffensiveLane.java'
-            exclude 'VidarScoutLandmarkFix.java'
-            exclude 'VidarScoutLandmarkObservation.java'
+            // Snapshot/mailbox types need OpenCV Mat or excluded runtime cameras.
             exclude 'frame/VidarFrameMailbox.java'
             exclude 'frame/VidarFramePipeline.java'
             exclude 'frame/VidarObservationFrame.java'
@@ -52,6 +60,7 @@ sourceSets {
             exclude 'frame/VidarSpatialSnapshot.java'
             exclude 'fusion/VidarPoseBackdate.java'
             exclude 'fusion/VidarOdomHistory.java'
+            // FTC camera lifecycle — replaced by java-pure/src/stub/.../VidarVision.java for fusion tests.
             exclude 'runtime/VidarVision.java'
             exclude 'runtime/CameraPipelineConfig.java'
             exclude 'runtime/VidarRuntime.java'
@@ -65,6 +74,7 @@ sourceSets {
             exclude 'model/VidarOffensiveLaneAnalysis.java'
             exclude 'api/VidarDiagnostics.java'
             exclude 'model/VidarVisionMeasurement.java'
+            // AprilTag SDK processors.
             exclude 'tag/VidarAdaptiveTagProcessor.java'
             exclude 'tag/VidarTagDecodeWorker.java'
             exclude 'tag/VidarTagScoutRunner.java'
@@ -93,4 +103,7 @@ processResources {
 
 test {
     useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
 }

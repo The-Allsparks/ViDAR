@@ -80,6 +80,7 @@ Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DES
 | [Coordinate frames](docs/COORDINATE_FRAMES.md) | Frames, transforms, intrinsics, validation |
 | [Teaching guide](docs/TEACHING.md) | Java lessons for Control Hub development |
 | [Roadmap](docs/ROADMAP.md) | Multi-cam USB wiring, validation, optional pathing integration |
+| [Performance](docs/PERFORMANCE.md) | Hub vs desktop measurement; CI vs hardware |
 | [Pedro integration](docs/PEDRO_INTEGRATION.md) | Pose bridge + sparse tag correction with Pedro Pathing |
 | [Browser simulator](#browser-simulator) | Tune ROIs and colors before deploying to the hub |
 | [Robot templates](config/robots/README.md) | SVPRO vs C920 example `robot.json` files |
@@ -250,7 +251,7 @@ flowchart LR
 
 **Auto → TeleOp:** `spatial.close()` detaches cameras; the next OpMode's `create()` reuses the runtime and attaches fresh VisionPortals.
 
-**Local JVM tests:** `cd java-pure && ./gradlew test` (26 tests — fusion, temporal filter, tag budget, config, range fusion).
+**Local JVM tests:** `cd java-pure && ./gradlew test` (64 `@Test` methods — fusion, world association, tag budget, config, range fusion, generous throughput ceilings). Architecture guards run with `python -m pytest tests/`.
 
 Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
 
@@ -267,6 +268,8 @@ Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
 | [docs/CALIBRATION_CHECKLIST.md](docs/CALIBRATION_CHECKLIST.md) | Printable calibration checklist |
 | [docs/COORDINATE_FRAMES.md](docs/COORDINATE_FRAMES.md) | Frames, transforms, intrinsics |
 | [docs/TEACHING.md](docs/TEACHING.md) | Java lessons for students |
+| [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Latency budgets, measurement, CI limits |
+| [AGENTS.md](AGENTS.md) | Architecture and quality rules for humans and agents |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Phased plan and open work |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup and guidelines |
 
