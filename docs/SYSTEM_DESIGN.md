@@ -161,7 +161,7 @@ Architecturally supports 1–4 cameras via `VidarVisionAttachment`. Four simulta
 
 ## JVM unit tests — **Implemented**
 
-Pure-logic tests run locally via `cd java-pure && ./gradlew test` (TagDecodeBudget, MultiCameraFusion, VidarTemporalFilter, config, range fusion). CI runs these on Ubuntu.
+Pure-logic tests run locally via `cd java-pure && ./gradlew test`. CI runs these on Ubuntu and `java-pure` is a required check on `main`. Architecture / hot-path source guards run in the Python `test` job (`tests/architecture/`). They freeze package edges and forbid motors, `Thread.sleep` in OpModes, and `VisionPortal.Builder` outside attach.
 
 ## Simulator parity — **Tested in simulation**
 

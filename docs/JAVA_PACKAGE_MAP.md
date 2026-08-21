@@ -44,4 +44,14 @@ OpMode → VidarSpatial → VidarRuntime (singleton)
 
 **Lifecycle:** `VidarSpatial.create()` → `attachVision()`; `spatial.close()` → `detachVision()`; `VidarRuntime.shutdown()` on RC exit.
 
+## Dependency direction
+
+Intended flow (high → low): OpMode / `VidarSpatial` → runtime → fusion/world → geometry/model → config types.
+
+`vidar.integration` is an adapter and may depend only on `fusion`.
+
+`vidar.geometry` and `vidar.world` must not depend on `detect`, `tag`, or `schedule`.
+
+The **current** import graph is frozen in `tests/architecture/allowed_package_edges.json`. CI fails if a new edge appears. Known cycles (frame↔detect, schedule↔runtime/detect, geometry↔fusion/runtime) are documented debt — shrink the freeze, do not grow it.
+
 See [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for pipeline detail.

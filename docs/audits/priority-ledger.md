@@ -2,7 +2,7 @@
 
 Living ledger for orchestrator selection. GitHub issues are authoritative; this file is the in-repo snapshot.
 
-**Updated:** 2026-08-20 (post-#34)  
+**Updated:** 2026-08-20 (quality/performance/CI audit)  
 **Identity:** `TA-C-GHill`  
 **Max active implementation PRs:** 1
 
@@ -18,32 +18,38 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) (first software child of [#33](https://github.com/The-Allsparks/ViDAR/issues/33)) |
-| Why highest priority | Smallest non-hardware #33 acceptance item: stop compiling against unpinned SDK tip |
-| Why ready | Tag `v11.2.1` exists; no Control Hub required |
-| Dependencies | #34 ledger sync merged (`95cedfd`) |
-| Expected deliverable | `java-compile` clones `--branch v11.2.1`; docs name the pin |
+| Selected issue | [#25](https://github.com/The-Allsparks/ViDAR/issues/25) (Actions pin + permissions) via quality CI branch |
+| Why highest priority | Lands CI hygiene already specified; architecture tests ride the same pytest job |
+| Why ready | No Control Hub required |
+| Dependencies | Quality audit children #37–#47 |
+| Expected deliverable | SHA-pinned Actions, `permissions: contents: read`, architecture guards |
 | Hardware required | No |
-| Branch | `fix/pin-ftc-sdk-java-compile` |
-| Last delivered | [#34](https://github.com/The-Allsparks/ViDAR/issues/34) via [#35](https://github.com/The-Allsparks/ViDAR/pull/35) |
+| Branch | `chore/quality-performance-ci-baseline` |
+| Last delivered | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) via [#36](https://github.com/The-Allsparks/ViDAR/pull/36) |
 
 ## Ledger
 
 | Issue | Priority | Readiness | Dependencies | Status | Branch / PR | Blocker | Next action |
 |-------|----------|-----------|--------------|--------|-------------|---------|-------------|
-| **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 (combined) | Open | — | Hardware for USB rows | Split children; start with #29 |
-| #34 Record #33 as first priority | P0 docs | Done | #33 | **Merged** #35 `95cedfd` | — | — | Closed |
+| **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 | Open | — | Hardware for USB rows | Continue children |
+| #37 Quality/CI epic | P1 | Active | This audit | Open | `chore/quality-performance-ci-baseline` | — | Merge CI PR; then children |
+| #25 Actions permissions + pins | P2 | In this PR | None | Open | same branch | — | Merge |
+| #24 java-pure required check | P2 | **Done** | Admin | **Closed** | settings | — | `java-pure` required on `main` |
+| #38 Package cycles | P1 | Ready | #37 | Open | — | — | After CI PR |
+| #44 Metrics percentiles | P1 | Ready | #37 | Open | — | — | Unblocks honest #27/#40 |
+| #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #44 |
+| #43 java-pure FusionEngine/Spatial | P2 | Ready | #23 partial | Open | — | — | After #38 if types move |
+| #39 God methods | P2 | Ready | — | Open | — | — | After #43 seams preferred |
+| #41 TagGate static state | P2 | Ready | — | Open | — | — | Anytime |
+| #42 JSON single tuning surface | P2 | Ready | — | Open | — | — | Anytime |
+| #45 Dedup default JSON | P3 | Ready | #42 | Open | — | — | Good first issue |
+| #46 Hide `runtime()` | P3 | Ready | — | Open | — | — | With #33 docs |
+| #47 Spotless baseline | P3 | Ready | — | Open | — | Format blast radius | Dedicated PR |
 | #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
-| #29 Pin FTC SDK in java-compile | P0 child of #33 | In progress | #33 | This PR | `fix/pin-ftc-sdk-java-compile` | — | Merge when CI green |
-| #13 Geometry-authoritative ranging | Done | Done | #17 | **Merged** #18 | — | — | Closed |
-| #20 Worker failure visibility | Done | Done | #18 | **Merged** #31 | — | — | Closed |
-| #21 Frame-gated world association | Done | Done | #20 | **Merged** #32 `e6006b0` | — | — | Closed |
-| #22 Sim range-fusion parity | P2 | Ready | #13 done | Open | — | Behind #33 gate for readiness claims | After first #33 children |
-| #23 java-pure world/runtime tests | P2 | Partial | #21 done | Open | — | — | Close or extend after review |
-| #24 java-pure required check | P2 | Ready (settings) | None | Open | — | Settings | After current PR |
-| #25 Actions permissions + pins | P2 | Ready | None | Open | — | — | After #29 or with it |
+| #22 Sim range-fusion parity | P2 | Ready | #13 done | Open | — | Behind #33 for readiness claims | After first #33 children |
+| #23 java-pure world/runtime tests | P2 | **Mostly done** | #21 done | Open | — | Remaining = #43 | Close or retarget after review |
 | #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |
-| #27 Control Hub / desktop benches | P1 under #33 | Partial | Hardware for hub | Open | — | Hardware | Desktop OK later |
+| #27 Control Hub / desktop benches | P1 under #33 | Partial | Hardware for hub; #44 | Open | — | Hardware | Desktop OK; Hub blocked |
 | #16 Calibration visualization | P3 | Ready | #17 done | Open | — | Behind #33 | After packaging gate |
 | #14 Intrinsics quality metadata | P3 | Ready | None hard | Open | — | Behind #33 | After #16 |
 | #28 Repo hygiene templates | P4 | Ready | None | Open | — | — | After P0 children |
