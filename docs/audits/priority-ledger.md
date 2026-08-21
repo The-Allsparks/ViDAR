@@ -18,14 +18,14 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#25](https://github.com/The-Allsparks/ViDAR/issues/25) (Actions pin + permissions) via quality CI branch |
-| Why highest priority | Lands CI hygiene already specified; architecture tests ride the same pytest job |
-| Why ready | No Control Hub required |
-| Dependencies | Quality audit children #37–#47 |
-| Expected deliverable | SHA-pinned Actions, `permissions: contents: read`, architecture guards |
-| Hardware required | No |
-| Branch | `chore/quality-performance-ci-baseline` |
-| Last delivered | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) via [#36](https://github.com/The-Allsparks/ViDAR/pull/36) |
+| Selected issue | [#44](https://github.com/The-Allsparks/ViDAR/issues/44) (observation-tick percentiles) |
+| Why highest priority | Unblocks honest Hub measurement for #27 / #40 |
+| Why ready | No Control Hub required for the code; Hub fills validation-log later |
+| Dependencies | #37 epic; #48 CI baseline merged |
+| Expected deliverable | `VidarLatencyWindow` + Discover **Tick ms** + PERFORMANCE.md procedure |
+| Hardware required | No for code; Hub for filling log |
+| Branch | `feat/observation-tick-latency-metrics` |
+| Last delivered | [#25](https://github.com/The-Allsparks/ViDAR/issues/25) / [#24](https://github.com/The-Allsparks/ViDAR/issues/24) via [#48](https://github.com/The-Allsparks/ViDAR/pull/48) |
 
 ## Ledger
 
@@ -36,7 +36,7 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | #25 Actions permissions + pins | P2 | In this PR | None | Open | same branch | — | Merge |
 | #24 java-pure required check | P2 | **Done** | Admin | **Closed** | settings | — | `java-pure` required on `main` |
 | #38 Package cycles | P1 | Ready | #37 | Open | — | — | After CI PR |
-| #44 Metrics percentiles | P1 | Ready | #37 | Open | — | — | Unblocks honest #27/#40 |
+| #44 Metrics percentiles | P1 | **In progress** | #37 | Open | `feat/observation-tick-latency-metrics` | — | Land PR |
 | #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #44 |
 | #43 java-pure FusionEngine/Spatial | P2 | Ready | #23 partial | Open | — | — | After #38 if types move |
 | #39 God methods | P2 | Ready | — | Open | — | — | After #43 seams preferred |

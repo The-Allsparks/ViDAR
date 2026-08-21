@@ -27,6 +27,11 @@ public final class VidarDiagnostics {
     public final String observationWorkerLastError;
     public final int observationWorkerConsecutiveFailures;
     public final int observationWorkerTotalFailures;
+    /** Observation-worker tick latency percentiles over a recent window (milliseconds). */
+    public final double observationTickP50Ms;
+    public final double observationTickP95Ms;
+    public final double observationTickMaxMs;
+    public final int observationTickSamples;
 
     public VidarDiagnostics(
             ConfigSource configSource,
@@ -34,7 +39,7 @@ public final class VidarDiagnostics {
             int connectedCameras,
             List<String> warnings,
             VidarMetrics.CameraHealth[] cameraHealth) {
-        this(configSource, cameraCount, connectedCameras, warnings, cameraHealth, "", 0, 0);
+        this(configSource, cameraCount, connectedCameras, warnings, cameraHealth, "", 0, 0, 0, 0, 0, 0);
     }
 
     public VidarDiagnostics(
@@ -46,6 +51,34 @@ public final class VidarDiagnostics {
             String observationWorkerLastError,
             int observationWorkerConsecutiveFailures,
             int observationWorkerTotalFailures) {
+        this(
+                configSource,
+                cameraCount,
+                connectedCameras,
+                warnings,
+                cameraHealth,
+                observationWorkerLastError,
+                observationWorkerConsecutiveFailures,
+                observationWorkerTotalFailures,
+                0,
+                0,
+                0,
+                0);
+    }
+
+    public VidarDiagnostics(
+            ConfigSource configSource,
+            int cameraCount,
+            int connectedCameras,
+            List<String> warnings,
+            VidarMetrics.CameraHealth[] cameraHealth,
+            String observationWorkerLastError,
+            int observationWorkerConsecutiveFailures,
+            int observationWorkerTotalFailures,
+            double observationTickP50Ms,
+            double observationTickP95Ms,
+            double observationTickMaxMs,
+            int observationTickSamples) {
         this.configSource = configSource;
         this.cameraCount = cameraCount;
         this.connectedCameras = connectedCameras;
@@ -57,6 +90,10 @@ public final class VidarDiagnostics {
                 observationWorkerLastError == null ? "" : observationWorkerLastError;
         this.observationWorkerConsecutiveFailures = observationWorkerConsecutiveFailures;
         this.observationWorkerTotalFailures = observationWorkerTotalFailures;
+        this.observationTickP50Ms = observationTickP50Ms;
+        this.observationTickP95Ms = observationTickP95Ms;
+        this.observationTickMaxMs = observationTickMaxMs;
+        this.observationTickSamples = observationTickSamples;
     }
 
     public static VidarDiagnostics empty() {
@@ -76,6 +113,11 @@ public final class VidarDiagnostics {
         }
         if (observationWorkerTotalFailures > 0) {
             sb.append(" workerFailures=").append(observationWorkerTotalFailures);
+        }
+        if (observationTickSamples > 0) {
+            sb.append(" tickMs p50=").append(String.format("%.2f", observationTickP50Ms));
+            sb.append(" p95=").append(String.format("%.2f", observationTickP95Ms));
+            sb.append(" max=").append(String.format("%.2f", observationTickMaxMs));
         }
         return sb.toString();
     }
