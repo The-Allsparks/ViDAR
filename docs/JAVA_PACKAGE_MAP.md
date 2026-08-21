@@ -17,7 +17,7 @@
 
 | Package | Responsibility | Key classes |
 |---------|----------------|-------------|
-| `vidar.runtime` | Process runtime + camera attachment | `VidarRuntime`, `VidarVisionAttachment`, `VidarObservationWorker`, `RuntimeBootstrap`, `VidarVision`, `VidarRuntimeConfig` |
+| `vidar.runtime` | Process runtime + camera attachment | `VidarRuntime`, `VidarVisionAttachment`, `VidarObservationWorker`, `VidarLatencyWindow`, `RuntimeBootstrap`, `VidarVision`, `VidarRuntimeConfig` |
 | `vidar.api` | Student diagnostics | `VidarDiagnostics` |
 | `vidar.integration` | Optional pathing bridges (no hard deps) | `VidarPedroPose`, `VidarPedroPoseBridge`, `VidarPedroCorrectionTracker` |
 | `vidar.detect` | Contour / color-blob pipeline | `VidarContourProcessor`, `ElementDetector`, `PlateDetector` |

@@ -36,12 +36,17 @@ public final class VidarRuntime {
     private static final Object LOCK = new Object();
     private static volatile VidarRuntime instance;
 
+    /** ~1 s of samples at a 1 ms observation-worker period; oversized if the tick slows. */
+    private static final int OBSERVATION_TICK_WINDOW = 1024;
+
     private final VidarWorldModel world;
     private final FieldPoseContext fieldPoseContext;
     private final TagDecodeBudget tagDecodeBudget;
     private final VidarTagDecodeWorker tagDecodeWorker;
     private final VidarResourceBudget resourceBudget;
     private final VidarObservationWorker observationWorker;
+    private final VidarLatencyWindow observationTickLatency =
+            new VidarLatencyWindow(OBSERVATION_TICK_WINDOW);
     private final AtomicReference<VidarSpatialSnapshot> publishedSnapshot =
             new AtomicReference<>(VidarSpatialSnapshot.empty());
     private final AtomicReference<VidarObservationFrame> publishedFrame =
@@ -243,6 +248,11 @@ public final class VidarRuntime {
         return observationWorker;
     }
 
+    /** Recent observation-worker tick latencies (p50/p95/max). Safe to read from the OpMode loop. */
+    public VidarLatencyWindow observationTickLatency() {
+        return observationTickLatency;
+    }
+
     public VidarGlobalVisionWorker globalVisionWorker() {
         return attachment == null ? null : attachment.globalVisionWorker();
     }
@@ -270,23 +280,28 @@ public final class VidarRuntime {
     }
 
     private void observationTick() {
-        VidarFusionEngine engine;
-        synchronized (this) {
-            engine = fusionEngine;
-            if (engine != null) {
-                if (fieldPoseContext.odomSupplier() != null) {
-                    engine.recordOdom(fieldPoseContext.odomSupplier().get());
+        long startedNanos = System.nanoTime();
+        try {
+            VidarFusionEngine engine;
+            synchronized (this) {
+                engine = fusionEngine;
+                if (engine != null) {
+                    if (fieldPoseContext.odomSupplier() != null) {
+                        engine.recordOdom(fieldPoseContext.odomSupplier().get());
+                    }
+                    engine.update();
+                    world.update(engine, System.nanoTime());
+                } else {
+                    world.update(null, System.nanoTime());
                 }
-                engine.update();
-                world.update(engine, System.nanoTime());
-            } else {
-                world.update(null, System.nanoTime());
             }
-        }
-        if (engine != null) {
-            publishNow();
-        } else {
-            publishDetachedSnapshot();
+            if (engine != null) {
+                publishNow();
+            } else {
+                publishDetachedSnapshot();
+            }
+        } finally {
+            observationTickLatency.record(System.nanoTime() - startedNanos);
         }
     }
 

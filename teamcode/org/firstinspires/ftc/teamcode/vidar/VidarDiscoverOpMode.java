@@ -72,6 +72,14 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
                         + (spatial.diagnostics().observationWorkerLastError.isEmpty()
                                 ? "" : ": " + spatial.diagnostics().observationWorkerLastError));
             }
+            if (spatial.diagnostics().observationTickSamples > 0) {
+                telemetry.addData("Tick ms", String.format(
+                        "p50=%.2f p95=%.2f max=%.2f n=%d",
+                        spatial.diagnostics().observationTickP50Ms,
+                        spatial.diagnostics().observationTickP95Ms,
+                        spatial.diagnostics().observationTickMaxMs,
+                        spatial.diagnostics().observationTickSamples));
+            }
             telemetry.addData("FPS cam1", spatial.cameraCount() > 0
                     && spatial.runtime().camera(0) != null
                     ? String.format("%.1f", spatial.runtime().camera(0).portalFps()) : "—");

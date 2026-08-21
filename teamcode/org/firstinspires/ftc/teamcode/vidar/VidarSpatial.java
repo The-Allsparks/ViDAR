@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.vidar.frame.VidarSpatialSnapshot;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarFusionEngine;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarOffensiveLaneAnalysis;
 import org.firstinspires.ftc.teamcode.vidar.runtime.RuntimeBootstrap;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarLatencyWindow;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarObservationWorker;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarRuntime;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -324,8 +325,11 @@ public final class VidarSpatial {
                     + " consecutive=" + workerConsecutive
                     + (workerError.isEmpty() ? "" : ": " + workerError));
         }
+        VidarLatencyWindow tickLatency = runtime.observationTickLatency();
         diagnostics = new VidarDiagnostics(
                 runtime.configSource(), count, connected, warnings, health,
-                workerError, workerConsecutive, workerTotal);
+                workerError, workerConsecutive, workerTotal,
+                tickLatency.p50Ms(), tickLatency.p95Ms(), tickLatency.maxMs(),
+                tickLatency.sampleCount());
     }
 }

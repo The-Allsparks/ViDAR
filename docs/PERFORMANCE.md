@@ -20,8 +20,8 @@ Record results in [validation-log.md](validation-log.md). Empty cells mean **unm
 |--------|--------|-------|
 | Element FPS / camera | ≥ 15 | Discover telemetry / `scripts/bench_metrics.py` (desktop only) |
 | Tag decode | < 400 ms when it runs | Manual OpMode |
-| Worst-case OpMode loop | Team-defined; record p50/p95/max | OpMode + `VidarMetrics` |
-| Observation worker tick | Bound fusion+world; avoid 1 kHz snapshot churn if Hub CPU is tight | Needs Hub measurement |
+| Worst-case OpMode loop | Team-defined; record p50/p95/max | OpMode telemetry |
+| Observation worker tick | Bound fusion+world; avoid 1 kHz snapshot churn if Hub CPU is tight | Discover **Tick ms** (`diagnostics().observationTickP50Ms` / `P95` / `Max`) |
 
 ## How to measure
 
@@ -31,9 +31,21 @@ Desktop (not Hub):
 python scripts/bench_metrics.py
 ```
 
-On the Control Hub use **ViDAR: Discover** / `VidarMetrics` (portal FPS, dropped frames, decode drops). Do not enable FTC Dashboard streaming during a MATCH (manual R704).
+On the Control Hub:
 
-Until #44 lands p50/p95/max, record worst-case loop time from OpMode telemetry and note firmware, camera count, and resolution.
+1. Run **ViDAR: Discover** with the intended camera count.
+2. Read **Tick ms** — `p50`, `p95`, `max`, and sample count `n` over a ~1024-sample ring (`VidarLatencyWindow`).
+3. Also note portal FPS, dropped frames, and decode drops from `VidarMetrics`.
+4. Paste numbers into [validation-log.md](validation-log.md) with firmware, camera count, and resolution.
+
+Do not enable FTC Dashboard streaming during a MATCH (manual R704).
+
+The same tick percentiles are on `VidarSpatial.diagnostics()` after each `update()`:
+
+```java
+VidarDiagnostics d = spatial.diagnostics();
+// d.observationTickP50Ms / P95Ms / MaxMs / Samples
+```
 
 Hot-path code changes: [#40](https://github.com/The-Allsparks/ViDAR/issues/40). Measure first ([#27](https://github.com/The-Allsparks/ViDAR/issues/27)).
 
