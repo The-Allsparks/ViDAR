@@ -71,7 +71,7 @@ public class VidarAutoSeekOpMode extends VidarSpatialOpModeBase {
             telemetry.addData("Tracks", spatial.trackCount());
             if (spatial.isMotionTrackingActive() && spatial.trackCount() > 0) {
                 List<VidarSpatialTrack> elementTracks =
-                        spatial.runtime().world().getTracks(VidarWorldModel.Kind.ELEMENT);
+                        spatial.tracks(VidarWorldModel.Kind.ELEMENT);
                 if (!elementTracks.isEmpty()) {
                     telemetry.addData("Sample track",
                             VidarBlobUtil.formatWorldTrack(elementTracks.get(0)));

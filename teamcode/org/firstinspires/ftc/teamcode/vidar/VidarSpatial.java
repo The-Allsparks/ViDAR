@@ -283,6 +283,53 @@ public final class VidarSpatial {
         return diagnostics;
     }
 
+    /**
+     * Portal FPS for camera {@code index}, or {@code NaN} if that slot is unavailable.
+     * Prefer this over {@link #runtime()} for Discover-style telemetry.
+     */
+    public float portalFps(int index) {
+        org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision cam = runtime.camera(index);
+        return cam == null ? Float.NaN : cam.portalFps();
+    }
+
+    /** Camera scheduler state name for telemetry, or empty if unavailable. */
+    public String cameraDirectionState(int index) {
+        org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision cam = runtime.camera(index);
+        return cam == null ? "" : cam.directionState().name();
+    }
+
+    /** Element rejection summary for telemetry, or empty if unavailable. */
+    public String elementRejectionSummary(int index) {
+        org.firstinspires.ftc.teamcode.vidar.runtime.VidarVision cam = runtime.camera(index);
+        return cam == null ? "" : cam.elementRejectionStats().summary();
+    }
+
+    /**
+     * Calibration diagnostics map for telemetry, or empty if fusion is detached.
+     * Prefer this over {@link #runtime()}{@code .fusionEngine()}.
+     */
+    public java.util.Map<String, String> calibrationTelemetryMap() {
+        org.firstinspires.ftc.teamcode.vidar.geometry.VidarCalibrationDiagnostics cal =
+                runtime.calibrationDiagnostics();
+        return cal == null
+                ? java.util.Collections.emptyMap()
+                : cal.toTelemetryMap();
+    }
+
+    /** World-model tracks of the given kind (empty when detached / tracking off). */
+    public List<org.firstinspires.ftc.teamcode.vidar.world.VidarSpatialTrack> tracks(
+            org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel.Kind kind) {
+        return runtime.world().getTracks(kind);
+    }
+
+    /**
+     * Process singleton — <b>internal</b>. Prefer {@link #diagnostics()}, {@link #portalFps(int)},
+     * {@link #tracks}, and other facade accessors. Kept for 0.2.x compatibility; do not couple
+     * new OpModes to {@link VidarRuntime} lifecycle internals.
+     *
+     * @deprecated use facade accessors; will be package-private or removed in a future major
+     */
+    @Deprecated
     public VidarRuntime runtime() {
         return runtime;
     }

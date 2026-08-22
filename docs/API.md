@@ -279,7 +279,12 @@ updateCorrected(): VidarCorrectedFrame    // when odom supplier configured
 snapshot(): VidarSpatialSnapshot          // same pinned snapshot as elements()/allies()/foes()
 lastFrame(): VidarObservationFrame
 diagnostics(): VidarDiagnostics
-runtime(): VidarRuntime
+portalFps(index): float                   // NaN if camera missing
+cameraDirectionState(index): String
+elementRejectionSummary(index): String
+calibrationTelemetryMap(): Map            // empty when fusion detached
+tracks(kind): List<VidarSpatialTrack>
+runtime(): VidarRuntime                   // @Deprecated — prefer facade accessors above
 close(): void                             // detachVision — runtime persists for next OpMode
 ```
 

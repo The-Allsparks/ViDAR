@@ -2,7 +2,7 @@
 
 Living ledger for orchestrator selection. GitHub issues are authoritative; this file is the in-repo snapshot.
 
-**Updated:** 2026-08-22 (#27 desktop benches)  
+**Updated:** 2026-08-22 (#46 hide runtime() in progress)  
 **Identity:** `TA-C-GHill`  
 **Max active implementation PRs:** 1
 
@@ -18,12 +18,12 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#27](https://github.com/The-Allsparks/ViDAR/issues/27) desktop + Hub bench procedures |
-| Why highest priority | Unlocks honest #40 work; #22 closed |
-| Why ready | No Control Hub required for desktop half |
-| Expected deliverable | validation-log desktop row, benches artifact, Hub Tick-ms procedure |
-| Branch | `docs/desktop-and-hub-perception-benches` |
-| Last delivered | [#22](https://github.com/The-Allsparks/ViDAR/issues/22) via [#65](https://github.com/The-Allsparks/ViDAR/pull/65) |
+| Selected issue | [#46](https://github.com/The-Allsparks/ViDAR/issues/46) hide `VidarSpatial.runtime()` |
+| Why highest priority | #40 Hub-blocked; API hygiene helps #33 lifecycle |
+| Why ready | No hardware; Discover/AutoSeek are only call sites |
+| Expected deliverable | Facade accessors + `@Deprecated runtime()` + OpMode migration + CI guard |
+| Branch | `refactor/hide-vidarspatial-runtime` |
+| Last delivered | [#27](https://github.com/The-Allsparks/ViDAR/issues/27) via [#66](https://github.com/The-Allsparks/ViDAR/pull/66) |
 
 ## Ledger
 
@@ -37,14 +37,14 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | #37 Quality/CI epic | P1 | Active | This audit | Open | — | — | Children remain |
 | #25 Actions permissions + pins | P2 | **Done** | None | **Closed** #48 | — | — | SHA pins |
 | #44 Metrics percentiles | P1 | **Done** | #37 | **Closed** #59 | — | — | Discover Tick ms |
-| #27 Control Hub / desktop benches | P1 under #33 | **Active** | #44 | Open | `docs/desktop-and-hub-perception-benches` | Hub rows empty | Land desktop artifact |
-| #40 Tick lock / mailbox / snapshots | P1 | Blocked on Hub numbers | #44, #27 | Open | — | Measure Hub Tick ms | After Hub row |
+| #27 Control Hub / desktop benches | P1 under #33 | **Done** (desktop) | #44 | **Closed** #66 | — | Hub rows empty | Capture Tick ms on Hub |
+| #40 Tick lock / mailbox / snapshots | P1 | **Blocked** | #44, #27 | Open | — | Hub Tick ms | After Hub row |
+| #46 Hide `runtime()` | P3 | **Active** | — | Open | `refactor/hide-vidarspatial-runtime` | — | Land PR |
 | #41 TagGate static state | P2 | **Done** | — | **Closed** #63 | — | — | Runtime-owned gate |
 | #42 JSON single tuning surface | P2 | **Done** | — | **Closed** #64 | — | — | Season world/fusion keys |
 | #22 Sim range-fusion parity | P2 | **Done** | #13 | **Closed** #65 | — | — | GROUND_PLANE in sim |
 | #39 God methods | P2 | Ready | — | Open | — | — | After seams |
 | #45 Dedup default JSON | P3 | Ready | #42 | Open | — | — | Good first issue |
-| #46 Hide `runtime()` | P3 | Ready | — | Open | — | — | Anytime |
 | #47 Spotless baseline | P3 | Ready | — | Open | — | Format blast radius | Dedicated PR |
 | #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
 | #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |
