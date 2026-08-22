@@ -103,8 +103,9 @@ def main() -> int:
 
     categories = {d.category for d in sanity}
     print(f"  categories seen: {sorted(categories)}")
-    print()
-    print("Paste into docs/validation-log.md Phase 0 when run on your machine.")
+print()
+print("Paste into docs/validation-log.md Phase 0 when run on your machine.")
+print("Do not treat these FPS numbers as Control Hub proof (issue #27 / #40).")
 
     return 0 if fps >= TARGET_FPS and elements >= 1 else 1
 

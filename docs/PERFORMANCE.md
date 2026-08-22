@@ -31,12 +31,15 @@ Desktop (not Hub):
 python scripts/bench_metrics.py
 ```
 
-On the Control Hub:
+Paste stdout into [validation-log.md](validation-log.md) Phase 0, or keep a dated note under [benches/](benches/) (example: [benches/desktop-2026-08-22.md](benches/desktop-2026-08-22.md)).
+
+On the Control Hub (required before claiming #40 improvements):
 
 1. Run **ViDAR: Discover** with the intended camera count.
-2. Read **Tick ms** — `p50`, `p95`, `max`, and sample count `n` over a ~1024-sample ring (`VidarLatencyWindow`).
-3. Also note portal FPS, dropped frames, and decode drops from `VidarMetrics`.
-4. Paste numbers into [validation-log.md](validation-log.md) with firmware, camera count, and resolution.
+2. Wait until detections are steady (~30 s).
+3. Read **Tick ms** — `p50`, `p95`, `max`, and sample count `n` over a ~1024-sample ring (`VidarLatencyWindow`).
+4. Also note portal FPS, dropped frames, and decode drops from `VidarMetrics`.
+5. Paste numbers into [validation-log.md](validation-log.md) Phase 0 **Control Hub** table with firmware, camera count, and resolution.
 
 Do not enable FTC Dashboard streaming during a MATCH (manual R704).
 
@@ -47,7 +50,7 @@ VidarDiagnostics d = spatial.diagnostics();
 // d.observationTickP50Ms / P95Ms / MaxMs / Samples
 ```
 
-Hot-path code changes: [#40](https://github.com/The-Allsparks/ViDAR/issues/40). Measure first ([#27](https://github.com/The-Allsparks/ViDAR/issues/27)).
+Hot-path code changes: [#40](https://github.com/The-Allsparks/ViDAR/issues/40). Measure first ([#27](https://github.com/The-Allsparks/ViDAR/issues/27)). Hub rows may stay empty until hardware exists — that is expected; desktop FPS alone does not unlock #40.
 
 ## What CI can test
 
