@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.vidar.schedule.VidarResourceBudget;
 import org.firstinspires.ftc.teamcode.vidar.tag.TagDecodeBudget;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagConfig;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagDecodeWorker;
+import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagGateState;
 import org.firstinspires.ftc.teamcode.vidar.world.VidarWorldModel;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -42,6 +43,7 @@ public final class VidarRuntime {
     private final VidarWorldModel world;
     private final FieldPoseContext fieldPoseContext;
     private final TagDecodeBudget tagDecodeBudget;
+    private final VidarTagGateState tagGate = new VidarTagGateState();
     private final VidarTagDecodeWorker tagDecodeWorker;
     private final VidarResourceBudget resourceBudget;
     private final VidarObservationWorker observationWorker;
@@ -148,7 +150,13 @@ public final class VidarRuntime {
             fusionEngine = null;
         }
         fieldPoseContext.bindVision((VidarVisionFusion) null);
+        tagGate.reset();
         publishDetachedSnapshot();
+    }
+
+    /** Decode gate owned by this process runtime (driver request + pose cone). */
+    public VidarTagGateState tagGate() {
+        return tagGate;
     }
 
     public void resetMatchState() {
@@ -157,6 +165,7 @@ public final class VidarRuntime {
             fusionEngine.resetMatchState();
         }
         tagDecodeBudget.reset();
+        tagGate.reset();
     }
 
     public VidarSpatialSnapshot snapshot() {

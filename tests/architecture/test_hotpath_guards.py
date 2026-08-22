@@ -107,3 +107,21 @@ def test_fusion_and_world_avoid_filesystem_io():
         "Filesystem I/O in detect/fusion/world/geometry can stall the Control Hub:\n"
         + "\n".join(hits)
     )
+
+
+STATIC_VOLATILE = re.compile(r"\bstatic\s+volatile\b")
+
+
+def test_tag_package_has_no_static_volatile_gate_state():
+    """Tag decode gate state must live on VidarRuntime (VidarTagGateState), not process globals."""
+    hits = []
+    for path in iter_vidar_java():
+        rel = path.relative_to(VIDAR_JAVA).as_posix()
+        if not rel.startswith("tag/"):
+            continue
+        if STATIC_VOLATILE.search(read_java(path)):
+            hits.append(rel)
+    assert not hits, (
+        "static volatile in tag/ leaks Auto→TeleOp / multi-camera gate state (#41):\n"
+        + "\n".join(hits)
+    )

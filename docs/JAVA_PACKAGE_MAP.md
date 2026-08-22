@@ -21,7 +21,7 @@
 | `vidar.api` | Student diagnostics | `VidarDiagnostics` |
 | `vidar.integration` | Optional pathing bridges (no hard deps) | `VidarPedroPose`, `VidarPedroPoseBridge`, `VidarPedroCorrectionTracker` |
 | `vidar.detect` | Contour / color-blob pipeline | `VidarContourProcessor`, `ElementDetector`, `PlateDetector` |
-| `vidar.tag` | AprilTag scout, crop decode, gates | `VidarAdaptiveTagProcessor`, `VidarTagDecodeWorker`, `TagDecodeBudget` |
+| `vidar.tag` | AprilTag scout, crop decode, gates | `VidarAdaptiveTagProcessor`, `VidarTagDecodeWorker`, `TagDecodeBudget`, `VidarTagGate` (facade), `VidarTagGateState` (owned by runtime) |
 | `vidar.fusion` | Localization, temporal filter, multi-camera fusion | `VidarFusionEngine`, `VidarLocalizationFusion`, `MultiCameraFusion`, `FieldPoseContext`, `VidarVisionFusion` |
 | `vidar.world` | Short-term track memory | `VidarWorldModel`, `VidarTrackAssociator` |
 | `vidar.frame` | Per-cycle immutable snapshots | `VidarObservationFrame`, `VidarSpatialSnapshot` |

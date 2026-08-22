@@ -81,6 +81,7 @@ sourceSets {
             exclude 'tag/VidarTagScoutRunner.java'
             exclude 'tag/VidarTagCropDecoder.java'
             exclude 'tag/VidarTagCropPlanner.java'
+            // Facade forwards to VidarRuntime; gate state itself (VidarTagGateState) is JVM-tested.
             exclude 'tag/VidarTagGate.java'
         }
     }
