@@ -18,24 +18,23 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#38](https://github.com/The-Allsparks/ViDAR/issues/38) (break package cycles) |
-| Why highest priority | Shrinks the import freeze after #44 measurement landed |
-| Why ready | frame→detect was javadoc-only; no Control Hub required |
-| Dependencies | #37 epic; #44 done |
-| Expected deliverable | Remove `frame`→`detect` from freeze; architecture tests green |
+| Selected issue | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) install/lifecycle docs slice |
+| Why highest priority | P0 FTC packaging; SDK pin done; Hub rows blocked |
+| Why ready | Docs + VERSION + architecture guards; no Control Hub |
+| Dependencies | #29 done; #38/#44 done |
+| Expected deliverable | `VERSION`, `docs/INSTALL.md`, `docs/LIFECYCLE.md`, OpMode `close()` CI guard |
 | Hardware required | No |
-| Branch | `refactor/break-frame-detect-package-cycle` |
-| Last delivered | [#44](https://github.com/The-Allsparks/ViDAR/issues/44) via [#59](https://github.com/The-Allsparks/ViDAR/pull/59) |
+| Branch | `docs/ftc-install-and-lifecycle-gate` |
+| Last delivered | [#38](https://github.com/The-Allsparks/ViDAR/issues/38) via [#60](https://github.com/The-Allsparks/ViDAR/pull/60) |
 
 ## Ledger
 
 | Issue | Priority | Readiness | Dependencies | Status | Branch / PR | Blocker | Next action |
 |-------|----------|-----------|--------------|--------|-------------|---------|-------------|
 | **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 | Open | — | Hardware for USB rows | Continue children |
-| #37 Quality/CI epic | P1 | Active | This audit | Open | `chore/quality-performance-ci-baseline` | — | Merge CI PR; then children |
-| #25 Actions permissions + pins | P2 | In this PR | None | Open | same branch | — | Merge |
-| #24 java-pure required check | P2 | **Done** | Admin | **Closed** | settings | — | `java-pure` required on `main` |
-| #38 Package cycles | P1 | **In progress** | #37 | Open | `refactor/break-frame-detect-package-cycle` | — | Land frame→detect removal |
+| #38 Package cycles | P1 | **Done** | #37 | **Closed** #60 | — | — | frame→detect removed |
+| #37 Quality/CI epic | P1 | Active | This audit | Open | — | — | Children remain |
+| #25 Actions permissions + pins | P2 | **Done** | None | **Closed** #48 | — | — | SHA pins |
 | #44 Metrics percentiles | P1 | **Done** | #37 | **Closed** #59 | — | — | Discover Tick ms |
 | #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #44 |
 | #43 java-pure FusionEngine/Spatial | P2 | Ready | #23 partial | Open | — | — | After #38 if types move |
