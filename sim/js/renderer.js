@@ -352,6 +352,8 @@ export function describeLogic(best, tuning) {
         elementRange: best.element?.range ?? null,
         dSize: best.element?.dSize ?? null,
         dFloor: best.element?.dFloor ?? null,
+        dGround: best.element?.dGround ?? null,
+        primaryRangeSource: best.element?.primaryRangeSource ?? null,
         elementConfidence: best.element?.confidence ?? null,
         robotXY: formatRobotXY(best.element),
       };
@@ -374,6 +376,8 @@ export function describeLogic(best, tuning) {
         elementRange: range ?? null,
         dSize: best.element.dSize ?? null,
         dFloor: best.element.dFloor ?? null,
+        dGround: best.element.dGround ?? null,
+        primaryRangeSource: best.element.primaryRangeSource ?? null,
         elementConfidence: conf,
         robotXY: formatRobotXY(best.element),
       };
@@ -387,6 +391,8 @@ export function describeLogic(best, tuning) {
         elementRange: range,
         dSize: best.element.dSize ?? null,
         dFloor: best.element.dFloor ?? null,
+        dGround: best.element.dGround ?? null,
+        primaryRangeSource: best.element.primaryRangeSource ?? null,
         elementConfidence: conf,
         robotXY: formatRobotXY(best.element),
       };
@@ -400,6 +406,8 @@ export function describeLogic(best, tuning) {
         elementRange: range ?? null,
         dSize: best.element.dSize ?? null,
         dFloor: best.element.dFloor ?? null,
+        dGround: best.element.dGround ?? null,
+        primaryRangeSource: best.element.primaryRangeSource ?? null,
         elementConfidence: conf,
         robotXY: formatRobotXY(best.element),
       };
@@ -412,6 +420,8 @@ export function describeLogic(best, tuning) {
       elementRange: range ?? null,
       dSize: best.element.dSize ?? null,
       dFloor: best.element.dFloor ?? null,
+      dGround: best.element.dGround ?? null,
+      primaryRangeSource: best.element.primaryRangeSource ?? null,
       elementConfidence: conf,
       robotXY: formatRobotXY(best.element),
     };
@@ -426,6 +436,8 @@ export function describeLogic(best, tuning) {
     elementRange: null,
     dSize: null,
     dFloor: null,
+    dGround: null,
+    primaryRangeSource: null,
     elementConfidence: null,
     robotXY: null,
   };

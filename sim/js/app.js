@@ -37,6 +37,8 @@ const robotDistEl = document.getElementById("robot-dist");
 const elementRangeEl = document.getElementById("element-range");
 const elementSizeRangeEl = document.getElementById("element-size-range");
 const elementFloorRangeEl = document.getElementById("element-floor-range");
+const elementGroundRangeEl = document.getElementById("element-ground-range");
+const elementRangeSourceEl = document.getElementById("element-range-source");
 const elementConfidenceEl = document.getElementById("element-confidence");
 const elementRobotXYEl = document.getElementById("element-robot-xy");
 const tagScoutEl = document.getElementById("tag-scout");
@@ -530,7 +532,7 @@ function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, act
           d.temporal === "potential" ? "potential" : "";
         const geom =
           d.range != null
-            ? ` · ${d.range.toFixed(0)}in (size ${d.dSize?.toFixed(0) ?? "—"}/floor ${d.dFloor?.toFixed(0) ?? "—"}) conf ${((d.confidence ?? 0) * 100).toFixed(0)}%`
+            ? ` · ${d.range.toFixed(0)}in (size ${d.dSize?.toFixed(0) ?? "—"}/floor ${d.dFloor?.toFixed(0) ?? "—"}/ground ${d.dGround?.toFixed(0) ?? "—"}) conf ${((d.confidence ?? 0) * 100).toFixed(0)}%${d.primaryRangeSource ? ` · ${d.primaryRangeSource}` : ""}`
             : "";
         const idPart = d.elementId ? ` · ${d.elementId}` : "";
         const rankPart = d.occurrenceRank != null && d.occurrenceRank >= 0 ? `#${d.occurrenceRank}` : "";
@@ -566,6 +568,13 @@ function updateSidebar(detections, rawDetections, logic, maskPixels, tuning, act
   if (elementFloorRangeEl) {
     elementFloorRangeEl.textContent =
       logic.dFloor == null ? "—" : `${logic.dFloor.toFixed(1)} in`;
+  }
+  if (elementGroundRangeEl) {
+    elementGroundRangeEl.textContent =
+      logic.dGround == null ? "—" : `${logic.dGround.toFixed(1)} in`;
+  }
+  if (elementRangeSourceEl) {
+    elementRangeSourceEl.textContent = logic.primaryRangeSource ?? "—";
   }
   if (elementConfidenceEl) {
     elementConfidenceEl.textContent =
