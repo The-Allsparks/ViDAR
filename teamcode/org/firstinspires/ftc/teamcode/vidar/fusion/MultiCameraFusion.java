@@ -18,13 +18,21 @@ public final class MultiCameraFusion {
 
     private MultiCameraFusion() {}
 
+    /**
+     * Whether a camera slot should contribute to fusion this cycle.
+     * Shared by {@link #fuseRankedElements} and {@link VidarFusionEngine#update()}.
+     */
+    public static boolean isUsableCamera(VidarVision camera) {
+        return camera != null && !camera.isFailed() && !camera.isExcludedFromRotation();
+    }
+
     public static VidarRankedElementFrame fuseRankedElements(
             VidarVision[] cameras,
             VidarTemporalFilter temporalFilter,
             int fusionCap) {
         List<ScoredElement> candidates = new ArrayList<>();
         for (VidarVision camera : cameras) {
-            if (camera == null || camera.isFailed() || camera.isExcludedFromRotation()) {
+            if (!isUsableCamera(camera)) {
                 continue;
             }
             VidarRankedElementFrame frame = camera.getRankedElements();
