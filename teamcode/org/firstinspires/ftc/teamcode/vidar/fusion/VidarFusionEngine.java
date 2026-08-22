@@ -175,7 +175,7 @@ public final class VidarFusionEngine implements VidarVisionFusion {
 
         for (int i = 0; i < cameraCount; i++) {
             VidarVision camera = cameras[i];
-            if (camera == null || camera.isFailed() || camera.isExcludedFromRotation()) {
+            if (!MultiCameraFusion.isUsableCamera(camera)) {
                 continue;
             }
 

@@ -45,6 +45,7 @@ sourceSets {
             exclude 'VidarRoiCalibrationOpMode.java'
             exclude 'VidarSpatialOpModeBase.java'
             // Spatial facade / fusion engine pull HardwareMap, VisionPortal, and excluded frame types.
+            // Fusion camera-skip seams are covered via MultiCameraFusion.isUsableCamera (used by update()).
             exclude 'VidarSpatial.java'
             exclude 'fusion/VidarFusionEngine.java'
             exclude 'geometry/VidarObservationSpatial.java'
