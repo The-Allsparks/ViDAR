@@ -88,7 +88,7 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
             telemetry.addData("Element detail", VidarBlobUtil.formatElementDetail(element));
             telemetry.addData("Spatial live", VidarBlobUtil.formatSpatialPoint(spatial.bestElement()));
             telemetry.addData("Spatial remembered", VidarBlobUtil.formatSpatialPoint(spatial.nearestElement()));
-            java.util.Map<String, String> cal = spatial.calibrationTelemetryMap();
+            java.util.Map<String, Object> cal = spatial.calibrationTelemetryMap();
             if (!cal.isEmpty()) {
                 telemetry.addData("Calibration", VidarBlobUtil.formatCalibrationDiagnostics(cal));
             }

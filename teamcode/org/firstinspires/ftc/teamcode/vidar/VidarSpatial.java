@@ -308,7 +308,7 @@ public final class VidarSpatial {
      * Calibration diagnostics map for telemetry, or empty if fusion is detached.
      * Prefer this over {@link #runtime()}{@code .fusionEngine()}.
      */
-    public java.util.Map<String, String> calibrationTelemetryMap() {
+    public java.util.Map<String, Object> calibrationTelemetryMap() {
         org.firstinspires.ftc.teamcode.vidar.geometry.VidarCalibrationDiagnostics cal =
                 runtime.calibrationDiagnostics();
         return cal == null
