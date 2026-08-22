@@ -2,7 +2,7 @@
 
 Living ledger for orchestrator selection. GitHub issues are authoritative; this file is the in-repo snapshot.
 
-**Updated:** 2026-08-21 (after #60/#61; #43 in progress)  
+**Updated:** 2026-08-21 (after #62; #41 in progress)  
 **Identity:** `TA-C-GHill`  
 **Max active implementation PRs:** 1
 
@@ -18,14 +18,14 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#43](https://github.com/The-Allsparks/ViDAR/issues/43) java-pure fusion/lifecycle seams |
-| Why highest priority | Unblocks god-method refactors; CI must catch failed-camera skip regressions |
-| Why ready | #38/#61 on main; WorldModel null-coast already covered |
-| Dependencies | #23 partial (TTL done) |
-| Expected deliverable | `MultiCameraFusion.isUsableCamera` + JVM skip tests; FusionEngine exclude stays |
+| Selected issue | [#41](https://github.com/The-Allsparks/ViDAR/issues/41) TagGate state on runtime |
+| Why highest priority | Process globals leak Auto→TeleOp / multi-create; blocks honest isolation tests |
+| Why ready | #43/#62 on main; Discover already calls facade after Spatial.create |
+| Dependencies | None hard |
+| Expected deliverable | `VidarTagGateState` owned by `VidarRuntime`; facade; java-pure + architecture guard |
 | Hardware required | No |
-| Branch | `test/java-pure-fusion-lifecycle-seams` |
-| Last delivered | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) docs slice via [#61](https://github.com/The-Allsparks/ViDAR/pull/61) |
+| Branch | `refactor/taggate-runtime-owned-state` |
+| Last delivered | [#43](https://github.com/The-Allsparks/ViDAR/issues/43) via [#62](https://github.com/The-Allsparks/ViDAR/pull/62) |
 
 ## Ledger
 
@@ -34,20 +34,20 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 | Open | — | Hardware for USB rows | Hub/#26/#27 next software |
 | #38 Package cycles | P1 | **Done** | #37 | **Closed** #60 | — | — | frame→detect removed |
 | #61 Install/lifecycle docs | P0 under #33 | **Done** | #33 | **Merged** | — | — | VERSION + close() guard |
+| #43 java-pure FusionEngine/Spatial | P2 | **Done** | #23 | **Closed** #62 | — | — | isUsableCamera seam |
+| #23 java-pure world/runtime tests | P2 | **Done** | #21 | **Closed** | — | — | TTL + #43 |
 | #37 Quality/CI epic | P1 | Active | This audit | Open | — | — | Children remain |
 | #25 Actions permissions + pins | P2 | **Done** | None | **Closed** #48 | — | — | SHA pins |
 | #44 Metrics percentiles | P1 | **Done** | #37 | **Closed** #59 | — | — | Discover Tick ms |
 | #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #27 Hub/desktop |
-| #43 java-pure FusionEngine/Spatial | P2 | **Active** | #23 partial | Open | `test/java-pure-fusion-lifecycle-seams` | — | Land seam tests |
-| #41 TagGate static state | P2 | Ready | — | Open | — | — | After #43 |
-| #42 JSON single tuning surface | P2 | Ready | — | Open | — | — | After #43 / with #41 |
-| #39 God methods | P2 | Ready | — | Open | — | — | After #43 seams preferred |
+| #41 TagGate static state | P2 | **Active** | — | Open | `refactor/taggate-runtime-owned-state` | — | Land PR |
+| #42 JSON single tuning surface | P2 | Ready | — | Open | — | — | After #41 |
+| #39 God methods | P2 | Ready | — | Open | — | — | After #43 seams |
 | #45 Dedup default JSON | P3 | Ready | #42 | Open | — | — | Good first issue |
 | #46 Hide `runtime()` | P3 | Ready | — | Open | — | — | With #33 docs |
 | #47 Spotless baseline | P3 | Ready | — | Open | — | Format blast radius | Dedicated PR |
 | #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
 | #22 Sim range-fusion parity | P2 | Ready | #13 done | Open | — | Behind #33 for readiness claims | After #41/#42 |
-| #23 java-pure world/runtime tests | P2 | **Mostly done** | #21 done | Open | — | Remaining = #43 | Close after #43 |
 | #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |
 | #27 Control Hub / desktop benches | P1 under #33 | Partial | Hardware for hub; #44 | Open | — | Hardware | Desktop OK; Hub blocked |
 | #16 Calibration visualization | P3 | Ready | #17 done | Open | — | Behind #33 | After packaging gate |
