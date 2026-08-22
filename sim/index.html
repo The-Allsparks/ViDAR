@@ -160,13 +160,15 @@
       </section>
       <section class="card">
         <h2>Robot logic preview</h2>
-        <p class="muted-line">Range fuses known element diameter (Hough radius) with floor-row LUT. Cross-check lowers confidence when they disagree.</p>
+        <p class="muted-line">Range fuses size, floor LUT, and ground-plane geometry when mount extrinsics are configured. Ground distance is authoritative when valid; size/floor cross-check confidence.</p>
         <p id="logic-state" class="logic-state">—</p>
         <dl class="metrics">
           <div><dt>Element X err</dt><dd id="element-error">—</dd></div>
           <div><dt>Fused range</dt><dd id="element-range">—</dd></div>
           <div><dt>Size range</dt><dd id="element-size-range">—</dd></div>
           <div><dt>Floor range</dt><dd id="element-floor-range">—</dd></div>
+          <div><dt>Ground range</dt><dd id="element-ground-range">—</dd></div>
+          <div><dt>Primary source</dt><dd id="element-range-source">—</dd></div>
           <div><dt>Confidence</dt><dd id="element-confidence">—</dd></div>
           <div><dt>Robot XY</dt><dd id="element-robot-xy">—</dd></div>
           <div><dt>Robot dist (px)</dt><dd id="robot-dist">—</dd></div>

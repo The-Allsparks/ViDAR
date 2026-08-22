@@ -1,8 +1,8 @@
 /** @typedef {{ name: string, label: string, color: string, shape?: string, hsvLow: number[], hsvHigh: number[], hsvLowWrap?: number[], hsvHighWrap?: number[], minArea?: number, requireCircularity?: boolean, minCircularity?: number, maxAspectRatio?: number, morphClosePasses?: number, brightnessMin?: number, brightnessSpread?: number, maxSaturation?: number, rejectGreen?: boolean, minInteriorScore?: number, minWhiteRatio?: number }} ColorTarget */
 
-/** @typedef {{ name: string, bearingDeg: number, horizonRowPx: number, focalLengthPx: number, floorLut: { cy: number, dist: number }[] }} CameraProfile */
+/** @typedef {{ name: string, bearingDeg: number, horizonRowPx: number, focalLengthPx: number, focalLengthYPx?: number, principalPointX?: number, principalPointY?: number, mountX?: number, mountY?: number, mountZ?: number, mountPitchDeg?: number, mountRollDeg?: number, mountYawDeg?: number, floorLut: { cy: number, dist: number }[] }} CameraProfile */
 
-/** @typedef {{ elementDiameter?: number, maxRangeMismatchRatio?: number, minElementConfidence?: number, pickupStop?: number, seekMaxRange?: number, activeCameraIndex?: number, cameras: CameraProfile[] }} GeometryConfig */
+/** @typedef {{ elementDiameter?: number, maxRangeMismatchRatio?: number, minElementConfidence?: number, pickupStop?: number, seekMaxRange?: number, seekMaxRangeIn?: number, legacyRangeFusion?: boolean, activeCameraIndex?: number, cameras: CameraProfile[] }} GeometryConfig */
 
 /** @typedef {{ enabled?: boolean, minSampleIntervalMs?: number, scoutWidth?: number, bandLeftMax?: number, bandRightMin?: number, scoutMinWidthPx?: number, decodeMinTagWidthPx?: number, poseGateDeg?: number, tagSizeIn?: number, desiredTagId?: number, decimationMin?: number, decimationMax?: number, expectedBearingDeg?: number | null, cameraBearingDeg?: number }} TagConfig */
 

@@ -2,7 +2,7 @@
 
 Living ledger for orchestrator selection. GitHub issues are authoritative; this file is the in-repo snapshot.
 
-**Updated:** 2026-08-21 (after #63; #42 in progress)  
+**Updated:** 2026-08-22 (#22 sim range-fusion in progress)  
 **Identity:** `TA-C-GHill`  
 **Max active implementation PRs:** 1
 
@@ -18,14 +18,12 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#42](https://github.com/The-Allsparks/ViDAR/issues/42) JSON VidarSettings tuning |
-| Why highest priority | Single edit path; stop reading deprecated merge-radius constant |
-| Why ready | #41/#62 on main |
-| Dependencies | None hard |
-| Expected deliverable | `world` + fusion ranked keys in season JSON; VidarSettings from season; docs |
-| Hardware required | No |
-| Branch | `refactor/json-vidarsettings-tuning-surface` |
-| Last delivered | [#41](https://github.com/The-Allsparks/ViDAR/issues/41) via [#63](https://github.com/The-Allsparks/ViDAR/pull/63) |
+| Selected issue | [#22](https://github.com/The-Allsparks/ViDAR/issues/22) sim range-fusion parity |
+| Why highest priority | Sim is first-use path; ground-plane authoritative fusion must match Java |
+| Why ready | #13/#42 on main |
+| Expected deliverable | geometry.js GROUND_PLANE fusion + tests + README-SIM |
+| Branch | `feat/sim-ground-plane-range-fusion` |
+| Last delivered | [#42](https://github.com/The-Allsparks/ViDAR/issues/42) via [#64](https://github.com/The-Allsparks/ViDAR/pull/64) |
 
 ## Ledger
 
@@ -41,8 +39,13 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | #44 Metrics percentiles | P1 | **Done** | #37 | **Closed** #59 | — | — | Discover Tick ms |
 | #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #27 Hub/desktop |
 | #41 TagGate static state | P2 | **Done** | — | **Closed** #63 | — | — | Runtime-owned gate |
-| #42 JSON single tuning surface | P2 | **Active** | — | Open | `refactor/json-vidarsettings-tuning-surface` | — | Land PR |
-| #22 Sim range-fusion parity | P2 | Ready | #13 done | Open | — | Behind #33 for readiness claims | After #42 |
+| #42 JSON single tuning surface | P2 | **Done** | — | **Closed** #64 | — | — | Season world/fusion keys |
+| #22 Sim range-fusion parity | P2 | **Active** | #13 done | Open | `feat/sim-ground-plane-range-fusion` | — | Land PR |
+| #39 God methods | P2 | Ready | — | Open | — | — | After seams |
+| #45 Dedup default JSON | P3 | Ready | #42 | Open | — | — | Good first issue |
+| #46 Hide `runtime()` | P3 | Ready | — | Open | — | — | With #33 docs |
+| #47 Spotless baseline | P3 | Ready | — | Open | — | Format blast radius | Dedicated PR |
+| #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
 | #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |
 | #27 Control Hub / desktop benches | P1 under #33 | Partial | Hardware for hub; #44 | Open | — | Hardware | Desktop OK; Hub blocked |
 | #16 Calibration visualization | P3 | Ready | #17 done | Open | — | Behind #33 | After packaging gate |
