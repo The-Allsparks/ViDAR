@@ -73,6 +73,8 @@ Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DES
 | Resource | Description |
 |----------|-------------|
 | [System design](docs/SYSTEM_DESIGN.md) | Architecture, pipelines, and feature status |
+| [Install](docs/INSTALL.md) | Versioned source-copy into TeamCode |
+| [Lifecycle](docs/LIFECYCLE.md) | VisionPortal ownership and OpMode `stop()` |
 | [API contract](docs/API.md) | Cross-language names, units, and telemetry fields |
 | [Configuration](docs/CONFIGURATION.md) | Season JSON, robot JSON, tuning reference |
 | [Calibration](docs/CALIBRATION.md) | Floor LUT, ROI, and field calibration workflow |
@@ -168,6 +170,8 @@ python -m pytest tests/ -v
 
 ### 2. Install on the Control Hub
 
+See **[docs/INSTALL.md](docs/INSTALL.md)** for the canonical versioned source-copy steps (SDK pin `v11.2.1`, assets, `VERSION`). Lifecycle / `stop()`: **[docs/LIFECYCLE.md](docs/LIFECYCLE.md)**.
+
 1. Clone the [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcRobotController) at the supported tag **`v11.2.1`** (or newer only after ViDAR CI is updated) and open it in Android Studio.
 2. Copy the entire `teamcode/org/firstinspires/ftc/teamcode/vidar/` tree (including subpackages) → `TeamCode/src/main/java/.../vidar/`. See [docs/JAVA_PACKAGE_MAP.md](docs/JAVA_PACKAGE_MAP.md).
 3. Copy `teamcode/assets/vidar/` → `TeamCode/src/main/assets/vidar/` (includes `default-season.json` / `default-robot.json` fallbacks plus your `season.json` / `robot.json` overrides).
@@ -262,6 +266,8 @@ Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
 | Document | Purpose |
 |----------|---------|
 | [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) | Architecture and feature status |
+| [docs/INSTALL.md](docs/INSTALL.md) | Versioned TeamCode install |
+| [docs/LIFECYCLE.md](docs/LIFECYCLE.md) | VisionPortal ownership and `stop()` |
 | [docs/API.md](docs/API.md) | Cross-language outer-layer contract |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Tuning and JSON reference |
 | [docs/CALIBRATION.md](docs/CALIBRATION.md) | Field calibration workflow |

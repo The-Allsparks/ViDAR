@@ -42,7 +42,7 @@ OpMode → VidarSpatial → VidarRuntime (singleton)
          fusion + VidarSpatialSnapshot + world tracks
 ```
 
-**Lifecycle:** `VidarSpatial.create()` → `attachVision()`; `spatial.close()` → `detachVision()`; `VidarRuntime.shutdown()` on RC exit.
+**Lifecycle:** `VidarSpatial.create()` → `attachVision()`; `spatial.close()` → `detachVision()`; `VidarRuntime.shutdown()` on RC exit. See [LIFECYCLE.md](LIFECYCLE.md) and [INSTALL.md](INSTALL.md).
 
 ## Dependency direction
 
