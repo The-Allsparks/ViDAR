@@ -79,7 +79,7 @@ CI may only apply **generous** JVM ceilings (algorithmic catastrophe), never mil
 
 Teams are expected to call `VidarSpatial`, snapshot types, diagnostics, JSON config, and optional Pedro adapters.
 
-Do not widen `VidarSpatial.runtime()` or other internals without an issue. Do not break existing `create` / `update` / `snapshot` / `close` signatures without a documented migration.
+Do not widen `VidarSpatial.runtime()` (deprecated) or other internals without an issue. Prefer `diagnostics()`, `portalFps`, `tracks`, and related facade accessors. Do not break existing `create` / `update` / `snapshot` / `close` signatures without a documented migration.
 
 ## Architectural changes
 

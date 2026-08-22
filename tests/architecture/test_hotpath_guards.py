@@ -125,3 +125,18 @@ def test_tag_package_has_no_static_volatile_gate_state():
         "static volatile in tag/ leaks Auto→TeleOp / multi-camera gate state (#41):\n"
         + "\n".join(hits)
     )
+
+
+RUNTIME_CALL = re.compile(r"\.runtime\s*\(\s*\)")
+
+
+def test_sample_opmodes_do_not_call_spatial_runtime():
+    """Built-in OpModes must use facade accessors, not deprecated VidarSpatial.runtime() (#46)."""
+    hits = []
+    for path in _opmode_files():
+        if RUNTIME_CALL.search(read_java(path)):
+            hits.append(path.name)
+    assert not hits, (
+        "Sample OpModes must not call spatial.runtime() — use diagnostics/portalFps/tracks:\n"
+        + "\n".join(hits)
+    )
