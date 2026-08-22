@@ -4,7 +4,16 @@
   "fusion": {
     "minElementConfidence": 0.35,
     "minPlateConfidence": 0.35,
-    "maxRangeMismatchRatio": 0.28
+    "maxRangeMismatchRatio": 0.28,
+    "maxRankedElements": 16,
+    "defaultMaxRankedElements": 5
+  },
+  "world": {
+    "mergeRadius": 8.0,
+    "trackGateRadius": 12.0,
+    "trackGateRadiusFoe": 18.0,
+    "blockRange": 36.0,
+    "blockConeDeg": 35.0
   },
   "elements": [
     {

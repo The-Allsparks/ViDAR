@@ -280,7 +280,8 @@ public final class VidarConfig {
     public static final double WORLD_ELEMENT_TTL_SEC = 2.5;
     public static final double WORLD_FOE_TTL_SEC = 3.0;
     public static final double WORLD_ALLY_TTL_SEC = 4.0;
-    /** @deprecated use {@link #WORLD_TRACK_GATE_RADIUS_IN} for association */
+    /** @deprecated use season JSON {@code world.mergeRadius} via {@link org.firstinspires.ftc.teamcode.vidar.config.VidarWorldTuning} */
+    @Deprecated
     public static final double WORLD_MERGE_RADIUS_IN = 8.0;
     public static final double WORLD_BLOCK_RANGE_IN = 36.0;
     public static final double WORLD_BLOCK_CONE_DEG = 35.0;

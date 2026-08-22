@@ -34,6 +34,9 @@ import java.util.List;
  */
 public final class VidarCorrectedFrame {
 
+    /** Default multi-camera dedup radius — keep aligned with bundled {@code world.mergeRadius}. */
+    private static final double DEFAULT_ELEMENT_MERGE_RADIUS = 8.0;
+
     public final long queryTimeNanos;
     public final Pose2D odomNow;
     public final VidarObservationFrame source;
@@ -209,7 +212,7 @@ public final class VidarCorrectedFrame {
         if (points.size() < 2) {
             return;
         }
-        double mergeR = VidarConfig.WORLD_MERGE_RADIUS_IN;
+        double mergeR = DEFAULT_ELEMENT_MERGE_RADIUS;
         for (int i = 0; i < points.size(); i++) {
             VidarCorrectedPoint a = points.get(i);
             for (int j = points.size() - 1; j > i; j--) {

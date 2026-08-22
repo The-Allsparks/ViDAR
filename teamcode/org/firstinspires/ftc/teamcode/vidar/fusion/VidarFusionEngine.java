@@ -116,6 +116,8 @@ public final class VidarFusionEngine implements VidarVisionFusion {
         this.tagDecodeBudget = tagDecodeBudget != null ? tagDecodeBudget : new TagDecodeBudget();
         this.resourceBudget = resourceBudget != null ? resourceBudget : new VidarResourceBudget();
         this.tagDecodeBudget.reset();
+        runtimeConfig.setFusionMaxRankedElements(this.season.fusionMaxRankedElements);
+        runtimeConfig.setDefaultMaxRankedElements(this.season.defaultMaxRankedElements);
     }
 
     public void setFieldPosePrior(Pose2D prior) {
@@ -155,7 +157,7 @@ public final class VidarFusionEngine implements VidarVisionFusion {
 
         bestElement = null;
         fusedRankedElements = MultiCameraFusion.fuseRankedElements(
-                cameras, temporalFilter, runtimeConfig.fusionMaxRankedElements());
+                cameras, temporalFilter, runtimeConfig.fusionMaxRankedElements(), season.world.mergeRadius);
         if (fusedRankedElements.best() != null) {
             bestElement = fusedRankedElements.best();
         }
