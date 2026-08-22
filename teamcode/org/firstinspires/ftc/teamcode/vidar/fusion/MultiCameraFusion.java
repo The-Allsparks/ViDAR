@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.vidar.fusion;
 
 import org.firstinspires.ftc.teamcode.vidar.VidarConfig;
 import org.firstinspires.ftc.teamcode.vidar.VidarElementObservation;
+import org.firstinspires.ftc.teamcode.vidar.config.VidarWorldTuning;
 import org.firstinspires.ftc.teamcode.vidar.frame.VidarRankedElementFrame;
 import org.firstinspires.ftc.teamcode.vidar.fusion.VidarTemporalFilter;
 import org.firstinspires.ftc.teamcode.vidar.geometry.VidarRobotPose2D;
@@ -30,6 +31,18 @@ public final class MultiCameraFusion {
             VidarVision[] cameras,
             VidarTemporalFilter temporalFilter,
             int fusionCap) {
+        return fuseRankedElements(
+                cameras,
+                temporalFilter,
+                fusionCap,
+                VidarWorldTuning.LIBRARY_DEFAULT_MERGE_RADIUS);
+    }
+
+    public static VidarRankedElementFrame fuseRankedElements(
+            VidarVision[] cameras,
+            VidarTemporalFilter temporalFilter,
+            int fusionCap,
+            double mergeRadiusIn) {
         List<ScoredElement> candidates = new ArrayList<>();
         for (VidarVision camera : cameras) {
             if (!isUsableCamera(camera)) {
@@ -53,7 +66,7 @@ public final class MultiCameraFusion {
         List<VidarElementObservation> deduped = new ArrayList<>();
         int overflow = 0;
         for (ScoredElement candidate : candidates) {
-            if (isDuplicateRobot(candidate.observation, deduped)) {
+            if (isDuplicateRobot(candidate.observation, deduped, mergeRadiusIn)) {
                 continue;
             }
             if (deduped.size() < fusionCap) {
@@ -79,11 +92,14 @@ public final class MultiCameraFusion {
         return obs.confidence * obs.areaPx * rangeWeight;
     }
 
-    private static boolean isDuplicateRobot(VidarElementObservation obs, List<VidarElementObservation> kept) {
+    private static boolean isDuplicateRobot(
+            VidarElementObservation obs,
+            List<VidarElementObservation> kept,
+            double mergeRadiusIn) {
         for (VidarElementObservation other : kept) {
             if (VidarRobotPose2D.withinRadius(
                     obs.robotX, obs.robotY, other.robotX, other.robotY,
-                    VidarConfig.WORLD_MERGE_RADIUS_IN)) {
+                    mergeRadiusIn)) {
                 return true;
             }
         }

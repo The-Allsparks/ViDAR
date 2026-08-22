@@ -54,6 +54,15 @@ def build_season(cfg: str) -> dict:
             "minElementConfidence": java_double("MIN_ELEMENT_CONFIDENCE", cfg, 0.35),
             "minPlateConfidence": java_double("MIN_PLATE_CONFIDENCE", cfg, 0.4),
             "maxRangeMismatchRatio": java_double("MAX_RANGE_MISMATCH_RATIO", cfg, 0.35),
+            "maxRankedElements": java_int("FUSION_MAX_RANKED_ELEMENTS", cfg, 16),
+            "defaultMaxRankedElements": java_int("DEFAULT_MAX_RANKED_ELEMENTS", cfg, 5),
+        },
+        "world": {
+            "mergeRadius": java_double("WORLD_MERGE_RADIUS_IN", cfg, 8.0),
+            "trackGateRadius": java_double("WORLD_TRACK_GATE_RADIUS_IN", cfg, 12.0),
+            "trackGateRadiusFoe": java_double("WORLD_TRACK_GATE_RADIUS_FOE_IN", cfg, 18.0),
+            "blockRange": java_double("WORLD_BLOCK_RANGE_IN", cfg, 36.0),
+            "blockConeDeg": java_double("WORLD_BLOCK_CONE_DEG", cfg, 35.0),
         },
         "elements": [{
             "id": "pollen",

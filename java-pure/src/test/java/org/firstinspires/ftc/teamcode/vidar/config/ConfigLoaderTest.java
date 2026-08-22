@@ -55,6 +55,29 @@ class ConfigLoaderTest {
     }
 
     @Test
+    void seasonWorldAndFusionTuningFromJson() {
+        String json = "{"
+                + "\"seasonId\":\"tuning-test\","
+                + "\"field\":{\"length\":144,\"width\":144},"
+                + "\"fusion\":{\"maxRankedElements\":12,\"defaultMaxRankedElements\":4},"
+                + "\"world\":{\"mergeRadius\":6.5,\"trackGateRadius\":10.0},"
+                + "\"elements\":[{\"id\":\"ball\",\"label\":\"Ball\",\"diameter\":4,"
+                + "\"detector\":\"color_blob\","
+                + "\"hsv\":{\"hMin\":0,\"hMax\":10,\"sMin\":0,\"sMax\":255,\"vMin\":0,\"vMax\":255}}],"
+                + "\"plates\":[]"
+                + "}";
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(json);
+        assertEquals(12, season.fusionMaxRankedElements);
+        assertEquals(4, season.defaultMaxRankedElements);
+        assertEquals(6.5, season.world.mergeRadius, 1e-9);
+        assertEquals(10.0, season.world.trackGateRadius, 1e-9);
+
+        VidarSettings settings = new VidarSettings(null, season);
+        assertEquals(6.5, settings.worldMergeRadiusIn, 1e-9);
+        assertEquals(12, settings.fusionMaxRankedElements);
+    }
+
+    @Test
     void bundledDefaultSeasonLoads() throws IOException {
         Path path = repoRoot().resolve(
                 "teamcode/org/firstinspires/ftc/teamcode/vidar/config/bundled/default-season.json");

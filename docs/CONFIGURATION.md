@@ -111,7 +111,36 @@ Use `VidarTeamConfig.defaultSeason()` / `defaultRobot()` until assets are copied
 
 ## Legacy Java constants
 
-Element/plate tuning constants in `VidarConfig.java` remain as library defaults and seed `VidarConfigLoader.defaultSeason()`. Prefer JSON for season swaps and per-robot camera layout.
+`VidarConfig.java` holds **hardware-only fallbacks** (camera names, worker toggles) when team JSON is missing. **Do not edit it for season tuning.**
+
+| What you want to tune | Edit this |
+|-----------------------|-----------|
+| Game pieces, HSV, fusion thresholds, world radii, AprilTags | `TeamCode/.../assets/vidar/season.json` |
+| Camera mounts, ROIs, floor LUT, alliance sensor | `TeamCode/.../assets/vidar/robot.json` |
+| Runtime caps during a match (Discover tuner) | `VidarRuntimeConfig` via OpMode — seeded from season JSON on attach |
+
+### Season JSON: `fusion` and `world`
+
+```json
+{
+  "fusion": {
+    "minElementConfidence": 0.35,
+    "maxRankedElements": 16,
+    "defaultMaxRankedElements": 5
+  },
+  "world": {
+    "mergeRadius": 8.0,
+    "trackGateRadius": 12.0,
+    "trackGateRadiusFoe": 18.0,
+    "blockRange": 36.0,
+    "blockConeDeg": 35.0
+  }
+}
+```
+
+Distances in `world` use the season file's `"distanceUnit"` (default inches). Effective values are merged in `VidarSettings` at attach time.
+
+Bundled defaults: `teamcode/assets/vidar/default-season.json` (keep in sync with `config/bundled/`). Regenerate with `python scripts/generate_default_config_assets.py` after changing library fallbacks in `VidarConfig.java`.
 
 ## Primary files
 

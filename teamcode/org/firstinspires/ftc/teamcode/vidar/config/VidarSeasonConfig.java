@@ -47,6 +47,12 @@ public final class VidarSeasonConfig {
 
     public final double maxRangeMismatchRatio;
 
+    public final int fusionMaxRankedElements;
+
+    public final int defaultMaxRankedElements;
+
+    public final VidarWorldTuning world;
+
     /** Unit for all distance fields in this season file and runtime observations (default inches). */
     public final org.firstinspires.ftc.teamcode.vidar.VidarDistanceUnit distanceUnit;
 
@@ -76,6 +82,12 @@ public final class VidarSeasonConfig {
 
             double maxRangeMismatchRatio,
 
+            int fusionMaxRankedElements,
+
+            int defaultMaxRankedElements,
+
+            VidarWorldTuning world,
+
             org.firstinspires.ftc.teamcode.vidar.VidarDistanceUnit distanceUnit) {
 
         this.seasonId = seasonId;
@@ -97,6 +109,12 @@ public final class VidarSeasonConfig {
         this.minPlateConfidence = minPlateConfidence;
 
         this.maxRangeMismatchRatio = maxRangeMismatchRatio;
+
+        this.fusionMaxRankedElements = fusionMaxRankedElements;
+
+        this.defaultMaxRankedElements = defaultMaxRankedElements;
+
+        this.world = world != null ? world : VidarWorldTuning.libraryDefaults();
 
         this.distanceUnit = distanceUnit == null
                 ? org.firstinspires.ftc.teamcode.vidar.VidarDistanceUnit.IN

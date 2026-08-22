@@ -112,7 +112,24 @@ public final class VidarConfigLoader {
                 parseMinElementConfidence(fusion),
                 fusion != null ? fusion.optDouble("minPlateConfidence", 0.35) : 0.35,
                 fusion != null ? fusion.optDouble("maxRangeMismatchRatio", 0.28) : 0.28,
+                parseFusionMaxRankedElements(fusion),
+                parseDefaultMaxRankedElements(fusion),
+                VidarWorldTuning.parse(root.optJSONObject("world")),
                 parseDistanceUnit(root));
+    }
+
+    private static int parseFusionMaxRankedElements(JSONObject fusion) {
+        if (fusion == null) {
+            return VidarConfig.FUSION_MAX_RANKED_ELEMENTS;
+        }
+        return fusion.optInt("maxRankedElements", VidarConfig.FUSION_MAX_RANKED_ELEMENTS);
+    }
+
+    private static int parseDefaultMaxRankedElements(JSONObject fusion) {
+        if (fusion == null) {
+            return VidarConfig.DEFAULT_MAX_RANKED_ELEMENTS;
+        }
+        return fusion.optInt("defaultMaxRankedElements", VidarConfig.DEFAULT_MAX_RANKED_ELEMENTS);
     }
 
     private static VidarDistanceUnit parseDistanceUnit(JSONObject root) {
