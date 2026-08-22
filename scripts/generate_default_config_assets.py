@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
-"""Generate bundled default-season.json and default-robot.json from VidarConfig constants."""
+"""Generate authoritative bundled default JSON, then copy into FTC assets.
+
+Authoritative source (edit via this script / VidarConfig constants):
+  teamcode/.../vidar/config/bundled/default-*.json
+
+Generated install copy (do not hand-edit):
+  teamcode/assets/vidar/default-*.json
+"""
 
 from __future__ import annotations
 
 import json
 import re
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,6 +20,8 @@ CONFIG_JAVA = ROOT / "teamcode/org/firstinspires/ftc/teamcode/vidar/VidarConfig.
 PROFILE_JAVA = ROOT / "teamcode/org/firstinspires/ftc/teamcode/vidar/runtime/VidarCameraProfile.java"
 ASSETS_DIR = ROOT / "teamcode/assets/vidar"
 BUNDLED_DIR = ROOT / "teamcode/org/firstinspires/ftc/teamcode/vidar/config/bundled"
+
+DEFAULT_NAMES = ("default-season.json", "default-robot.json")
 
 
 def java_number(name: str, text: str, default: float | None = None) -> float:
@@ -259,16 +269,22 @@ def build_robot(cfg: str, profile_text: str) -> dict:
 def main() -> None:
     cfg = CONFIG_JAVA.read_text(encoding="utf-8")
     profile = PROFILE_JAVA.read_text(encoding="utf-8")
-    season = json.dumps(build_season(cfg), indent=2) + "\n"
-    robot = json.dumps(build_robot(cfg, profile), indent=2) + "\n"
-    for out_dir in (ASSETS_DIR, BUNDLED_DIR):
-        out_dir.mkdir(parents=True, exist_ok=True)
-        season_path = out_dir / "default-season.json"
-        robot_path = out_dir / "default-robot.json"
-        season_path.write_text(season, encoding="utf-8")
-        robot_path.write_text(robot, encoding="utf-8")
-        print(f"Wrote {season_path}")
-        print(f"Wrote {robot_path}")
+    payloads = {
+        "default-season.json": json.dumps(build_season(cfg), indent=2) + "\n",
+        "default-robot.json": json.dumps(build_robot(cfg, profile), indent=2) + "\n",
+    }
+
+    BUNDLED_DIR.mkdir(parents=True, exist_ok=True)
+    ASSETS_DIR.mkdir(parents=True, exist_ok=True)
+
+    for name, text in payloads.items():
+        bundled_path = BUNDLED_DIR / name
+        bundled_path.write_text(text, encoding="utf-8")
+        print(f"Wrote authoritative {bundled_path}")
+
+        assets_path = ASSETS_DIR / name
+        shutil.copyfile(bundled_path, assets_path)
+        print(f"Copied install asset {assets_path}")
 
 
 if __name__ == "__main__":
