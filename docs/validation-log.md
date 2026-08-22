@@ -10,15 +10,36 @@ Record pass/fail results from [ROADMAP.md](ROADMAP.md) Phase 6 before trusting V
 
 ## 0 — Bench metrics (no robot)
 
-Run `python scripts/bench_metrics.py` on your dev machine to fill the rows below.
-Re-run on Control Hub hardware before competition.
+### Desktop (recorded)
+
+Run `python scripts/bench_metrics.py` on a dev machine. Full write-up: [benches/desktop-2026-08-22.md](benches/desktop-2026-08-22.md).
+
+| Date | Host | Element FPS | Sanity hits | Pass/Fail | Notes |
+|------|------|-------------|-------------|-----------|-------|
+| 2026-08-22 | Win11 / Python 3.12.10 | 648.8 | 1 | **PASS** (desktop only) | Not Hub; see bench artifact |
 
 | Test row | Target | Pass/Fail | Notes |
 |----------|--------|-----------|-------|
-| Element FPS per camera | ≥ 15 | | `python scripts/bench_metrics.py` |
-| Tag decode latency | < 400 ms | | Manual OpMode |
+| Element FPS per camera | ≥ 15 | **PASS** (desktop) | `python scripts/bench_metrics.py` → 648.8 FPS |
+| Tag decode latency | < 400 ms | | Manual OpMode on Hub |
 | Tag decode CPU spike | acceptable at 2 s interval | | Manual OpMode (Dashboard off-match only per R704) |
 | Plate false positives | < 1/min on empty field | | Manual / sim |
+
+### Control Hub procedure (fill when hardware exists)
+
+Do **not** invent numbers. When a Hub is available:
+
+1. Flash/deploy TeamCode with ViDAR; configure USB webcams in the Driver Station.
+2. Run **ViDAR: Discover** at the intended camera count and resolution (typically 640×480).
+3. After ~30 s of steady detections, read telemetry:
+   - **Tick ms** — `p50`, `p95`, `max`, `n` (`VidarLatencyWindow` / `diagnostics().observationTick*`)
+   - Portal FPS / dropped frames / decode drops from camera metrics
+4. Paste a row into the top table and Phase 0 Hub cells below with: date, Hub firmware, camera count, resolution, Tick ms, FPS.
+5. Optional: FTC Dashboard **off-match only** (manual R704) for graphs — never during a MATCH.
+
+| Date | Hub firmware | Cams | Res | Tick p50/p95/max ms | Portal FPS | Pass/Fail | Notes |
+|------|--------------|------|-----|---------------------|------------|-----------|-------|
+| | | | | | | | *empty — hardware blocked* |
 
 ## 1 — Single-camera calibration
 
