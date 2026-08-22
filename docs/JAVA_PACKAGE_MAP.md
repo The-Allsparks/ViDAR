@@ -52,6 +52,6 @@ Intended flow (high → low): OpMode / `VidarSpatial` → runtime → fusion/wor
 
 `vidar.geometry` and `vidar.world` must not depend on `detect`, `tag`, or `schedule`.
 
-The **current** import graph is frozen in `tests/architecture/allowed_package_edges.json`. CI fails if a new edge appears. Known cycles (frame↔detect, schedule↔runtime/detect, geometry↔fusion/runtime) are documented debt — shrink the freeze, do not grow it.
+The **current** import graph is frozen in `tests/architecture/allowed_package_edges.json`. CI fails if a new edge appears. Known remaining cycles (schedule↔runtime/detect, geometry↔fusion/runtime) are documented debt — shrink the freeze, do not grow it. The former `frame`↔`detect` cycle was removed (frame no longer imports detect).
 
 See [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for pipeline detail.

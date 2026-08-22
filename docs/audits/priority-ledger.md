@@ -18,14 +18,14 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#44](https://github.com/The-Allsparks/ViDAR/issues/44) (observation-tick percentiles) |
-| Why highest priority | Unblocks honest Hub measurement for #27 / #40 |
-| Why ready | No Control Hub required for the code; Hub fills validation-log later |
-| Dependencies | #37 epic; #48 CI baseline merged |
-| Expected deliverable | `VidarLatencyWindow` + Discover **Tick ms** + PERFORMANCE.md procedure |
-| Hardware required | No for code; Hub for filling log |
-| Branch | `feat/observation-tick-latency-metrics` |
-| Last delivered | [#25](https://github.com/The-Allsparks/ViDAR/issues/25) / [#24](https://github.com/The-Allsparks/ViDAR/issues/24) via [#48](https://github.com/The-Allsparks/ViDAR/pull/48) |
+| Selected issue | [#38](https://github.com/The-Allsparks/ViDAR/issues/38) (break package cycles) |
+| Why highest priority | Shrinks the import freeze after #44 measurement landed |
+| Why ready | frame→detect was javadoc-only; no Control Hub required |
+| Dependencies | #37 epic; #44 done |
+| Expected deliverable | Remove `frame`→`detect` from freeze; architecture tests green |
+| Hardware required | No |
+| Branch | `refactor/break-frame-detect-package-cycle` |
+| Last delivered | [#44](https://github.com/The-Allsparks/ViDAR/issues/44) via [#59](https://github.com/The-Allsparks/ViDAR/pull/59) |
 
 ## Ledger
 
@@ -35,8 +35,8 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | #37 Quality/CI epic | P1 | Active | This audit | Open | `chore/quality-performance-ci-baseline` | — | Merge CI PR; then children |
 | #25 Actions permissions + pins | P2 | In this PR | None | Open | same branch | — | Merge |
 | #24 java-pure required check | P2 | **Done** | Admin | **Closed** | settings | — | `java-pure` required on `main` |
-| #38 Package cycles | P1 | Ready | #37 | Open | — | — | After CI PR |
-| #44 Metrics percentiles | P1 | **In progress** | #37 | Open | `feat/observation-tick-latency-metrics` | — | Land PR |
+| #38 Package cycles | P1 | **In progress** | #37 | Open | `refactor/break-frame-detect-package-cycle` | — | Land frame→detect removal |
+| #44 Metrics percentiles | P1 | **Done** | #37 | **Closed** #59 | — | — | Discover Tick ms |
 | #40 Tick lock / mailbox / snapshots | P1 | Ready | #44, #27 | Open | — | Measure first | After #44 |
 | #43 java-pure FusionEngine/Spatial | P2 | Ready | #23 partial | Open | — | — | After #38 if types move |
 | #39 God methods | P2 | Ready | — | Open | — | — | After #43 seams preferred |
