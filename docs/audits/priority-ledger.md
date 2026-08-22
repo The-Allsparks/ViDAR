@@ -18,12 +18,12 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#46](https://github.com/The-Allsparks/ViDAR/issues/46) hide `VidarSpatial.runtime()` |
-| Why highest priority | #40 Hub-blocked; API hygiene helps #33 lifecycle |
-| Why ready | No hardware; Discover/AutoSeek are only call sites |
-| Expected deliverable | Facade accessors + `@Deprecated runtime()` + OpMode migration + CI guard |
-| Branch | `refactor/hide-vidarspatial-runtime` |
-| Last delivered | [#27](https://github.com/The-Allsparks/ViDAR/issues/27) via [#66](https://github.com/The-Allsparks/ViDAR/pull/66) |
+| Selected issue | [#45](https://github.com/The-Allsparks/ViDAR/issues/45) dedup default JSON |
+| Why highest priority | #40 Hub-blocked; prevent silent asset/bundled drift |
+| Why ready | Generator already exists |
+| Expected deliverable | bundled authoritative; assets generated copy; docs + parity test |
+| Branch | `refactor/dedup-default-json-assets` |
+| Last delivered | [#46](https://github.com/The-Allsparks/ViDAR/issues/46) via [#67](https://github.com/The-Allsparks/ViDAR/pull/67) |
 
 ## Ledger
 
@@ -39,12 +39,12 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | #44 Metrics percentiles | P1 | **Done** | #37 | **Closed** #59 | — | — | Discover Tick ms |
 | #27 Control Hub / desktop benches | P1 under #33 | **Done** (desktop) | #44 | **Closed** #66 | — | Hub rows empty | Capture Tick ms on Hub |
 | #40 Tick lock / mailbox / snapshots | P1 | **Blocked** | #44, #27 | Open | — | Hub Tick ms | After Hub row |
-| #46 Hide `runtime()` | P3 | **Active** | — | Open | `refactor/hide-vidarspatial-runtime` | — | Land PR |
+| #46 Hide `runtime()` | P3 | **Done** | — | **Closed** #67 | — | — | Facade accessors |
 | #41 TagGate static state | P2 | **Done** | — | **Closed** #63 | — | — | Runtime-owned gate |
 | #42 JSON single tuning surface | P2 | **Done** | — | **Closed** #64 | — | — | Season world/fusion keys |
 | #22 Sim range-fusion parity | P2 | **Done** | #13 | **Closed** #65 | — | — | GROUND_PLANE in sim |
 | #39 God methods | P2 | Ready | — | Open | — | — | After seams |
-| #45 Dedup default JSON | P3 | Ready | #42 | Open | — | — | Good first issue |
+| #45 Dedup default JSON | P3 | **Active** | #42 | Open | `refactor/dedup-default-json-assets` | — | Land PR |
 | #47 Spotless baseline | P3 | Ready | — | Open | — | Format blast radius | Dedicated PR |
 | #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
 | #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |

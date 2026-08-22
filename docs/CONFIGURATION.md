@@ -31,21 +31,20 @@ Copy the file for your active season to `TeamCode/src/main/assets/vidar/season.j
 
 ## Bundled defaults (no team JSON required)
 
-When teams omit custom assets, `VidarConfigLoader.defaultSeason()` and `defaultRobot()` load built-in JSON:
+When teams omit custom assets, `VidarConfigLoader.defaultSeason()` and `defaultRobot()` load built-in JSON.
 
-| Location | Used by |
-|----------|---------|
-| `vidar/config/bundled/default-*.json` (Java classpath) | On-robot `VidarConfigLoader` |
-| `teamcode/assets/vidar/default-*.json` | Python tests (`tests/test_config_defaults.py`) |
+| Location | Role |
+|----------|------|
+| `vidar/config/bundled/default-*.json` | **Authoritative** — Java classpath / on-robot loader |
+| `teamcode/assets/vidar/default-*.json` | **Generated copy** for TeamCode install + Python tests |
 
-Both copies must stay identical. Regenerate from `VidarConfig` constants:
+Do not hand-edit the assets copies. Regenerate from `VidarConfig` / `VidarCameraProfile` constants:
 
 ```bash
 python scripts/generate_default_config_assets.py
 ```
 
-The script writes both paths. Run it after changing defaults in `VidarConfig.java` or `VidarCameraProfile.java`.
-
+The script writes `config/bundled/`, then copies into `teamcode/assets/vidar/`. CI fails if the copies drift.
 ## Distance units
 
 ViDAR supports **inches (default)**, **meters (SI)**, and **centimeters** via JSON `"distanceUnit"`.
@@ -140,7 +139,7 @@ Use `VidarTeamConfig.defaultSeason()` / `defaultRobot()` until assets are copied
 
 Distances in `world` use the season file's `"distanceUnit"` (default inches). Effective values are merged in `VidarSettings` at attach time.
 
-Bundled defaults: `teamcode/assets/vidar/default-season.json` (keep in sync with `config/bundled/`). Regenerate with `python scripts/generate_default_config_assets.py` after changing library fallbacks in `VidarConfig.java`.
+Bundled defaults: authoritative under `vidar/config/bundled/default-*.json`; install copies under `teamcode/assets/vidar/`. Regenerate with `python scripts/generate_default_config_assets.py` after changing library fallbacks in `VidarConfig.java`.
 
 ## Primary files
 
