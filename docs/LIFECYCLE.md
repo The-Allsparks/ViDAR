@@ -50,6 +50,8 @@ RC exit → shutdown (optional)
 
 World tracks persist across detach and **coast/TTL** using observation time (see world-model tests). Snapshots while detached are published from the frozen world without live cameras.
 
+`VidarOpModeCameraSession` (java-pure `VidarOpModeCameraSessionTest`) asserts Auto attach → detach → TeleOp attach, idempotent `close()`/`detachVision()`, and attach-while-attached releasing the previous session. That is **not** Control Hub USB proof ([#26](https://github.com/The-Allsparks/ViDAR/issues/26)). `VidarVisionAttachment.close()` and `VidarVision.close()` are idempotent so a double `stop()` cannot double-close VisionPortals.
+
 ## Sample OpModes
 
 Built-in OpModes that construct `VidarSpatial` call `close()` on the stop path. CI enforces that (`tests/architecture/test_hotpath_guards.py`). ROI calibration uses a lone `VidarVision` and calls `vision.close()`.

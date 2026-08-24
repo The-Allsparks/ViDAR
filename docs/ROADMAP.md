@@ -12,9 +12,9 @@ ViDAR already ships TeamCode sources, `java-pure` tests, and FTC-oriented CI. Th
 
 | Gap | Tracking |
 |-----|----------|
-| Versioned install (source-copy may remain supported) | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) — see [INSTALL.md](INSTALL.md) / repo `VERSION` |
+| Versioned install (source-copy may remain supported) | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) / [#69](https://github.com/The-Allsparks/ViDAR/issues/69) — Hub `VidarVersion.SEMVER` + [INSTALL.md](INSTALL.md) |
 | Pinned FTC SDK in `java-compile` CI | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) — **done** (`v11.2.1`) |
-| Documented VisionPortal ownership + `stop()` release across OpMode transitions | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) — see [LIFECYCLE.md](LIFECYCLE.md) |
+| Documented VisionPortal ownership + `stop()` release across OpMode transitions | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) / [#69](https://github.com/The-Allsparks/ViDAR/issues/69) — [LIFECYCLE.md](LIFECYCLE.md); JVM session tests, not Hub USB |
 | Control Hub 1–4 camera / USB validation log | [#26](https://github.com/The-Allsparks/ViDAR/issues/26), [#27](https://github.com/The-Allsparks/ViDAR/issues/27) |
 | Narrow adapter contracts for BEACON / HELM / ECHO / TRACE | #33 |
 

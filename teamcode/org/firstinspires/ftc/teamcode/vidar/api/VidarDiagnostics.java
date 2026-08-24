@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.api;
 
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarMetrics;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarVersion;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +33,8 @@ public final class VidarDiagnostics {
     public final double observationTickP95Ms;
     public final double observationTickMaxMs;
     public final int observationTickSamples;
+    /** Semver baked into TeamCode ({@link org.firstinspires.ftc.teamcode.vidar.runtime.VidarVersion}). */
+    public final String libraryVersion;
 
     public VidarDiagnostics(
             ConfigSource configSource,
@@ -39,7 +42,8 @@ public final class VidarDiagnostics {
             int connectedCameras,
             List<String> warnings,
             VidarMetrics.CameraHealth[] cameraHealth) {
-        this(configSource, cameraCount, connectedCameras, warnings, cameraHealth, "", 0, 0, 0, 0, 0, 0);
+        this(configSource, cameraCount, connectedCameras, warnings, cameraHealth, "", 0, 0, 0, 0, 0, 0,
+                VidarVersion.SEMVER);
     }
 
     public VidarDiagnostics(
@@ -63,7 +67,8 @@ public final class VidarDiagnostics {
                 0,
                 0,
                 0,
-                0);
+                0,
+                VidarVersion.SEMVER);
     }
 
     public VidarDiagnostics(
@@ -79,6 +84,36 @@ public final class VidarDiagnostics {
             double observationTickP95Ms,
             double observationTickMaxMs,
             int observationTickSamples) {
+        this(
+                configSource,
+                cameraCount,
+                connectedCameras,
+                warnings,
+                cameraHealth,
+                observationWorkerLastError,
+                observationWorkerConsecutiveFailures,
+                observationWorkerTotalFailures,
+                observationTickP50Ms,
+                observationTickP95Ms,
+                observationTickMaxMs,
+                observationTickSamples,
+                VidarVersion.SEMVER);
+    }
+
+    public VidarDiagnostics(
+            ConfigSource configSource,
+            int cameraCount,
+            int connectedCameras,
+            List<String> warnings,
+            VidarMetrics.CameraHealth[] cameraHealth,
+            String observationWorkerLastError,
+            int observationWorkerConsecutiveFailures,
+            int observationWorkerTotalFailures,
+            double observationTickP50Ms,
+            double observationTickP95Ms,
+            double observationTickMaxMs,
+            int observationTickSamples,
+            String libraryVersion) {
         this.configSource = configSource;
         this.cameraCount = cameraCount;
         this.connectedCameras = connectedCameras;
@@ -94,6 +129,9 @@ public final class VidarDiagnostics {
         this.observationTickP95Ms = observationTickP95Ms;
         this.observationTickMaxMs = observationTickMaxMs;
         this.observationTickSamples = observationTickSamples;
+        this.libraryVersion = libraryVersion == null || libraryVersion.isEmpty()
+                ? VidarVersion.SEMVER
+                : libraryVersion;
     }
 
     public static VidarDiagnostics empty() {
@@ -106,7 +144,8 @@ public final class VidarDiagnostics {
 
     public String formatSummary() {
         StringBuilder sb = new StringBuilder();
-        sb.append("config=").append(configSource.name());
+        sb.append("vidar=").append(libraryVersion);
+        sb.append(" config=").append(configSource.name());
         sb.append(" cameras=").append(connectedCameras).append('/').append(cameraCount);
         if (!warnings.isEmpty()) {
             sb.append(" warnings=").append(warnings.size());

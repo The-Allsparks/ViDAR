@@ -5,6 +5,7 @@ import org.firstinspires.ftc.teamcode.vidar.frame.VidarObservationFrame;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagObservation;
 import org.firstinspires.ftc.teamcode.vidar.model.VidarTagScoutObservation;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarVersion;
 import org.firstinspires.ftc.teamcode.vidar.tag.VidarTagGate;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -34,7 +35,8 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
                 hardwareMap, () -> odomHolder[0], alliance::get);
         spatial.setFieldPosePrior(odomHolder[0]);
 
-        telemetry.addLine("ViDAR Discover — " + spatial.cameraCount() + " cam(s) @ 640×480 tic-toc");
+        telemetry.addLine("ViDAR " + VidarVersion.SEMVER + " Discover — "
+                + spatial.cameraCount() + " cam(s) @ 640×480 tic-toc");
         telemetry.addLine("INIT: Y=RED B=BLUE (or color sensor on own sign)");
         telemetry.addLine("Run: Back toggles alliance · A = tag sample");
         telemetry.update();
@@ -61,6 +63,7 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
             Pose2D fieldNow = spatial.fieldPose();
             VidarAlliance ours = alliance.get();
 
+            telemetry.addData("ViDAR", spatial.diagnostics().libraryVersion);
             telemetry.addData("Cameras", spatial.diagnostics().connectedCameras
                     + "/" + spatial.diagnostics().cameraCount);
             telemetry.addData("Config", spatial.diagnostics().configSource);

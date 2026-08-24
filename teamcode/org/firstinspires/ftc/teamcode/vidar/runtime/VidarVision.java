@@ -43,6 +43,7 @@ public class VidarVision {
     private final boolean asyncWorkerEnabled;
     private volatile boolean excludedFromRotation;
     private boolean failed;
+    private boolean closed;
 
     private VidarElementObservation bestElement;
     private VidarPlateObservation bestPlate;
@@ -388,9 +389,15 @@ public class VidarVision {
     }
 
     public void close() {
+        if (closed) {
+            return;
+        }
+        closed = true;
         if (frameMailbox != null) {
             frameMailbox.release();
         }
-        portal.close();
+        if (portal != null) {
+            portal.close();
+        }
     }
 }
