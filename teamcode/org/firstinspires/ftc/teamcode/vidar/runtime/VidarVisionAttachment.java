@@ -25,6 +25,7 @@ public final class VidarVisionAttachment {
     private final VidarRobotConfig robotConfig;
     private final VidarSeasonConfig season;
     private VidarGlobalVisionWorker globalWorker;
+    private boolean closed;
 
     private VidarVisionAttachment(
             VidarVision[] cameras,
@@ -120,6 +121,10 @@ public final class VidarVisionAttachment {
     }
 
     public void close() {
+        if (closed) {
+            return;
+        }
+        closed = true;
         if (globalWorker != null) {
             globalWorker.shutdownAndJoin();
             globalWorker = null;

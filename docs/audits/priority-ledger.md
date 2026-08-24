@@ -2,7 +2,7 @@
 
 Living ledger for orchestrator selection. GitHub issues are authoritative; this file is the in-repo snapshot.
 
-**Updated:** 2026-08-22 (#46 hide runtime() in progress)  
+**Updated:** 2026-08-23 (#69 OpMode session + Hub version)  
 **Identity:** `TA-C-GHill`  
 **Max active implementation PRs:** 1
 
@@ -18,20 +18,21 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 
 | Field | Value |
 |-------|--------|
-| Selected issue | [#45](https://github.com/The-Allsparks/ViDAR/issues/45) dedup default JSON |
-| Why highest priority | #40 Hub-blocked; prevent silent asset/bundled drift |
-| Why ready | Generator already exists |
-| Expected deliverable | bundled authoritative; assets generated copy; docs + parity test |
-| Branch | `refactor/dedup-default-json-assets` |
-| Last delivered | [#46](https://github.com/The-Allsparks/ViDAR/issues/46) via [#67](https://github.com/The-Allsparks/ViDAR/pull/67) |
+| Selected issue | [#69](https://github.com/The-Allsparks/ViDAR/issues/69) JVM attach/detach + Hub version |
+| Why highest priority | Next software #33 child; no Control Hub required |
+| Why ready | Session bookkeeping and `VidarVersion` do not need HardwareMap |
+| Expected deliverable | java-pure Auto→TeleOp session tests; idempotent portal close; baked semver on DS telemetry |
+| Branch | `feat/opmode-session-and-version-69` |
+| Last delivered | [#45](https://github.com/The-Allsparks/ViDAR/issues/45) via [#68](https://github.com/The-Allsparks/ViDAR/pull/68) |
 
 ## Ledger
 
 | Issue | Priority | Readiness | Dependencies | Status | Branch / PR | Blocker | Next action |
 |-------|----------|-----------|--------------|--------|-------------|---------|-------------|
-| **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 | Open | — | Hardware for USB rows | Hub/#26 next |
+| **#33 FTC packaging & lifecycle** | **P0 readiness** | **Active epic** | FORGE#4 | Open | — | Hardware for USB rows | Remaining: Hub USB, sibling contracts |
+| #69 JVM attach/detach + Hub version | P0 under #33 | **Active** | #33 | This PR | `feat/opmode-session-and-version-69` | — | Land PR |
 | #38 Package cycles | P1 | **Done** | #37 | **Closed** #60 | — | — | frame→detect removed |
-| #61 Install/lifecycle docs | P0 under #33 | **Done** | #33 | **Merged** | — | — | VERSION + close() guard |
+| #61 Install/lifecycle docs | P0 under #33 | **Done** | #33 | **Merged** | — | — | VERSION docs; Hub constant in #69 |
 | #43 java-pure FusionEngine/Spatial | P2 | **Done** | #23 | **Closed** #62 | — | — | isUsableCamera seam |
 | #23 java-pure world/runtime tests | P2 | **Done** | #21 | **Closed** | — | — | TTL + #43 |
 | #37 Quality/CI epic | P1 | Active | This audit | Open | — | — | Children remain |
@@ -44,7 +45,7 @@ Default order: safety blockers → correctness blockers → CI/build → multi-i
 | #42 JSON single tuning surface | P2 | **Done** | — | **Closed** #64 | — | — | Season world/fusion keys |
 | #22 Sim range-fusion parity | P2 | **Done** | #13 | **Closed** #65 | — | — | GROUND_PLANE in sim |
 | #39 God methods | P2 | Ready | — | Open | — | — | After seams |
-| #45 Dedup default JSON | P3 | **Active** | #42 | Open | `refactor/dedup-default-json-assets` | — | Land PR |
+| #45 Dedup default JSON | P3 | **Done** | #42 | **Closed** #68 | — | — | bundled authoritative |
 | #47 Spotless baseline | P3 | Ready | — | Open | — | Format blast radius | Dedicated PR |
 | #19 Roadmap epic | P0 process | Active | — | Open | — | — | Keep checklist in sync |
 | #26 Hardware validation log | P1 under #33 | Blocked | Hardware | Open | — | No Control Hub | Do not invent results |

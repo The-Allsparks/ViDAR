@@ -1,6 +1,6 @@
 # Installing ViDAR into an FTC project
 
-This is the **canonical student install** for ViDAR **0.2.0** (see repo-root [`VERSION`](../VERSION)). Source-copy remains supported; the version file is how you know which revision you copied.
+This is the **canonical student install** for ViDAR **0.2.0** (see repo-root [`VERSION`](../VERSION) and TeamCode [`VidarVersion.SEMVER`](../teamcode/org/firstinspires/ftc/teamcode/vidar/runtime/VidarVersion.java)). Source-copy remains supported. After copy, Driver Station telemetry (`ViDAR: Discover`) shows the baked semver — the repo `VERSION` file is not installed onto the Hub.
 
 **Supported FTC SDK:** `v11.2.1` (CI `java-compile` pin — see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
@@ -28,17 +28,19 @@ ViDAR does **not** command motors. Your OpMode (or pathing library) remains the 
 5. Optional: copy `VidarTeamConfig.java` beside the `vidar` package if you use it.
 6. Copy a robot template from `config/robots/` to `assets/vidar/robot.json` and calibrate.
 7. Name webcams `Webcam 1` … `Webcam 4` as needed; set camera count in JSON / `VidarConfig`.
-8. Run **ViDAR: Discover**, then call `spatial.close()` in every OpMode `stop` path (see [LIFECYCLE.md](LIFECYCLE.md)).
+8. Run **ViDAR: Discover** and confirm telemetry `ViDAR` is `0.2.0` (or the release you intended). Call `spatial.close()` in every OpMode `stop` path (see [LIFECYCLE.md](LIFECYCLE.md)).
 
 ## Version identity
 
 | File | Field |
 |------|--------|
 | `VERSION` | Single-line semver (authoritative for this repo) |
+| `VidarVersion.SEMVER` | Copied onto the Hub with TeamCode |
 | `java-pure/build.gradle` | `version = '…'` — must match `VERSION` |
 | README “Current status” | Must match `VERSION` |
+| `src/vidar/__init__.py` | Off-robot `__version__` |
 
-CI (`tests/architecture/test_version_identity.py`) fails if these drift.
+CI (`tests/architecture/test_version_and_lifecycle.py`) fails if these drift.
 
 Upgrades: replace the copied `vidar/` tree and assets with a newer ViDAR checkout; do not mix files from two versions.
 
@@ -48,7 +50,7 @@ There is **no** Maven/composite Gradle publish of ViDAR yet. “Versioned” mea
 
 1. You install from a tagged git revision or a release whose `VERSION` you record.
 2. CI compiles that tree against a **pinned** FTC SDK.
-3. You can answer “which ViDAR is on this robot?” by reading `VERSION` from the checkout you copied.
+3. You can answer “which ViDAR is on this robot?” from Driver Station telemetry (`ViDAR` / `VidarVersion.SEMVER`), not from a git checkout on the laptop.
 
 A future composite-Gradle or published AAR path would be an additive alternative; source-copy remains valid for students.
 

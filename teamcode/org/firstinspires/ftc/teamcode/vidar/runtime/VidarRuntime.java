@@ -58,6 +58,7 @@ public final class VidarRuntime {
     private VidarDiagnostics.ConfigSource configSource;
     private VidarFusionEngine fusionEngine;
     private VidarVisionAttachment attachment;
+    private final VidarOpModeCameraSession opModeSession = new VidarOpModeCameraSession();
 
     private VidarRuntime(RuntimeBootstrap bootstrap) {
         this.bootstrap = bootstrap;
@@ -100,7 +101,7 @@ public final class VidarRuntime {
             HardwareMap hardwareMap,
             VidarRobotConfig robot,
             VidarSeasonConfig season) {
-        if (attachment != null) {
+        if (attachment != null || opModeSession.isAttached()) {
             detachVision();
         }
         configSource = bootstrap.configSource;
@@ -128,6 +129,7 @@ public final class VidarRuntime {
             fieldPoseContext.bindVision(engine);
             attachment = newAttachment;
             fusionEngine = engine;
+            opModeSession.attach();
         } catch (RuntimeException ex) {
             if (engine != null) {
                 engine.resetMatchState();
@@ -141,6 +143,7 @@ public final class VidarRuntime {
     }
 
     public synchronized void detachVision() {
+        opModeSession.detach();
         if (attachment != null) {
             attachment.close();
             attachment = null;
@@ -278,6 +281,11 @@ public final class VidarRuntime {
         return attachment != null;
     }
 
+    /** Auto → TeleOp camera session bookkeeping (no HardwareMap). */
+    public VidarOpModeCameraSession opModeSession() {
+        return opModeSession;
+    }
+
     private void applyBootstrap(RuntimeBootstrap updated) {
         this.bootstrap = updated;
         if (updated.configSource != null) {
@@ -333,6 +341,7 @@ public final class VidarRuntime {
 
     private void shutdownInternal() {
         detachVision();
+        opModeSession.reset();
         observationWorker.shutdownAndJoin();
         if (tagDecodeWorker != null) {
             tagDecodeWorker.shutdownAndJoin();

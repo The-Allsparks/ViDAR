@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.vidar.runtime.VidarAllianceSelector;
+import org.firstinspires.ftc.teamcode.vidar.runtime.VidarVersion;
 
 /**
  * Shared INIT alliance polling and field-pose telemetry for spatial OpModes.
@@ -16,6 +17,7 @@ public abstract class VidarSpatialOpModeBase extends LinearOpMode {
     protected void pollAllianceInit(VidarAllianceSelector alliance, Gamepad gamepad) {
         while (!isStarted() && !isStopRequested()) {
             alliance.pollInit(gamepad);
+            telemetry.addData("ViDAR", VidarVersion.SEMVER);
             telemetry.addData("Alliance", alliance.formatStatus());
             telemetry.update();
         }
