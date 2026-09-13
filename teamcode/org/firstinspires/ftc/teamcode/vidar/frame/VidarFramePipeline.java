@@ -8,7 +8,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 /**
- * Downscale helpers for tic-toc processing at 640×480 capture with per-camera ROIs.
+ * Downscale helpers for tic-toc processing at 1280×720 capture with per-camera ROIs.
  */
 public final class VidarFramePipeline {
 

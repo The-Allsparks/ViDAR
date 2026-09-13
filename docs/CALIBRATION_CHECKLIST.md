@@ -19,7 +19,7 @@ Pick the template that matches **camera count** and **hardware** (SVPRO vs C920)
 
 ## 2 — Intrinsics (one-time per camera model)
 
-- [ ] `focalLengthPx` matches your camera at **640×480** (SVPRO ≈ 246, C920-class ≈ 340)
+- [ ] `focalLengthPx` matches your camera at **1280×720** (SVPRO ≈ 492, C920-class ≈ 680)
 - [ ] `horizontalFovDeg` / `verticalFovDeg` match product spec (sanity check only)
 
 ## 3 — Mount pose

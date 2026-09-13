@@ -27,4 +27,6 @@ def test_bundled_default_robot_loads():
     robot = load_robot(BUNDLED_ROBOT)
     assert robot.robot_name == "example-robot"
     assert len(robot.cameras) >= 1
-    assert robot.cameras[0].profile.focal_length_px == pytest.approx(340)
+    assert robot.cameras[0].profile.focal_length_px == pytest.approx(492)
+    assert robot.cameras[0].profile.calibration_width == 1280
+    assert robot.cameras[0].profile.calibration_height == 720

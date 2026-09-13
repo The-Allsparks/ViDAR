@@ -28,7 +28,9 @@ ViDAR does **not** command motors. Your OpMode (or pathing library) remains the 
 5. Optional: copy `VidarTeamConfig.java` beside the `vidar` package if you use it.
 6. Copy a robot template from `config/robots/` to `assets/vidar/robot.json` and calibrate.
 7. Name webcams `Webcam 1` … `Webcam 4` as needed; set camera count in JSON / `VidarConfig`.
-8. Run **ViDAR: Discover** and confirm telemetry `ViDAR` is `0.2.0` (or the release you intended). Call `spatial.close()` in every OpMode `stop` path (see [LIFECYCLE.md](LIFECYCLE.md)).
+8. Run **ViDAR: Discover** and confirm telemetry `ViDAR` is `0.2.0` (or the release you intended). Confirm **Portal** reads `1280x720 MJPEG`. Call `spatial.close()` in every OpMode `stop` path (see [LIFECYCLE.md](LIFECYCLE.md)).
+
+Portals request **1280×720 MJPEG** on every configured camera (ELP/SVPRO ~105° HFOV). AprilTag still runs on a crop in the upper band, not the full 720p frame. Four 720p streams are a USB risk on the Control Hub; that bench is not yet measured (see [PERFORMANCE.md](PERFORMANCE.md) and [validation-log.md](validation-log.md)). Do not use native 8MP or YUY2.
 
 ## Version identity
 

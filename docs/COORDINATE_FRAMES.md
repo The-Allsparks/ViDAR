@@ -55,7 +55,7 @@ Do not treat camera axes as robot axes. Mount extrinsics (`robot_T_cameraOptical
 
 ### Image pixels
 
-- **Full-frame** pixels: `cx`, `cy` on the 640×480 (or configured) capture.
+- **Full-frame** pixels: `cx`, `cy` on the 1280×720 (or configured) capture.
 - **Process-frame** pixels: after ROI crop and downscale (floor LUT, horizon row).
 
 Use `VidarImageTransform` (Java) / `ImageTransform` (Python) to map processed → calibrated sensor pixels before `pixelToRay()`.
@@ -124,7 +124,7 @@ Teams configure extrinsics once in robot JSON (`mount.x/y/z`, `bearingDeg`, `pit
 - optional `distortionModel` / `distortionCoeffs`
 - `pixelToRay()`, `pointToPixel()`
 
-**Operational model:** zero-distortion pinhole on the Control Hub — appropriate for typical FTC USB side cameras (narrow FOV, not fisheye). Mild radial distortion at the image edges may appear after checkerboard calibration; Brown-Conrady coefficients can be stored for offline refinement or optional future runtime use. Fisheye is rejected on-robot and is not expected on ViDAR hardware. Do not assume 640×480 intrinsics apply to cropped/processed images without `VidarImageTransform`.
+**Operational model:** zero-distortion pinhole on the Control Hub — appropriate for typical FTC USB side cameras (narrow FOV, not fisheye). Mild radial distortion at the image edges may appear after checkerboard calibration; Brown-Conrady coefficients can be stored for offline refinement or optional future runtime use. Fisheye is rejected on-robot and is not expected on ViDAR hardware. Do not assume 1280×720 intrinsics apply to cropped/processed images without `VidarImageTransform`.
 
 Legacy fields `focalLengthPx`, `principalPointX/Y` remain authoritative in robot JSON.
 
@@ -192,20 +192,20 @@ For floor-contact targets, `VidarGroundPlane` intersects a camera ray with **z =
 Under `cameraDefaults` or per-camera `camera`:
 
 ```json
-"calibrationWidth": 640,
-"calibrationHeight": 480,
-"calibrationVersion": "svpro-640x480-v1",
-"calibrationDate": "2026-08-05",
+"calibrationWidth": 1280,
+"calibrationHeight": 720,
+"calibrationVersion": "svpro-1280x720-v1",
+"calibrationDate": "2026-09-13",
 "distortionModel": "none",
-"focalLengthPx": 246,
-"focalLengthYPx": 246,
+"focalLengthPx": 492,
+"focalLengthYPx": 492,
 "horizontalFovDeg": 105,
-"verticalFovDeg": 88,
-"principalPointX": 320,
-"principalPointY": 240
+"verticalFovDeg": 72,
+"principalPointX": 640,
+"principalPointY": 360
 ```
 
-Mount block defines `robot_T_camera` translation and orientation (degrees). C920-class cameras use `focalLengthPx ≈ 340`, `horizontalFovDeg ≈ 70` — see `config/robots/README.md`.
+Mount block defines `robot_T_camera` translation and orientation (degrees). C920-class cameras use `focalLengthPx ≈ 680` at 1280×720, `horizontalFovDeg ≈ 70` — see `config/robots/README.md`.
 
 ---
 

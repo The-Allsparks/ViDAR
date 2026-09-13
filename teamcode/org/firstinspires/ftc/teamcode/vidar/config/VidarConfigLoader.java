@@ -458,13 +458,13 @@ public final class VidarConfigLoader {
         }
         flat.put("name", name);
         flat.put("bearingDeg", mount.optDouble("bearingDeg", camera.optDouble("bearingDeg", 0)));
-        flat.put("horizonRowPx", camera.optInt("horizonRowPx", 12));
-        flat.put("focalLengthPx", camera.optDouble("focalLengthPx", 340));
+        flat.put("horizonRowPx", camera.optInt("horizonRowPx", 18));
+        flat.put("focalLengthPx", camera.optDouble("focalLengthPx", 492));
         if (camera.has("focalLengthYPx")) {
             flat.put("focalLengthYPx", camera.getDouble("focalLengthYPx"));
         }
-        flat.put("principalPointX", camera.optDouble("principalPointX", 320));
-        flat.put("principalPointY", camera.optDouble("principalPointY", 240));
+        flat.put("principalPointX", camera.optDouble("principalPointX", 640));
+        flat.put("principalPointY", camera.optDouble("principalPointY", 360));
         flat.put("calibrationWidth", camera.optInt("calibrationWidth", camera.optInt("imageWidth", 0)));
         flat.put("calibrationHeight", camera.optInt("calibrationHeight", camera.optInt("imageHeight", 0)));
         if (camera.has("distortionModel")) {
@@ -479,8 +479,8 @@ public final class VidarConfigLoader {
         if (camera.has("calibrationDate")) {
             flat.put("calibrationDate", camera.getString("calibrationDate"));
         }
-        flat.put("horizontalFovDeg", camera.optDouble("horizontalFovDeg", 70));
-        flat.put("verticalFovDeg", camera.optDouble("verticalFovDeg", 55));
+        flat.put("horizontalFovDeg", camera.optDouble("horizontalFovDeg", 105));
+        flat.put("verticalFovDeg", camera.optDouble("verticalFovDeg", 72));
         flat.put("plateWidth", camera.has("plateWidth")
                 ? camera.getDouble("plateWidth")
                 : camera.optDouble("plateWidthIn", 12.0));
@@ -595,13 +595,13 @@ public final class VidarConfigLoader {
         return new VidarRobotConfig.CameraProfileSpec(
                 p.getString("name"),
                 p.getDouble("bearingDeg"),
-                p.optInt("horizonRowPx", 12),
-                p.optDouble("focalLengthPx", 340),
-                p.optDouble("focalLengthYPx", p.optDouble("focalLengthPx", 340)),
-                p.optDouble("principalPointX", 320),
-                p.optDouble("principalPointY", 240),
-                p.optDouble("horizontalFovDeg", 70),
-                p.optDouble("verticalFovDeg", 55),
+                p.optInt("horizonRowPx", 18),
+                p.optDouble("focalLengthPx", 492),
+                p.optDouble("focalLengthYPx", p.optDouble("focalLengthPx", 492)),
+                p.optDouble("principalPointX", 640),
+                p.optDouble("principalPointY", 360),
+                p.optDouble("horizontalFovDeg", 105),
+                p.optDouble("verticalFovDeg", 72),
                 cy, dist,
                 p.optDouble("mountX", 0),
                 p.optDouble("mountY", 0),

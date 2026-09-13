@@ -34,7 +34,7 @@ public final class VidarTransformRegistry {
     private final CameraTransforms[] cameras;
 
     public VidarTransformRegistry(VidarRobotConfig robot) {
-        this(robot, 640, 480);
+        this(robot, 1280, 720);
     }
 
     public VidarTransformRegistry(VidarRobotConfig robot, int frameWidth, int frameHeight) {
@@ -73,7 +73,7 @@ public final class VidarTransformRegistry {
     }
 
     public static CameraTransforms buildForProfile(VidarCameraProfile profile) {
-        return buildForProfile(profile, 640, 480);
+        return buildForProfile(profile, 1280, 720);
     }
 
     /**

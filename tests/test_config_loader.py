@@ -58,7 +58,7 @@ def test_load_example_robot():
     assert len(robot.cameras) == 4
     assert robot.cameras[0].profile.name == "front"
     assert robot.cameras[0].profile.floor_lut
-    assert robot.cameras[0].profile.focal_length_px == pytest.approx(246)
+    assert robot.cameras[0].profile.focal_length_px == pytest.approx(492)
 
 
 @pytest.mark.parametrize("robot_path", ROBOT_FILES, ids=lambda p: p.stem)
@@ -68,9 +68,9 @@ def test_all_robot_json_files_load(robot_path: Path):
     assert robot.cameras[0].profile.focal_length_px > 0
     fx = robot.cameras[0].profile.focal_length_px
     if "c920" in robot_path.stem:
-        assert fx == pytest.approx(340)
+        assert fx == pytest.approx(680)
     elif "svpro" in robot_path.stem or robot_path.stem == "example-robot":
-        assert fx == pytest.approx(246)
+        assert fx == pytest.approx(492)
 
 
 def test_decode_season_april_tags():
@@ -119,4 +119,4 @@ def test_bundled_default_robot_loads():
     robot = load_robot(BUNDLED_ROBOT)
     assert robot.robot_name == "example-robot"
     assert len(robot.cameras) >= 1
-    assert robot.cameras[0].profile.focal_length_px == pytest.approx(340)
+    assert robot.cameras[0].profile.focal_length_px == pytest.approx(492)

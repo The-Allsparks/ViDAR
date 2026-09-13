@@ -27,9 +27,9 @@ public final class VidarTagConfig {
 
 
 
-    /** All cameras capture at 640×480 (480p). */
+    /** All cameras capture at 1280×720 (720p MJPEG). */
 
-    public static final Size CAPTURE_RESOLUTION = new Size(640, 480);
+    public static final Size CAPTURE_RESOLUTION = new Size(1280, 720);
 
 
 
@@ -45,9 +45,9 @@ public final class VidarTagConfig {
 
 
 
-    /** Approximate horizontal FOV for bearing from scout cx (C920-class). */
+    /** Approximate horizontal FOV for bearing from scout cx (ELP/SVPRO 105° class). */
 
-    public static final double HORIZONTAL_FOV_DEG = 70.0;
+    public static final double HORIZONTAL_FOV_DEG = 105.0;
 
 
 
@@ -87,15 +87,15 @@ public final class VidarTagConfig {
 
 
 
-    /** Lens intrinsics @ 640×480 (C920 defaults — tune or calibrate on your webcam). */
+    /** Lens intrinsics @ 1280×720 for 105° HFOV (fx ≈ 246 at 640; scale with width). */
 
-    public static final double LENS_FX = 622.001;
+    public static final double LENS_FX = 492.0;
 
-    public static final double LENS_FY = 622.001;
+    public static final double LENS_FY = 492.0;
 
-    public static final double LENS_CX = 319.803;
+    public static final double LENS_CX = 640.0;
 
-    public static final double LENS_CY = 241.251;
+    public static final double LENS_CY = 360.0;
 
 
 

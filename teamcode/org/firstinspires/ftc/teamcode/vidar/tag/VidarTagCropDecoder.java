@@ -310,8 +310,14 @@ public final class VidarTagCropDecoder {
             int height,
             CameraCalibration calibration,
             VidarCameraProfile profile) {
-        double sx = width / 640.0;
-        double sy = height / 480.0;
+        int calW = (profile != null && profile.calibrationWidth > 0)
+                ? profile.calibrationWidth
+                : VidarTagConfig.CAPTURE_RESOLUTION.getWidth();
+        int calH = (profile != null && profile.calibrationHeight > 0)
+                ? profile.calibrationHeight
+                : VidarTagConfig.CAPTURE_RESOLUTION.getHeight();
+        double sx = width / (double) Math.max(1, calW);
+        double sy = height / (double) Math.max(1, calH);
         return new double[] {
                 VidarTagConfig.lensFx(profile, sx),
                 VidarTagConfig.lensFy(profile, sy),

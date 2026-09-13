@@ -8,9 +8,15 @@ ViDAR must keep Control Hub loop time **predictable**. Throughput on a desktop J
 |------|--------|-------|
 | VisionPortal callback → `VidarFrameMailbox.publish` | Portal | Full-frame `copyTo` today |
 | Contour / tag scout `processFrame` | Portal (1-cam sync) or `VidarGlobalVisionWorker` | OpenCV; pooled Mats |
-| AprilTag crop decode | `VidarTagDecodeWorker` | Budgeted ≤ 1 Hz globally |
+| AprilTag crop decode | `VidarTagDecodeWorker` | Budgeted ≤ 1 Hz globally; crop only, not full 720p |
 | Fusion + world + snapshot | `VidarObservationWorker` (~1 ms sleep) | Holds `synchronized (VidarRuntime)` during `engine.update()` + `world.update()` |
 | Student OpMode `loop()` | Robot | Must only read snapshots; telemetry `String.format` can dominate DS loop time |
+
+## USB vs AprilTag CPU
+
+Capture is **1280×720 MJPEG** on every configured portal. USB pays for the full frame × camera count. AprilTag CPU pays only for the upper-band crop (~half width × tag ROI height) at most once per second. POLLEN/plates may downscale the 720p frame. If four 720p streams drop frames on an Android 7 Hub, stream fewer cameras at 720p rather than dropping a hive-capable side to 480p. Hub 4×720p MJPEG is **not yet measured** ([validation-log.md](validation-log.md)).
+
+Do not enable FTC Dashboard streaming during a MATCH.
 
 ## Budgets (targets, not CI gates)
 

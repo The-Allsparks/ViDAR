@@ -51,7 +51,9 @@ class ConfigLoaderTest {
         assertEquals(4, robot.cameras.length);
         assertEquals("front", robot.cameras[0].profile.name);
         assertTrue(robot.cameras[0].profile.focalLengthPx > 0);
-        assertEquals(246, robot.cameras[0].profile.focalLengthPx, 0.01);
+        assertEquals(492, robot.cameras[0].profile.focalLengthPx, 0.01);
+        assertEquals(1280, robot.cameras[0].profile.calibrationWidth);
+        assertEquals(720, robot.cameras[0].profile.calibrationHeight);
     }
 
     @Test

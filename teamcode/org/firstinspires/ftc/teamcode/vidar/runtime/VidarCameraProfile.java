@@ -71,7 +71,7 @@ public final class VidarCameraProfile {
             double mountX,
             double mountY) {
         this(name, bearingDeg, horizonRowPx, focalLengthPx, focalLengthPx,
-                320, 240, 70, 55, floorCyPx, floorDist,
+                640, 360, 105, 72, floorCyPx, floorDist,
                 mountX, mountY, 0, 0, 0, 0, 12.0, VidarCameraRoiConfig.DEFAULT);
     }
 
@@ -176,8 +176,8 @@ public final class VidarCameraProfile {
 
     private static VidarCameraProfile buildSide(String name, double bearing, double mountX, double mountY) {
         return new VidarCameraProfile(
-                name, bearing, 12, 340, 340, 320, 240, 70, 55,
-                new double[] {95, 75, 55, 40},
+                name, bearing, 18, 492, 492, 640, 360, 105, 72,
+                new double[] {143, 113, 83, 60},
                 new double[] {12, 24, 36, 48},
                 mountX, mountY, 9.0, 0, -12, 0, 12.0,
                 VidarCameraRoiConfig.DEFAULT);

@@ -30,7 +30,7 @@ Run `python scripts/bench_metrics.py` on a dev machine. Full write-up: [benches/
 Do **not** invent numbers. When a Hub is available:
 
 1. Flash/deploy TeamCode with ViDAR; configure USB webcams in the Driver Station.
-2. Run **ViDAR: Discover** at the intended camera count and resolution (typically 640×480).
+2. Run **ViDAR: Discover** at the intended camera count and resolution (1280×720 MJPEG).
 3. After ~30 s of steady detections, read telemetry:
    - **Tick ms** — `p50`, `p95`, `max`, `n` (`VidarLatencyWindow` / `diagnostics().observationTick*`)
    - Portal FPS / dropped frames / decode drops from camera metrics
@@ -39,7 +39,7 @@ Do **not** invent numbers. When a Hub is available:
 
 | Date | Hub firmware | Cams | Res | Tick p50/p95/max ms | Portal FPS | Pass/Fail | Notes |
 |------|--------------|------|-----|---------------------|------------|-----------|-------|
-| | | | | | | | *empty — hardware blocked* |
+| | | | 1280×720 MJPEG ×4 | | | | **not yet measured** — #92 constants-only; Hub 4-cam USB bench before competition enable |
 
 ## 1 — Single-camera calibration
 
