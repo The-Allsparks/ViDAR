@@ -26,6 +26,8 @@ dependencies {
     implementation 'org.json:json:20260814'
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    // Gradle 9 no longer ships the JUnit Platform launcher on the test runtime classpath.
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 def teamcodeVidar = file("${rootDir}/../teamcode/org/firstinspires/ftc/teamcode/vidar")
