@@ -235,7 +235,7 @@ public final class VidarTagCropDecoder {
                 } else if (bestSingle == null) {
                     bestSingle = single;
                 }
-            } else {
+            } else if (detection instanceof AprilTagClusterDetection) {
                 AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) detection;
                 if (bestCluster == null) {
                     bestCluster = clusterDet;
@@ -276,6 +276,9 @@ public final class VidarTagCropDecoder {
                     decodePixels);
         }
 
+        if (!(best instanceof AprilTagClusterDetection)) {
+            return null;
+        }
         AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) best;
         String clusterName = clusterDet.metadata == null ? null : clusterDet.metadata.name;
         return new DecodeResult(

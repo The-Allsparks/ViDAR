@@ -100,6 +100,20 @@ class VidarTagCropDecoderPickBestTest {
         assertNull(VidarTagCropDecoder.toDecodeResult(null, CROP, 320, 240, 1));
     }
 
+    @Test
+    void pickBestSkipsUnknownDetectionSubtype() {
+        AprilTagDetection unknown = new AprilTagDetection(
+                ftcPose(1, 1, 0), new AprilTagPoseRaw(), null, 0L, DistanceUnit.INCH) {};
+        AprilTagDetection tagged = single(7, new Point(80, 60), ftcPose(3, 10, 0));
+
+        AprilTagDetection best = VidarTagCropDecoder.pickBest(
+                Arrays.asList(unknown, tagged), null, CROP, 320, 240);
+        VidarTagCropDecoder.DecodeResult result =
+                VidarTagCropDecoder.toDecodeResult(best, CROP, 320, 240, 1);
+        assertEquals(7, result.tagId);
+        assertNull(VidarTagCropDecoder.toDecodeResult(unknown, CROP, 320, 240, 1));
+    }
+
     private static AprilTagSingleDetection single(int id, Point center, AprilTagPoseFtc pose) {
         return new AprilTagSingleDetection(
                 id, 0, 1f, center, new Point[0], null, pose, new AprilTagPoseRaw(),
