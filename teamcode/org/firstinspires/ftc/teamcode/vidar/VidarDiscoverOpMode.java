@@ -36,7 +36,8 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
         spatial.setFieldPosePrior(odomHolder[0]);
 
         telemetry.addLine("ViDAR " + VidarVersion.SEMVER + " Discover — "
-                + spatial.cameraCount() + " cam(s) @ 640×480 tic-toc");
+                + spatial.cameraCount() + " cam(s) @ "
+                + VidarConfig.portalCaptureLabel() + " MJPEG tic-toc");
         telemetry.addLine("INIT: Y=RED B=BLUE (or color sensor on own sign)");
         telemetry.addLine("Run: Back toggles alliance · A = tag sample");
         telemetry.update();
@@ -83,6 +84,7 @@ public class VidarDiscoverOpMode extends VidarSpatialOpModeBase {
                         spatial.diagnostics().observationTickMaxMs,
                         spatial.diagnostics().observationTickSamples));
             }
+            telemetry.addData("Portal", VidarConfig.portalCaptureLabel() + " MJPEG");
             telemetry.addData("FPS cam1", spatial.cameraCount() > 0
                     && !Float.isNaN(spatial.portalFps(0))
                     ? String.format("%.1f", spatial.portalFps(0)) : "—");

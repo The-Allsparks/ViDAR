@@ -14,16 +14,16 @@ Calibrate each camera independently. Store results in robot JSON (`config/robots
 | HFOV | ~105° (manufacturer) | Wide **rectilinear**, not fisheye — pinhole + `distortionModel: "none"` is appropriate |
 | Focus | Fixed | No autofocus hunting on field |
 | Interface | USB 2.0 UVC | Plug-and-play on Control Hub; use a **powered hub** for 3–4 cameras |
-| ViDAR stream | **640×480** | `VidarConfig.PORTAL_RESOLUTION` — calibrate intrinsics at this size, not native 8MP |
+| ViDAR stream | **1280×720 MJPEG** | `VidarConfig.PORTAL_RESOLUTION` — calibrate intrinsics at this size, not native 8MP. AprilTag still crops. |
 
-**Starting intrinsics @ 640×480** (pinhole from 105° HFOV; refine on-field):
+**Starting intrinsics @ 1280×720** (pinhole from 105° HFOV; fx scales with width from 246 @ 640; refine on-field):
 
 ```
-focalLengthPx ≈ 246     // (640/2) / tan(105°/2)
-focalLengthYPx ≈ 246    // ~88° VFOV at 4:3
-principalPointX/Y ≈ 320, 240
+focalLengthPx ≈ 492     // (1280/2) / tan(105°/2)  == 246 * (1280/640)
+focalLengthYPx ≈ 492    // ~72° VFOV at 16:9
+principalPointX/Y ≈ 640, 360
 horizontalFovDeg = 105
-verticalFovDeg = 88
+verticalFovDeg = 72
 distortionModel = "none"
 ```
 
@@ -33,13 +33,13 @@ Wider FOV than a C920 (~78°): same physical object occupies fewer pixels at a g
 
 --- — **Implemented** (manual + validation; checkerboard OpMode **Planned**)
 
-Measure or estimate at calibration resolution (`calibrationWidth` × `calibrationHeight`, default 640×480):
+Measure or estimate at calibration resolution (`calibrationWidth` × `calibrationHeight`, default 1280×720):
 
 | Field | Location |
 |-------|----------|
 | `focalLengthPx` | Horizontal focal length |
 | `focalLengthYPx` | Vertical (defaults to horizontal) |
-| `principalPointX/Y` | Usually ~320, 240 |
+| `principalPointX/Y` | Usually ~640, 360 |
 | `horizontalFovDeg` / `verticalFovDeg` | From datasheet or measurement |
 
 OpMode for full checkerboard calibration: **Planned**. Pinhole `pixelToRay` / `pointToPixel` and sim axis overlay: **Implemented**, **Tested in simulation**.

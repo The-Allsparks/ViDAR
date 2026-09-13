@@ -80,7 +80,7 @@ public final class VidarCameraIntrinsics {
     }
 
     public static VidarCameraIntrinsics fromProfile(VidarCameraProfile profile) {
-        return fromProfile(profile, 640, 480);
+        return fromProfile(profile, 1280, 720);
     }
 
     public static VidarCameraIntrinsics fromProfile(

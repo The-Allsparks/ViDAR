@@ -26,7 +26,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import java.util.function.Supplier;
 
 /**
- * One camera: tic-toc element / plate / tag at 640×480 with shared scheduler per portal.
+ * One camera: tic-toc element / plate / tag at 1280×720 MJPEG with shared scheduler per portal.
  */
 public class VidarVision {
 

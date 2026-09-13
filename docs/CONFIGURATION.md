@@ -23,9 +23,13 @@ Templates live in the repo:
 | `config/robots/example-robot.json` | 4× SVPRO | Team default — same as `example-robot-svpro-4cam.json` |
 | `config/robots/example-robot-svpro-4cam.json` | 4× SVPRO | Explicit four-camera SVPRO template |
 | `config/robots/example-robot-svpro-1cam.json` | 1× SVPRO | Bench / first hub validation |
-| `config/robots/example-robot-c920-4cam.json` | 4× C920-class | ~70° HFOV reference (fx ≈ 340) |
+| `config/robots/example-robot-c920-4cam.json` | 4× C920-class | ~70° HFOV reference (fx ≈ 680 at 1280×720) |
 
 See [`config/robots/README.md`](../config/robots/README.md) for camera selection, ranging impact, and floor LUT notes.
+
+## Capture (Hub)
+
+Competition portals request **1280×720 MJPEG** (`VidarConfig.PORTAL_RESOLUTION` / `VidarTagConfig.CAPTURE_RESOLUTION`). Shop ELP/SVPRO modules are ~105° HFOV: `focalLengthPx ≈ 246` at 640×480, **≈ 492 at 1280×720** (scale with width). C920-class ~70° uses fx ≈ 340 at 640, **≈ 680 at 1280**. AprilTag still crops the upper band; POLLEN/plates may downscale. YUY2 and native 8MP are not selected. USB cost is four 720p streams; AprilTag CPU is the crop.
 
 Copy the file for your active season to `TeamCode/src/main/assets/vidar/season.json`. HSV and filter values in older-season templates are **starting points** — tune on field before competition.
 

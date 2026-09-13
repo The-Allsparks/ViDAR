@@ -58,8 +58,8 @@ public final class VidarConfig {
     /** Legacy single-camera name — same as {@link #CAMERA_NAMES}[0]. */
     public static final String CAMERA_NAME = CAMERA_NAMES[0];
 
-    /** All USB webcams stream at 640×480 for CPU/USB budget. */
-    public static final Size PORTAL_RESOLUTION = new Size(640, 480);
+    /** All USB webcams stream at 1280×720 MJPEG (BIOBUZZ 3.25 in tags need the pixels). */
+    public static final Size PORTAL_RESOLUTION = new Size(1280, 720);
 
     /** Downscale bottom-half ROI before element/plate OpenCV (0.5 → half size). */
     public static final double PROCESS_ROI_SCALE = 0.5;
@@ -82,7 +82,7 @@ public final class VidarConfig {
     /** Disable RC LiveView during matches to save CPU. */
     public static final boolean LIVE_VIEW_ENABLED = false;
 
-    /** Use MJPEG when more than one camera is active (USB hub bandwidth). */
+    /** Always MJPEG. YUY2 is not selected (USB budget for 720p; issue #92). */
     public static final boolean MJPEG_MULTI_CAMERA = true;
 
     /** Serialize heavy OpenCV across cameras on a background worker (round-robin). */
@@ -234,12 +234,15 @@ public final class VidarConfig {
         return portalStreamFormat(activeCameraCount());
     }
 
-    /** Uses robot JSON camera count when building multi-camera portals. */
+    /** Uses robot JSON camera count when building multi-camera portals. Always MJPEG. */
     public static org.firstinspires.ftc.vision.VisionPortal.StreamFormat portalStreamFormat(int activeCameraCount) {
-        if (MJPEG_MULTI_CAMERA && activeCameraCount > 1) {
-            return org.firstinspires.ftc.vision.VisionPortal.StreamFormat.MJPEG;
-        }
-        return org.firstinspires.ftc.vision.VisionPortal.StreamFormat.YUY2;
+        return org.firstinspires.ftc.vision.VisionPortal.StreamFormat.MJPEG;
+    }
+
+    /** Requested portal size, e.g. {@code 1280x720}. */
+    public static String portalCaptureLabel() {
+        Size s = portalCameraResolution();
+        return s.getWidth() + "x" + s.getHeight();
     }
 
     /** Bottom-half ROI for plate locators at the portal resolution. */

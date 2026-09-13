@@ -2,16 +2,16 @@
 
 Copy **one** file to `TeamCode/src/main/assets/vidar/robot.json` and tune mounts + floor LUT on your physical robot.
 
-All templates stream at **640×480** (`VidarConfig.PORTAL_RESOLUTION`). Intrinsics must match that resolution, not the camera’s native 8MP mode.
+All templates stream at **1280×720 MJPEG** (`VidarConfig.PORTAL_RESOLUTION`). Intrinsics must match that resolution, not the camera’s native 8MP mode. AprilTag still runs on a crop.
 
 ## Which file to use
 
-| File | Cameras | Hardware | `focalLengthPx` | HFOV | When to use |
-|------|---------|----------|-----------------|------|-------------|
-| [`example-robot.json`](example-robot.json) | 4 | **SVPRO 8MP** (team default) | 246 | 105° | Competition robot with four SVPRO modules |
-| [`example-robot-svpro-4cam.json`](example-robot-svpro-4cam.json) | 4 | SVPRO 8MP | 246 | 105° | Same as `example-robot.json` (explicit name) |
-| [`example-robot-svpro-1cam.json`](example-robot-svpro-1cam.json) | 1 | SVPRO 8MP | 246 | 105° | First Control Hub bring-up, ranging validation |
-| [`example-robot-c920-4cam.json`](example-robot-c920-4cam.json) | 4 | Logitech C920 / C270 class | 340 | ~70° | Legacy/reference layout for narrow-FOV USB webcams |
+| File | Cameras | Hardware | `focalLengthPx` @ 1280×720 | HFOV | When to use |
+|------|---------|----------|----------------------------|------|-------------|
+| [`example-robot.json`](example-robot.json) | 4 | **SVPRO 8MP** (team default) | 492 | 105° | Competition robot with four SVPRO modules |
+| [`example-robot-svpro-4cam.json`](example-robot-svpro-4cam.json) | 4 | SVPRO 8MP | 492 | 105° | Same as `example-robot.json` (explicit name) |
+| [`example-robot-svpro-1cam.json`](example-robot-svpro-1cam.json) | 1 | SVPRO 8MP | 492 | 105° | First Control Hub bring-up, ranging validation |
+| [`example-robot-c920-4cam.json`](example-robot-c920-4cam.json) | 4 | Logitech C920 / C270 class | 680 | ~70° | Legacy/reference layout for narrow-FOV USB webcams |
 
 **Amazon (team camera):** [SVPRO 8MP USB module B0DCF8WW6V](https://www.amazon.com/dp/B0DCF8WW6V) — model SV-USB8MP05AF-FF105, Sony IMX179, fixed focus, wide **rectilinear** lens (not fisheye).
 
@@ -41,4 +41,4 @@ See **[docs/CALIBRATION_CHECKLIST.md](../../docs/CALIBRATION_CHECKLIST.md)** for
 
 ## Library defaults vs robot JSON
 
-If a field is omitted from JSON, loaders fall back to **C920-class** defaults (`focalLengthPx = 340`, tag scout FOV 70°). Always ship a complete `robot.json` for your actual camera model — do not rely on code defaults on the hub.
+If a field is omitted from JSON, loaders fall back to **SVPRO 105° @ 1280×720** defaults (`focalLengthPx = 492`). C920-class teams must copy `example-robot-c920-4cam.json` (`focalLengthPx = 680`, FOV 70°). Always ship a complete `robot.json` for your actual camera model.

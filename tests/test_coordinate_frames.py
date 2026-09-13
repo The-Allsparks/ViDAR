@@ -223,8 +223,8 @@ class TestConfigBackwardCompat:
         robot = load_robot(path)
         assert len(robot.cameras) == 4
         profile = robot.cameras[0].profile
-        assert profile.calibration_width == 640
-        assert profile.calibration_height == 480
+        assert profile.calibration_width == 1280
+        assert profile.calibration_height == 720
 
 
 class TestCalibrationDataset:

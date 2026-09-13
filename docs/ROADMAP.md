@@ -212,7 +212,7 @@ Power options:
 
 ### Practical limits
 
-- Use **640×480** portal when tags enabled (`VidarTagConfig`).
+- Use **1280×720 MJPEG** portal when tags enabled (`VidarTagConfig`). USB cost is the full frame; AprilTag still crops. Four 720p streams are **not yet Hub-measured**.
 - Identical camera models simplify intrinsics sharing (team: SVPRO 8MP module).
 - Short USB cables, strain relief, ferrite if you see dropouts.
 - Log `portal.getCameraState()` and frame timing in a stress OpMode before competition.
