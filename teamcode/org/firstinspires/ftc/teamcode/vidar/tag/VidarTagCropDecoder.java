@@ -7,10 +7,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.teamcode.vidar.config.VidarSeasonConfig;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -20,25 +24,44 @@ import java.util.List;
 /**
  * Runs official {@link AprilTagProcessor} on a cropped sub-frame only (~25% of pixels)
  * with lens intrinsics adjusted for the ROI.
+ *
+ * <p>FTC SDK 12.0: {@link AprilTagDetection} is the shared base. Tag {@code id} and pixel
+ * {@code center} live on {@link AprilTagSingleDetection}. BIOBUZZ HIVE openings arrive as
+ * {@link AprilTagClusterDetection}; {@code ftcPose} is camera-relative to the cluster origin
+ * (CELL opening), not one tag center. Do not call {@code .id} or {@code .center} on the base type.
  */
 public final class VidarTagCropDecoder {
 
+    /** Sentinel tag id when the hit is a named cluster (SDK samples use -1). */
+    public static final int CLUSTER_TAG_ID = -1;
+
     public static final class DecodeResult {
         public final int tagId;
+        /** Cluster metadata name, or {@code null} for a single-tag hit. */
+        public final String clusterName;
+        public final boolean cluster;
         public final double centerX;
         public final double centerY;
+        /**
+         * Camera-relative pose copied from {@code ftcPose} (x/y/yaw). Not SDK
+         * {@code robotPose} and not {@code field_T_robot} — that mapping is a follow-up.
+         */
         public final Pose2D fieldPose;
         public final int decimationUsed;
         public final int decodePixels;
 
         DecodeResult(
                 int tagId,
+                String clusterName,
+                boolean cluster,
                 double centerX,
                 double centerY,
                 Pose2D fieldPose,
                 int decimationUsed,
                 int decodePixels) {
             this.tagId = tagId;
+            this.clusterName = clusterName;
+            this.cluster = cluster;
             this.centerX = centerX;
             this.centerY = centerY;
             this.fieldPose = fieldPose;
@@ -142,25 +165,7 @@ public final class VidarTagCropDecoder {
             if (best == null) {
                 return null;
             }
-
-            double mapScaleX = (double) crop.width / Math.max(1, work.cols());
-            double mapScaleY = (double) crop.height / Math.max(1, work.rows());
-            double fullCenterX = best.center.x * mapScaleX + crop.x;
-            double fullCenterY = best.center.y * mapScaleY + crop.y;
-            Pose2D fieldPose = new Pose2D(
-                    DistanceUnit.INCH,
-                    best.ftcPose.x,
-                    best.ftcPose.y,
-                    AngleUnit.DEGREES,
-                    best.ftcPose.yaw);
-
-            return new DecodeResult(
-                    best.id,
-                    fullCenterX,
-                    fullCenterY,
-                    fieldPose,
-                    decimation,
-                    work.cols() * work.rows());
+            return toDecodeResult(best, crop, work.cols(), work.rows(), decimation);
         } finally {
             if (cropMat != null) {
                 cropMat.release();
@@ -188,7 +193,10 @@ public final class VidarTagCropDecoder {
         return cropTagProcessor;
     }
 
-    private static AprilTagDetection pickBest(
+    /**
+     * Prefer a cluster hit (CELL opening) over a single tag. Single-tag {@code id} is identity only.
+     */
+    static AprilTagDetection pickBest(
             List<AprilTagDetection> detections,
             VidarTagScoutObservation scout,
             Rect crop,
@@ -201,28 +209,97 @@ public final class VidarTagCropDecoder {
         double mapScaleX = (double) crop.width / Math.max(1, workCols);
         double mapScaleY = (double) crop.height / Math.max(1, workRows);
 
-        AprilTagDetection best = null;
+        AprilTagDetection bestCluster = null;
+        AprilTagDetection bestSingle = null;
         double bestDist = Double.MAX_VALUE;
 
         for (AprilTagDetection detection : detections) {
-            if (VidarTagConfig.DESIRED_TAG_ID >= 0 && detection.id != VidarTagConfig.DESIRED_TAG_ID) {
-                continue;
-            }
-
-            double fullX = detection.center.x * mapScaleX + crop.x;
-            double fullY = detection.center.y * mapScaleY + crop.y;
-
-            if (scout != null) {
-                double dist = Math.hypot(fullX - scout.cx, fullY - scout.cy);
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = detection;
+            if (detection instanceof AprilTagSingleDetection) {
+                AprilTagSingleDetection single = (AprilTagSingleDetection) detection;
+                if (VidarTagConfig.DESIRED_TAG_ID >= 0 && single.id != VidarTagConfig.DESIRED_TAG_ID) {
+                    continue;
                 }
-            } else if (best == null) {
-                best = detection;
+                if (single.center == null) {
+                    continue;
+                }
+
+                double fullX = single.center.x * mapScaleX + crop.x;
+                double fullY = single.center.y * mapScaleY + crop.y;
+
+                if (scout != null) {
+                    double dist = Math.hypot(fullX - scout.cx, fullY - scout.cy);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        bestSingle = single;
+                    }
+                } else if (bestSingle == null) {
+                    bestSingle = single;
+                }
+            } else {
+                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) detection;
+                if (bestCluster == null) {
+                    bestCluster = clusterDet;
+                }
             }
         }
-        return best;
+        return bestCluster != null ? bestCluster : bestSingle;
+    }
+
+    static DecodeResult toDecodeResult(
+            AprilTagDetection best,
+            Rect crop,
+            int workCols,
+            int workRows,
+            int decimation) {
+        if (best == null) {
+            return null;
+        }
+
+        Pose2D cameraRelative = poseFromFtc(best.ftcPose);
+        int decodePixels = Math.max(1, workCols) * Math.max(1, workRows);
+
+        if (best instanceof AprilTagSingleDetection) {
+            AprilTagSingleDetection single = (AprilTagSingleDetection) best;
+            double mapScaleX = (double) crop.width / Math.max(1, workCols);
+            double mapScaleY = (double) crop.height / Math.max(1, workRows);
+            Point center = single.center;
+            double fullCenterX = center == null ? Double.NaN : center.x * mapScaleX + crop.x;
+            double fullCenterY = center == null ? Double.NaN : center.y * mapScaleY + crop.y;
+            return new DecodeResult(
+                    single.id,
+                    null,
+                    false,
+                    fullCenterX,
+                    fullCenterY,
+                    cameraRelative,
+                    decimation,
+                    decodePixels);
+        }
+
+        AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) best;
+        String clusterName = clusterDet.metadata == null ? null : clusterDet.metadata.name;
+        return new DecodeResult(
+                CLUSTER_TAG_ID,
+                clusterName,
+                true,
+                Double.NaN,
+                Double.NaN,
+                cameraRelative,
+                decimation,
+                decodePixels);
+    }
+
+    /** Camera-relative {@code ftcPose} only. Do not read {@code detection.robotPose}. */
+    private static Pose2D poseFromFtc(AprilTagPoseFtc ftcPose) {
+        if (ftcPose == null) {
+            return null;
+        }
+        return new Pose2D(
+                DistanceUnit.INCH,
+                ftcPose.x,
+                ftcPose.y,
+                AngleUnit.DEGREES,
+                ftcPose.yaw);
     }
 
     private static double[] resolveIntrinsics(

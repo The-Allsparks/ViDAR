@@ -252,6 +252,15 @@ Tune HSV on field, then update `season.json` (browser sim: `sim/vidar-tuning.jso
 Season JSON defines where AprilTags live on the field so ViDAR can build an FTC
 `AprilTagLibrary`, compute field-relative robot pose, and gate decode sampling.
 
+### BIOBUZZ tags are clusters
+
+BIOBUZZ HIVE openings are **AprilTag clusters** (four 3.25 in 36h11 tags), not one
+tag with an `id`. FTC SDK 12.0 returns them as `AprilTagClusterDetection`.
+The cluster origin is the CELL opening. Crop decode prefers a cluster hit when
+aiming at a CELL; single-tag `id` is still identity for a lone tag. See
+https://ftc-docs.firstinspires.org/apriltag-clusters. Do not invent tag IDs here
+(that is issue #77). `ftcPose` is camera-relative — not field pose.
+
 **Field frame** (matches FTC SDK): origin at field center, +X right, +Y forward, +Z up.
 
 ```json

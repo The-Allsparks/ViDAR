@@ -2,7 +2,7 @@
 
 This is the **canonical student install** for ViDAR **0.2.0** (see repo-root [`VERSION`](../VERSION) and TeamCode [`VidarVersion.SEMVER`](../teamcode/org/firstinspires/ftc/teamcode/vidar/runtime/VidarVersion.java)). Source-copy remains supported. After copy, Driver Station telemetry (`ViDAR: Discover`) shows the baked semver — the repo `VERSION` file is not installed onto the Hub.
 
-**Supported FTC SDK:** `v11.2.1` (CI `java-compile` pin — see [CONTRIBUTING.md](../CONTRIBUTING.md)).
+**Supported FTC SDK:** `v12.0` (CI `java-compile` pin — see [CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 Desktop Python, Docker, and the browser sim are **off-robot only**. Do not deploy them to the Robot Controller.
 
@@ -22,7 +22,7 @@ ViDAR does **not** command motors. Your OpMode (or pathing library) remains the 
 ## Install steps
 
 1. Clone or download this repository at a known tag/commit. Confirm `VERSION` matches the release you intended.
-2. Open [FtcRobotController](https://github.com/FIRST-Tech-Challenge/FtcRobotController) at tag **`v11.2.1`** (or newer only after ViDAR CI is updated).
+2. Open [FtcRobotController](https://github.com/FIRST-Tech-Challenge/FtcRobotController) at tag **`v12.0`** (or newer only after ViDAR CI is updated).
 3. Copy `teamcode/org/firstinspires/ftc/teamcode/vidar/` → `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/vidar/`.
 4. Copy `teamcode/assets/vidar/` → `TeamCode/src/main/assets/vidar/`.
 5. Optional: copy `VidarTeamConfig.java` beside the `vidar` package if you use it.
