@@ -70,7 +70,7 @@ CI may only apply **generous** JVM ceilings (algorithmic catastrophe), never mil
 
 ## Dependencies
 
-- Prefer no new Maven/pip dependencies. java-pure is Java 11 bytecode; CI compiles TeamCode against FTC SDK **v11.2.1**.
+- Prefer no new Maven/pip dependencies. java-pure is Java 11 bytecode; CI compiles TeamCode against FTC SDK **v12.0**.
 - Do not add a DI framework.
 - Do not add ArchUnit to TeamCode (Android/FTC). Architecture is enforced by source tests under `tests/architecture/`.
 - Pedro Pathing stays an optional consumer in `vidar.integration` with no Maven dependency.

@@ -31,7 +31,7 @@ jobs:
       - name: Compile ViDAR Java against FTC SDK
         env:
           # Keep in sync with README / CONTRIBUTING "Supported FTC SDK".
-          FTC_SDK_REF: v11.2.1
+          FTC_SDK_REF: v12.0
         run: |
           git clone --depth 1 --branch "$FTC_SDK_REF" \
             https://github.com/FIRST-Tech-Challenge/FtcRobotController.git /tmp/ftc

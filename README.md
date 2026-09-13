@@ -170,9 +170,9 @@ python -m pytest tests/ -v
 
 ### 2. Install on the Control Hub
 
-See **[docs/INSTALL.md](docs/INSTALL.md)** for the canonical versioned source-copy steps (SDK pin `v11.2.1`, assets, `VERSION`). Lifecycle / `stop()`: **[docs/LIFECYCLE.md](docs/LIFECYCLE.md)**.
+See **[docs/INSTALL.md](docs/INSTALL.md)** for the canonical versioned source-copy steps (SDK pin `v12.0`, assets, `VERSION`). Lifecycle / `stop()`: **[docs/LIFECYCLE.md](docs/LIFECYCLE.md)**.
 
-1. Clone the [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcRobotController) at the supported tag **`v11.2.1`** (or newer only after ViDAR CI is updated) and open it in Android Studio.
+1. Clone the [FTC SDK](https://github.com/FIRST-Tech-Challenge/FtcRobotController) at the supported tag **`v12.0`** (or newer only after ViDAR CI is updated) and open it in Android Studio.
 2. Copy the entire `teamcode/org/firstinspires/ftc/teamcode/vidar/` tree (including subpackages) → `TeamCode/src/main/java/.../vidar/`. See [docs/JAVA_PACKAGE_MAP.md](docs/JAVA_PACKAGE_MAP.md).
 3. Copy `teamcode/assets/vidar/` → `TeamCode/src/main/assets/vidar/` (includes `default-season.json` / `default-robot.json` fallbacks plus your `season.json` / `robot.json` overrides).
 4. Copy a robot template from [`config/robots/`](config/robots/README.md) to `TeamCode/src/main/assets/vidar/robot.json` (or edit the bundled default).

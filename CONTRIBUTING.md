@@ -35,7 +35,7 @@ Or run everything:
 python scripts/run_tests.py
 ```
 
-`java-pure` is a **required** GitHub Actions check on `main`, along with Python `test` (Ubuntu + Windows) and `java-compile` against FTC SDK `v11.2.1`.
+`java-pure` is a **required** GitHub Actions check on `main`, along with Python `test` (Ubuntu + Windows) and `java-compile` against FTC SDK `v12.0`.
 
 ## Browser simulator
 
@@ -62,7 +62,7 @@ CI `java-compile` clones [FtcRobotController](https://github.com/FIRST-Tech-Chal
 
 | Field | Value |
 |-------|--------|
-| **Supported tag** | `v11.2.1` |
+| **Supported tag** | `v12.0` |
 | **Workflow env** | `FTC_SDK_REF` in `.github/workflows/test.yml` |
 
 Bump the pin deliberately when validating a newer SDK; do not treat an unpinned clone as compatibility proof. Desktop `java-pure` tests do **not** claim Control Hub readiness.
