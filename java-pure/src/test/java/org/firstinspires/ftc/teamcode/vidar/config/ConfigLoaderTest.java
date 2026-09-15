@@ -38,6 +38,7 @@ class ConfigLoaderTest {
         }
         assertEquals(30, season.aprilTags[0].id);
         assertEquals(45, season.aprilTags[15].id);
+        assertEquals(0, season.fixtures.length);
         assertFalse(json.contains("\"fixtures\""));
         assertTrue(json.contains("\"flowerGeometry\""));
         assertTrue(json.contains("\"outerDiameter\": 1.05"));
@@ -106,5 +107,78 @@ class ConfigLoaderTest {
         VidarSeasonConfig season = VidarConfigLoader.loadSeason(json);
         assertEquals("2025-decode", season.seasonId);
         assertEquals("pollen", season.elements[0].id);
+        assertEquals(0, season.fixtures.length);
+    }
+
+    private static String minimalSeasonJson(String fixturesBlock) {
+        String fixtures = fixturesBlock == null ? "" : "," + fixturesBlock;
+        return "{"
+                + "\"seasonId\":\"fixture-test\","
+                + "\"field\":{\"length\":144,\"width\":144},"
+                + "\"elements\":[{\"id\":\"ball\",\"label\":\"Ball\",\"diameter\":4,"
+                + "\"detector\":\"color_blob\","
+                + "\"hsv\":{\"hMin\":0,\"hMax\":10,\"sMin\":0,\"sMax\":255,\"vMin\":0,\"vMax\":255}}],"
+                + "\"plates\":[]"
+                + fixtures
+                + "}";
+    }
+
+    @Test
+    void omittedFixturesKeyLoadsEmptyArray() {
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(minimalSeasonJson(null));
+        assertEquals(0, season.fixtures.length);
+        assertEquals("ball", season.elements[0].id);
+    }
+
+    @Test
+    void syntheticStaticFieldFixtureLoads() {
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(minimalSeasonJson(
+                "\"fixtures\":[{"
+                        + "\"id\":\"flower_1\","
+                        + "\"label\":\"Flower 1\","
+                        + "\"localization\":\"static_field\","
+                        + "\"position\":{\"x\":12.5,\"y\":-64.0,\"z\":21.5},"
+                        + "\"orientationDeg\":{\"yaw\":90},"
+                        + "\"detectors\":[\"ordered_stack\"]"
+                        + "}]"));
+        assertEquals(1, season.fixtures.length);
+        VidarFixtureSpec spec = season.fixtureById("flower_1");
+        assertNotNull(spec);
+        assertEquals("Flower 1", spec.label);
+        assertEquals(VidarFixtureLocalizationMode.STATIC_FIELD, spec.localization);
+        assertEquals(12.5, spec.xIn, 1e-9);
+        assertEquals(-64.0, spec.yIn, 1e-9);
+        assertEquals(21.5, spec.zIn, 1e-9);
+        assertEquals(90.0, spec.yawDeg, 1e-9);
+        assertEquals(1, spec.detectors.length);
+        assertEquals("ordered_stack", spec.detectors[0]);
+        assertEquals(0, spec.tagIds.length);
+        assertTrue(spec.hasFieldPosition());
+    }
+
+    @Test
+    void unknownFixtureLocalizationFailsLoudly() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> VidarConfigLoader.loadSeason(minimalSeasonJson(
+                        "\"fixtures\":[{\"id\":\"bad\",\"localization\":\"nope\"}]")));
+        assertTrue(ex.getMessage().contains("Unknown fixture localization"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("nope"), ex.getMessage());
+    }
+
+    @Test
+    void blankFixtureIdFails() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> VidarConfigLoader.loadSeason(minimalSeasonJson(
+                        "\"fixtures\":[{\"id\":\"  \",\"localization\":\"static_field\"}]")));
+        assertTrue(ex.getMessage().contains("Fixture id is required"), ex.getMessage());
+    }
+
+    @Test
+    void emptyFixtureLabelDefaultsToId() {
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(minimalSeasonJson(
+                "\"fixtures\":[{\"id\":\"flower_1\",\"label\":\"\",\"localization\":\"static_field\"}]"));
+        assertEquals("flower_1", season.fixtureById("flower_1").label);
     }
 }

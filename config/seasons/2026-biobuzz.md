@@ -78,4 +78,4 @@ Section 9.8: approximately **3.6 in** (9.1 cm) Gopher ResisDent balls, red `am-5
 
 ## Not in this file
 
-`fixtures[]` waits for #78. `robot.json` camera mounts unchanged. `VidarLocalizationFusion` is not taught that HIVE tags are static landmarks.
+`fixtures[]` is loaded when present; this season file still omits it (`namedPoses` + `flowerGeometry` is the holding pen). `robot.json` camera mounts unchanged. `VidarLocalizationFusion` is not taught that HIVE tags are static landmarks.

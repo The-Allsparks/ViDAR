@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from vidar.config_loader import load_robot, load_season, parse_season
-from vidar.models import ElementDetectorType
+from vidar.models import ElementDetectorType, FixtureLocalizationMode
 from vidar.units import DistanceUnit
 
 
@@ -25,6 +25,7 @@ def test_load_biobuzz_season():
     assert by_id["nectar_blue"].diameter == pytest.approx(3.6)
     assert len(season.plates) == 2
     assert season.distance_unit is DistanceUnit.IN
+    assert season.fixtures == ()
 
 
 def test_season_distance_unit_meters():
@@ -156,12 +157,90 @@ def test_biobuzz_season_raw_json_named_poses_and_extra_keys():
     assert "hsvWrap" not in nectar_red
 
 
+def _minimal_season(**extra):
+    data = {
+        "seasonId": "fixture-test",
+        "field": {"length": 144, "width": 144},
+        "elements": [
+            {
+                "id": "ball",
+                "label": "Ball",
+                "diameter": 4,
+                "detector": "color_blob",
+                "hsv": {
+                    "hMin": 0,
+                    "hMax": 10,
+                    "sMin": 0,
+                    "sMax": 255,
+                    "vMin": 0,
+                    "vMax": 255,
+                },
+            }
+        ],
+        "plates": [],
+    }
+    data.update(extra)
+    return data
+
+
+def test_omitted_fixtures_key_loads_empty_tuple():
+    season = parse_season(_minimal_season())
+    assert season.fixtures == ()
+    assert season.elements[0].id == "ball"
+
+
+def test_synthetic_static_field_fixture_loads():
+    season = parse_season(
+        _minimal_season(
+            fixtures=[
+                {
+                    "id": "flower_1",
+                    "label": "Flower 1",
+                    "localization": "static_field",
+                    "position": {"x": 12.5, "y": -64.0, "z": 21.5},
+                    "orientationDeg": {"yaw": 90},
+                    "detectors": ["ordered_stack"],
+                }
+            ]
+        )
+    )
+    spec = season.fixture_by_id("flower_1")
+    assert spec is not None
+    assert spec.label == "Flower 1"
+    assert spec.localization is FixtureLocalizationMode.STATIC_FIELD
+    assert spec.x == pytest.approx(12.5)
+    assert spec.y == pytest.approx(-64.0)
+    assert spec.z == pytest.approx(21.5)
+    assert spec.yaw_deg == pytest.approx(90)
+    assert spec.detectors == ("ordered_stack",)
+    assert spec.tag_ids == ()
+    assert spec.has_field_position()
+
+
+def test_unknown_fixture_localization_fails_loudly():
+    with pytest.raises(ValueError, match="Unknown fixture localization"):
+        parse_season(_minimal_season(fixtures=[{"id": "bad", "localization": "nope"}]))
+
+
+def test_blank_fixture_id_fails():
+    with pytest.raises(ValueError, match="Fixture id is required"):
+        parse_season(_minimal_season(fixtures=[{"id": "  ", "localization": "static_field"}]))
+
+
+def test_empty_fixture_label_defaults_to_id():
+    season = parse_season(
+        _minimal_season(fixtures=[{"id": "flower_1", "label": "", "localization": "static_field"}])
+    )
+    assert season.fixture_by_id("flower_1").label == "flower_1"
+
+
 @pytest.mark.parametrize("season_path", SEASON_FILES, ids=lambda p: p.stem)
 def test_all_season_json_files_load(season_path: Path):
     season = load_season(season_path)
     assert season.season_id
     assert len(season.elements) >= 1
     assert len(season.plates) >= 1
+    assert season.fixtures == ()
     for element in season.elements:
         assert element.diameter > 0
         assert element.detector in ElementDetectorType

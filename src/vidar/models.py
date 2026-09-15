@@ -23,6 +23,24 @@ class Alliance(str, Enum):
     BLUE = "blue"
 
 
+class FixtureLocalizationMode(str, Enum):
+    APRIL_TAG = "april_tag"
+    STATIC_FIELD = "static_field"
+    VISUAL = "visual"
+
+    @classmethod
+    def from_json(cls, raw: str | None) -> FixtureLocalizationMode:
+        if raw is None or str(raw).strip() == "":
+            raise ValueError("Fixture localization is required (april_tag, static_field, or visual)")
+        key = str(raw).strip().lower()
+        try:
+            return cls(key)
+        except ValueError as exc:
+            raise ValueError(
+                f'Unknown fixture localization "{raw}" (expected april_tag, static_field, or visual)'
+            ) from exc
+
+
 @dataclass(frozen=True)
 class HsvRange:
     h_min: int
@@ -112,6 +130,30 @@ class AprilTagSpec:
 
 
 @dataclass(frozen=True)
+class FixtureSpec:
+    id: str
+    label: str
+    localization: FixtureLocalizationMode
+    x: float = float("nan")
+    y: float = float("nan")
+    z: float = float("nan")
+    yaw_deg: float = 0.0
+    pitch_deg: float = 0.0
+    roll_deg: float = 0.0
+    detectors: tuple[str, ...] = ()
+    tag_ids: tuple[int, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.id is None or str(self.id).strip() == "":
+            raise ValueError("Fixture id is required")
+        if self.label is None or self.label == "":
+            object.__setattr__(self, "label", self.id)
+
+    def has_field_position(self) -> bool:
+        return not (math.isnan(self.x) or math.isnan(self.y) or math.isnan(self.z))
+
+
+@dataclass(frozen=True)
 class SeasonConfig:
     season_id: str
     season_name: str
@@ -119,6 +161,7 @@ class SeasonConfig:
     elements: tuple[ElementSpec, ...]
     plates: tuple[PlateSpec, ...]
     april_tags: tuple[AprilTagSpec, ...] = ()
+    fixtures: tuple[FixtureSpec, ...] = ()
     default_tag_size: float = 8.125
     min_element_confidence: float = 0.35
     min_plate_confidence: float = 0.35
@@ -138,6 +181,12 @@ class SeasonConfig:
         for tag in self.april_tags:
             if tag.id == tag_id:
                 return tag
+        return None
+
+    def fixture_by_id(self, fixture_id: str) -> FixtureSpec | None:
+        for fixture in self.fixtures:
+            if fixture.id == fixture_id:
+                return fixture
         return None
 
     def localization_tags(self) -> tuple[AprilTagSpec, ...]:

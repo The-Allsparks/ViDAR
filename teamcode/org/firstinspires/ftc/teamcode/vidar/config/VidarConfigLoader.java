@@ -101,6 +101,7 @@ public final class VidarConfigLoader {
         VidarFieldSpec field = parseField(root);
         double defaultTagSize = parseDefaultTagSize(root);
         VidarAprilTagSpec[] tags = parseAprilTags(root, defaultTagSize);
+        VidarFixtureSpec[] fixtures = parseFixtures(root);
         return new VidarSeasonConfig(
                 root.getString("seasonId"),
                 root.optString("seasonName", root.getString("seasonId")),
@@ -108,6 +109,7 @@ public final class VidarConfigLoader {
                 elements,
                 plates,
                 tags,
+                fixtures,
                 defaultTagSize,
                 parseMinElementConfidence(fusion),
                 fusion != null ? fusion.optDouble("minPlateConfidence", 0.35) : 0.35,
@@ -228,6 +230,65 @@ public final class VidarConfigLoader {
         VidarAprilTagSpec[] out = new VidarAprilTagSpec[array.length()];
         for (int i = 0; i < array.length(); i++) {
             out[i] = parseAprilTag(array.getJSONObject(i), defaultSize);
+        }
+        return out;
+    }
+
+    /**
+     * Optional {@code fixtures[]} — omitted or empty means today's behavior (no fixture specs).
+     * Unknown {@code localization} strings fail loudly.
+     */
+    private static VidarFixtureSpec[] parseFixtures(JSONObject root) throws JSONException {
+        if (!root.has("fixtures")) {
+            return new VidarFixtureSpec[0];
+        }
+        JSONArray array = root.getJSONArray("fixtures");
+        VidarFixtureSpec[] out = new VidarFixtureSpec[array.length()];
+        for (int i = 0; i < array.length(); i++) {
+            out[i] = parseFixture(array.getJSONObject(i));
+        }
+        return out;
+    }
+
+    private static VidarFixtureSpec parseFixture(JSONObject fixture) throws JSONException {
+        String id = fixture.getString("id");
+        JSONObject position = fixture.optJSONObject("position");
+        if (position == null) {
+            position = fixture.optJSONObject("positionIn");
+        }
+        JSONObject orientation = fixture.optJSONObject("orientationDeg");
+        return new VidarFixtureSpec(
+                id,
+                fixture.optString("label", id),
+                VidarFixtureLocalizationMode.fromJson(fixture.optString("localization", null)),
+                readTagCoord(fixture, position, "x"),
+                readTagCoord(fixture, position, "y"),
+                readTagCoord(fixture, position, "z"),
+                readTagOrientation(fixture, orientation, "yaw"),
+                readTagOrientation(fixture, orientation, "pitch"),
+                readTagOrientation(fixture, orientation, "roll"),
+                parseStringArray(fixture.optJSONArray("detectors")),
+                parseIntArray(fixture.optJSONArray("tagIds")));
+    }
+
+    private static String[] parseStringArray(JSONArray array) throws JSONException {
+        if (array == null) {
+            return new String[0];
+        }
+        String[] out = new String[array.length()];
+        for (int i = 0; i < array.length(); i++) {
+            out[i] = array.getString(i);
+        }
+        return out;
+    }
+
+    private static int[] parseIntArray(JSONArray array) throws JSONException {
+        if (array == null) {
+            return new int[0];
+        }
+        int[] out = new int[array.length()];
+        for (int i = 0; i < array.length(); i++) {
+            out[i] = array.getInt(i);
         }
         return out;
     }

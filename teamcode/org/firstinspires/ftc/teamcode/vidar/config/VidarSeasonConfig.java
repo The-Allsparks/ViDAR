@@ -15,7 +15,8 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 
 /**
 
- * Per-season game-piece definitions (elements, plates, fusion thresholds) and field AprilTag map.
+ * Per-season game-piece definitions (elements, plates, fusion thresholds), field AprilTag map,
+ * and optional known field fixtures.
 
  * Teams load a JSON season file and pass it when creating {@link org.firstinspires.ftc.teamcode.vidar.VidarSpatial}.
 
@@ -36,6 +37,10 @@ public final class VidarSeasonConfig {
     public final VidarPlateSpec[] plates;
 
     public final VidarAprilTagSpec[] aprilTags;
+
+    /** Known field structures from {@code fixtures[]}; empty when the key is omitted. */
+
+    public final VidarFixtureSpec[] fixtures;
 
     /** Default black-square size when a tag entry omits {@code size}. */
 
@@ -74,6 +79,8 @@ public final class VidarSeasonConfig {
 
             VidarAprilTagSpec[] aprilTags,
 
+            VidarFixtureSpec[] fixtures,
+
             double defaultTagSize,
 
             double minElementConfidence,
@@ -101,6 +108,8 @@ public final class VidarSeasonConfig {
         this.plates = plates == null ? new VidarPlateSpec[0] : plates;
 
         this.aprilTags = aprilTags == null ? new VidarAprilTagSpec[0] : aprilTags;
+
+        this.fixtures = fixtures == null ? new VidarFixtureSpec[0] : fixtures;
 
         this.defaultTagSize = defaultTagSize;
 
@@ -173,6 +182,30 @@ public final class VidarSeasonConfig {
         for (VidarAprilTagSpec spec : aprilTags) {
 
             if (spec.id == id) {
+
+                return spec;
+
+            }
+
+        }
+
+        return null;
+
+    }
+
+
+
+    public VidarFixtureSpec fixtureById(String id) {
+
+        if (id == null) {
+
+            return null;
+
+        }
+
+        for (VidarFixtureSpec spec : fixtures) {
+
+            if (id.equals(spec.id)) {
 
                 return spec;
 
