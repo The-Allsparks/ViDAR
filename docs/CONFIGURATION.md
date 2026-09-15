@@ -261,11 +261,11 @@ Season JSON defines where AprilTags live on the field so ViDAR can build an FTC
 BIOBUZZ HIVE openings are **AprilTag clusters** (four **3.25 in** 36h11 tags on
 each CELL bottom), not DECODE's **8.125 in** goal tags and not one tag with an
 `id`. Citations: [`config/seasons/2026-biobuzz.md`](../config/seasons/2026-biobuzz.md)
-(Competition Manual V1 §9.9 / Figure 9-17). FTC SDK 12.0 returns them as
+(Competition Manual V1 section 9.9 / Figure 9-17). FTC SDK 12.0 returns them as
 `AprilTagClusterDetection`. The cluster origin is the CELL opening. Crop decode
 prefers a cluster hit when aiming at a CELL; single-tag `id` is still identity
 for a lone tag. See https://ftc-docs.firstinspires.org/apriltag-clusters.
-`ftcPose` is camera-relative — not field pose.
+`ftcPose` is camera-relative - not field pose.
 
 Every BIOBUZZ HIVE tag in season JSON has `"localization": false`. That means
 **not a static SDK landmark**. Do not feed these IDs into

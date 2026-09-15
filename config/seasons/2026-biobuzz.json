@@ -1,7 +1,7 @@
 {
   "_comment": "BIOBUZZ field transcription for ViDAR#77. Citations: config/seasons/2026-biobuzz.md. Tags are 3.25 in 36h11 CELL clusters, not DECODE 8.125 in goals. localization:false means not a static SDK landmark.",
   "seasonId": "2026-biobuzz",
-  "seasonName": "BIOBUZZ 2026-27 \u2014 yellow POLLEN (2.8 in) and red/blue NECTAR (3.6 in)",
+  "seasonName": "BIOBUZZ 2026-27 - yellow POLLEN (2.8 in) and red/blue NECTAR (3.6 in)",
   "field": {
     "length": 691.2,
     "width": 317.0
