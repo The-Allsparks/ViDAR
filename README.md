@@ -7,6 +7,7 @@
 </p>
 
 <p align="center">
+  <a href="docs/WHITE_PAPER.md"><strong>White paper</strong></a> ·
   <a href="docs/SYSTEM_DESIGN.md"><strong>System design</strong></a> ·
   <a href="docs/API.md"><strong>API contract</strong></a> ·
   <a href="#browser-simulator"><strong>Browser simulator</strong></a> ·
@@ -72,6 +73,7 @@ Feature-level labels and maturity notes: [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DES
 
 | Resource | Description |
 |----------|-------------|
+| [White paper](docs/WHITE_PAPER.md) | Technical paper: problem, architecture, Hub limits, status as of 0.2.0 |
 | [System design](docs/SYSTEM_DESIGN.md) | Architecture, pipelines, and feature status |
 | [Install](docs/INSTALL.md) | Versioned source-copy into TeamCode |
 | [Lifecycle](docs/LIFECYCLE.md) | VisionPortal ownership and OpMode `stop()` |
@@ -265,6 +267,7 @@ Integration notes and validation checklist: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 | Document | Purpose |
 |----------|---------|
+| [docs/WHITE_PAPER.md](docs/WHITE_PAPER.md) | Technical white paper (problem, contracts, evidence) |
 | [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md) | Architecture and feature status |
 | [docs/INSTALL.md](docs/INSTALL.md) | Versioned TeamCode install |
 | [docs/LIFECYCLE.md](docs/LIFECYCLE.md) | VisionPortal ownership and `stop()` |

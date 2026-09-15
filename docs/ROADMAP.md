@@ -2,25 +2,23 @@
 
 Phased plan for multi-camera deployment, robot-space situational awareness, optional pathing integration, and field validation.
 
-Orchestrator snapshot: [initial deep audit](audits/initial-deep-audit.md) · [priority ledger](audits/priority-ledger.md). GitHub milestones and issues are authoritative for work order.
+Orchestrator snapshot: [initial deep audit](audits/initial-deep-audit.md) · [priority ledger](audits/priority-ledger.md) · **current work order:** [2026-09-14 issue audit and implementation plan](plans/2026-09-14-issue-audit-and-implementation.md). GitHub milestones and issues are authoritative for work order.
 
-## P0 — FTC packaging and lifecycle ([#33](https://github.com/The-Allsparks/ViDAR/issues/33))
+## P0 — FTC packaging and lifecycle ([#33](https://github.com/The-Allsparks/ViDAR/issues/33) ✅ closed)
 
-**First readiness priority** for claiming FTC integration (org gate: [FORGE#4](https://github.com/The-Allsparks/FORGE/issues/4)).
-
-ViDAR already ships TeamCode sources, `java-pure` tests, and FTC-oriented CI. That work stays. What is still missing for readiness:
+Software packaging for FTC integration is **done** on `main` (org gate for *combined* stack readiness remains [FORGE#4](https://github.com/The-Allsparks/FORGE/issues/4)).
 
 | Gap | Tracking |
 |-----|----------|
-| Versioned install (source-copy may remain supported) | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) / [#69](https://github.com/The-Allsparks/ViDAR/issues/69) — Hub `VidarVersion.SEMVER` + [INSTALL.md](INSTALL.md) |
-| Pinned FTC SDK in `java-compile` CI | [#29](https://github.com/The-Allsparks/ViDAR/issues/29) — **done**; current pin **`v12.0`** ([#90](https://github.com/The-Allsparks/ViDAR/issues/90)) |
-| Documented VisionPortal ownership + `stop()` release across OpMode transitions | [#33](https://github.com/The-Allsparks/ViDAR/issues/33) / [#69](https://github.com/The-Allsparks/ViDAR/issues/69) — [LIFECYCLE.md](LIFECYCLE.md); JVM session tests, not Hub USB |
-| Control Hub 1–4 camera / USB validation log | [#26](https://github.com/The-Allsparks/ViDAR/issues/26), [#27](https://github.com/The-Allsparks/ViDAR/issues/27) |
-| Narrow adapter contracts for BEACON / HELM / ECHO / TRACE | #33 |
+| Versioned install (source-copy remains supported) | **Done** — Hub `VidarVersion.SEMVER` + [INSTALL.md](INSTALL.md) ([#69](https://github.com/The-Allsparks/ViDAR/issues/69)) |
+| Pinned FTC SDK in `java-compile` CI | **Done** — pin **`v12.0`** ([#90](https://github.com/The-Allsparks/ViDAR/issues/90)) |
+| Documented VisionPortal ownership + `stop()` release across OpMode transitions | **Done** (JVM session tests) — [LIFECYCLE.md](LIFECYCLE.md); not Hub USB |
+| Control Hub 1–4 camera / USB validation log | **Open** — [#26](https://github.com/The-Allsparks/ViDAR/issues/26), [#112](https://github.com/The-Allsparks/ViDAR/issues/112) |
+| Narrow adapter contracts for BEACON / HELM / ECHO / TRACE | **Open** under product epics [#75](https://github.com/The-Allsparks/ViDAR/issues/75) / [#96](https://github.com/The-Allsparks/ViDAR/issues/96) (HELM fixture status: [HELM#46](https://github.com/The-Allsparks/HELM/issues/46)) |
 
-ViDAR remains **passive** — it must not command the drivetrain. Do not treat unpinned SDK clones or desktop-only tests as Hub validation.
+ViDAR remains **passive** — it must not command the drivetrain. Do not treat desktop-only tests as Hub validation. Do not claim match-ready vision while Hub rows in [validation-log.md](validation-log.md) are empty.
 
-Phases below (multi-cam, plates, world model, Pedro bridge, USB wiring, field validation) remain the product roadmap; **#33 gates “FTC-ready” claims**.
+Current product epics: **[#75](https://github.com/The-Allsparks/ViDAR/issues/75) fixture state** and **[#96](https://github.com/The-Allsparks/ViDAR/issues/96) fixture-assisted localization**. [#76](https://github.com/The-Allsparks/ViDAR/issues/76) is **accepted**. Next implementation is [#78](https://github.com/The-Allsparks/ViDAR/issues/78) (`fixtures[]` loader). Pose fusion still waits on [#97](https://github.com/The-Allsparks/ViDAR/issues/97) A vs B.
 
 ## Architecture (current)
 
