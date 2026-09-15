@@ -14,6 +14,8 @@ from vidar.models import (
     ElementShape,
     ElementSpec,
     FieldSpec,
+    FixtureLocalizationMode,
+    FixtureSpec,
     HsvRange,
     PlateSpec,
     RobotConfig,
@@ -333,6 +335,34 @@ def _parse_april_tags(data: dict[str, Any]) -> tuple[tuple[AprilTagSpec, ...], f
     return tuple(_parse_april_tag(item, default_size) for item in tags_raw), default_size
 
 
+def _parse_fixtures(data: dict[str, Any]) -> tuple[FixtureSpec, ...]:
+    raw = data.get("fixtures")
+    if not raw:
+        return ()
+    return tuple(_parse_fixture(item) for item in raw)
+
+
+def _parse_fixture(raw: dict[str, Any]) -> FixtureSpec:
+    fixture_id = str(raw["id"])
+    position = raw.get("position") or raw.get("positionIn")
+    orientation = raw.get("orientationDeg")
+    detectors = tuple(str(item) for item in (raw.get("detectors") or []))
+    tag_ids = tuple(int(item) for item in (raw.get("tagIds") or []))
+    return FixtureSpec(
+        id=fixture_id,
+        label=str(raw.get("label", fixture_id)),
+        localization=FixtureLocalizationMode.from_json(raw.get("localization")),
+        x=_read_tag_coord(raw, position, "x"),
+        y=_read_tag_coord(raw, position, "y"),
+        z=_read_tag_coord(raw, position, "z"),
+        yaw_deg=_read_tag_orientation(raw, orientation, "yaw"),
+        pitch_deg=_read_tag_orientation(raw, orientation, "pitch"),
+        roll_deg=_read_tag_orientation(raw, orientation, "roll"),
+        detectors=detectors,
+        tag_ids=tag_ids,
+    )
+
+
 def parse_season(data: dict[str, Any]) -> SeasonConfig:
     fusion = data.get("fusion") or {}
     if "elements" not in data:
@@ -341,6 +371,7 @@ def parse_season(data: dict[str, Any]) -> SeasonConfig:
 
     field_raw = data.get("field") or {}
     april_tags, default_tag_size = _parse_april_tags(data)
+    fixtures = _parse_fixtures(data)
     return SeasonConfig(
         season_id=str(data["seasonId"]),
         season_name=str(data.get("seasonName", data["seasonId"])),
@@ -351,6 +382,7 @@ def parse_season(data: dict[str, Any]) -> SeasonConfig:
         elements=tuple(_parse_element(item) for item in elements_raw),
         plates=tuple(_parse_plate(item) for item in data["plates"]),
         april_tags=april_tags,
+        fixtures=fixtures,
         default_tag_size=default_tag_size,
         min_element_confidence=float(fusion.get("minElementConfidence", 0.35)),
         min_plate_confidence=float(fusion.get("minPlateConfidence", 0.35)),

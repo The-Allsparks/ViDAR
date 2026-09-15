@@ -274,9 +274,10 @@ cluster is a later issue, not this flag.
 
 FLOWER **field** poses (`x`, `y`, yaw) live in `namedPoses[]`. Shared part
 geometry (opening **z = 21.5 in**, HIPS pipe **1.05 in** OD, **3.45 in**
-square spacing) lives in `flowerGeometry` from the Field CAD STEP. The current
-loaders ignore `namedPoses` and `flowerGeometry`. Do not add `fixtures[]` in
-the BIOBUZZ transcription file.
+square spacing) lives in `flowerGeometry` from the Field CAD STEP. Loaders
+ignore `namedPoses` and `flowerGeometry`. BIOBUZZ still **omits** `fixtures[]`;
+the cited poses are the holding pen until a wrap PR maps them onto
+`VidarFixtureSpec`.
 
 **Field frame** (matches FTC SDK): origin at field center, +X right, +Y forward, +Z up.
 
@@ -309,6 +310,38 @@ ViDAR falls back to `AprilTagGameDatabase.getCurrentGameTagLibrary()`.
 
 Access at runtime: `season.aprilTagLibrary()`, `season.tagById(20)`,
 `season.useTagForLocalization(tagId)`.
+
+## Field fixtures
+
+Optional `fixtures[]` on season JSON. Omit the key (or use `[]`) for today's
+behavior: no fixture specs, no detectors, no store. Unknown `localization`
+strings fail at load.
+
+```json
+"fixtures": [
+  {
+    "id": "flower_1",
+    "label": "Flower 1",
+    "localization": "static_field",
+    "position": { "x": 12.5, "y": -64.0, "z": 21.5 },
+    "orientationDeg": { "yaw": 90, "pitch": 0, "roll": 0 },
+    "detectors": ["ordered_stack"],
+    "tagIds": []
+  }
+]
+```
+
+| Field | Meaning |
+|-------|---------|
+| `id` | Stable identity (later store key) |
+| `label` | Human name; defaults to `id` |
+| `localization` | `april_tag` / `static_field` / `visual` |
+| `position` / `orientationDeg` | Field pose of the fixture frame (same units as the season file) |
+| `detectors` | String ids resolved by a later detector registry; empty is valid |
+| `tagIds` | AprilTag identities when `localization` is `april_tag` |
+
+Java: `VidarFixtureSpec` on `VidarSeasonConfig.fixtures`. Python: `SeasonConfig.fixtures`.
+Do not put BIOBUZZ scoring meaning (owner, nectar) on this spec.
 
 ## Per-camera ROIs
 
