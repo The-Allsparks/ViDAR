@@ -10,7 +10,8 @@ Season JSON: [`2026-biobuzz.json`](2026-biobuzz.json). This is the citation side
 |----------|---------|------|----------------|
 | BIOBUZZ Competition Manual (English PDF) | V1 | 12 Sep 2026 (Kickoff) | sections 9.5-9.9, Figures 9-12, 9-15, 9-16, **9-17**; section 10.3.1 MATCH-start HIVE tilt |
 | Event Field Setup Guide | V1.0 | 12 Sep 2026 | section 9.3 HIVE AprilTag labels; section 10 Flower Installation / Flower Locations; section 11.1 MATCH-start HIVE tilt |
-| Onshape Field CAD | Version 1 | 12 Sep 2026 (Playing Field page) | **Not measured.** Public document `BIOBUZZ Playing Field` (`a355e772e3d24813de7852ee`). Anonymous assembly API returned HTTP 401. No inch xy/yaw was invented from the 144 in FIELD. |
+| Onshape Field CAD | Version 1 | 12 Sep 2026 (Playing Field page) | Public document `BIOBUZZ Playing Field` (`a355e772e3d24813de7852ee`). Anonymous assembly API still 401. Pipe OD/spacing and FLOWER xy/yaw measured from FIRST Field CAD STEP `BIOBUZZ_Full Field.20260912.step`. |
+| Field CAD (STEP) | V1 20260912 | 12 Sep 2026 | [field-cad-step](https://ftc-resources.firstinspires.org/ftc/archive/2027/field/field-cad-step). `am-5862` pipes; four `am-5855` FLOWER poses mapped to FTC x/y/yaw. |
 | FLOWER Scoring Volume CAD | Version 1 | 12 Sep 2026 | Linked from Competition Manual CAD Reference 10-4 / [scoring-volume](https://ftc-resources.firstinspires.org/ftc/archive/2027/field/scoring-volume). Used only to confirm the scoring volume is the FLOWER rings - not a field-pose table. |
 | Playing Field hub | - | - | https://ftc-resources.firstinspires.org/ftc/archive/2027/field |
 
@@ -31,23 +32,45 @@ Manual prose (section 9.9) lists the same four ranges. Size **3.25 in**, family 
 
 **Omitted:** per-tag `positionIn` / `orientationDeg`. Tags move when a HIVE tips. Figure 9-17 does not publish inch coordinates. MATCH-start tilt is described (section 10.3.1 / Setup Guide section 11.1) but is not a static field pose. That work is #91.
 
-## FLOWERs (`namedPoses`)
+## FLOWERs (`namedPoses` + `flowerGeometry`)
 
-Four FLOWERs on the perimeter, one mid-wall (Figure 9-17; Setup Guide section 10.4 "Flower Locations"). No official `flower_1`... names in V1 - JSON ids are wall names for later `fixtures[]` wrap (#78).
+Shared part geometry (opening height, pipes) is `flowerGeometry`. Each named pose is the **field placement** of that geometry: `positionIn.x/y` and `orientationDeg.yaw`. Height is **not** on the pose.
 
-| id | Cited numbers | Omitted |
-|----|---------------|---------|
-| `flower_audience` | z = **21.5 in** (top opening above TILES, section 9.7 / Figure 9-12); audience wall | xy, yaw |
-| `flower_opposite_audience` | z = 21.5 in; wall opposite audience | xy, yaw |
-| `flower_red` | z = 21.5 in; red wall (left from audience) | xy, yaw |
-| `flower_blue` | z = 21.5 in; blue wall | xy, yaw |
-| `hive_structure` | x=0, y=0 from "center of the FIELD" (section 9.6); z = **43.95 in** pivot (section 9.6.1); CELLs ~**18.8 in** apart (section 9.6.2) | yaw |
+Local frame: origin at the top-opening center in XY; +Z up; +Y out the opening into the FIELD; +X right-handed. Yaw 0 faces +X.
 
-Figure 9-12 also cites a 4.0 in top opening, 1.25 in backstop, 3.55 x 3.57 in retrieval opening. Those are FLOWER geometry, not field xy.
+STEP is Y-up. FTC mapping: X=STEP X, Y=STEP Z, Z=STEP Y. Audience is the STEP -Z wall (red audience cell STEP X<0, blue STEP X>0).
+
+| id | x | y | yaw | Wall |
+|----|---|---|-----|------|
+| `flower_audience` | -23.3926 | -68.0416 | 90 | audience (-Y) |
+| `flower_opposite_audience` | 23.3926 | 68.0416 | -90 | opposite audience (+Y) |
+| `flower_red` | -68.0416 | 23.3926 | 0 | red (-X, left from audience) |
+| `flower_blue` | 68.0416 | -23.3926 | 180 | blue (+X) |
+| `hive_structure` | 0 | 0 | (omitted) | z = **43.95 in** pivot (section 9.6.1) |
+
+Pose origin is the 3.45 in HIPS-pipe square centroid. Setup Guide 10.4 / Figure 9-17 look mid-wall and publish **no inches**. CAD is **23.3926 in** from each wall midpoint. Keep both.
+
+Figure 9-12 opening / backstop / retrieval numbers and STEP pipes stay in `flowerGeometry`.
+
+### HIPS pipes (ranging)
+
+Competition Manual section 9.7 only says four HIPS pipes. STEP `am-5862: Flower HIPS Pipe` (16 instances):
+
+| Quantity | Value | Source |
+|----------|-------|--------|
+| Outer diameter | **1.05 in** | STEP cylinder radius 0.013335 m |
+| Inner diameter | **0.85 in** | STEP cylinder radius 0.010795 m |
+| Wall | **0.10 in** | OD-ID |
+| Count / layout | 4 pipes, **3.45 in x 3.45 in** square of vertical axes | 4 FLOWERs x 4 pipes |
+| Wall-parallel pair spacing | **3.45 in** (front pair and back pair) | Same square, plane parallel to the wall |
+| Front-to-back depth | **3.45 in** | Same square, toward field center |
+| Color | CAD green RGB **(95, 167, 61)** | STEP `COLOUR_RGB`; Assembly renders match. Not HSV. |
+
+Assembly Guide 5.4 / 5.5: two **front** (field-side) pipes and two **back** (wall-side) pipes. Apparent front-pair gap and pipe width give range; front vs back pair as a trapezoid gives yaw. Loaders ignore `flowerGeometry`.
 
 ## CAD vs manual
 
-No numeric disagreement was recorded because Onshape transforms were not read. If a later CAD measure disagrees with 21.5 in / 43.95 in / 18.8 in / 3.25 in, **keep both numbers** - do not silently pick.
+Pipe OD/spacing are **CAD-only** (not in section 9.7). Opening height **21.5 in** stays on `flowerGeometry` from the manual. Setup-guide mid-wall vs CAD 23.3926 in offset: **keep both**. If a later CAD measure disagrees with 21.5 in / 43.95 in / 18.8 in / 3.25 in, keep both numbers - do not silently pick.
 
 ## NECTAR
 

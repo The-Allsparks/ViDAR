@@ -125,16 +125,33 @@ def test_biobuzz_season_raw_json_named_poses_and_extra_keys():
         "flower_blue",
     }
     assert flower_ids <= poses.keys()
-    for flower_id in flower_ids:
-        assert poses[flower_id]["positionIn"]["z"] == pytest.approx(21.5)
-        assert "x" not in poses[flower_id]["positionIn"]
-        assert "y" not in poses[flower_id]["positionIn"]
-        assert "orientationDeg" not in poses[flower_id]
-        assert poses[flower_id]["citation"]
+    geom = raw["flowerGeometry"]
+    assert geom["topOpeningHeight"] == pytest.approx(21.5)
+    expected = {
+        "flower_audience": (-23.3926, -68.0416, 90),
+        "flower_opposite_audience": (23.3926, 68.0416, -90),
+        "flower_red": (-68.0416, 23.3926, 0),
+        "flower_blue": (68.0416, -23.3926, 180),
+    }
+    for flower_id, (x, y, yaw) in expected.items():
+        pose = poses[flower_id]
+        assert pose["positionIn"]["x"] == pytest.approx(x)
+        assert pose["positionIn"]["y"] == pytest.approx(y)
+        assert "z" not in pose["positionIn"]
+        assert pose["orientationDeg"]["yaw"] == yaw
+        assert pose["geometry"] == "flowerGeometry"
+        assert pose["citation"]
     hive = poses["hive_structure"]
     assert hive["positionIn"]["x"] == pytest.approx(0)
     assert hive["positionIn"]["y"] == pytest.approx(0)
     assert hive["positionIn"]["z"] == pytest.approx(43.95)
+    pipes = raw["flowerGeometry"]["pipes"]
+    assert pipes["outerDiameter"] == pytest.approx(1.05)
+    assert pipes["innerDiameter"] == pytest.approx(0.85)
+    assert pipes["wallParallelSpacing"] == pytest.approx(3.45)
+    assert pipes["depthSpacing"] == pytest.approx(3.45)
+    assert pipes["count"] == 4
+    assert pipes["colorRgb255"] == [95, 167, 61]
     nectar_red = next(el for el in raw["elements"] if el["id"] == "nectar_red")
     assert "hsvWrap" not in nectar_red
 
