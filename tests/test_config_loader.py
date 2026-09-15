@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -17,8 +18,11 @@ BUNDLED_ROBOT = ROOT / "teamcode/assets/vidar/default-robot.json"
 def test_load_biobuzz_season():
     season = load_season(ROOT / "config/seasons/2026-biobuzz.json")
     assert season.season_id == "2026-biobuzz"
-    assert len(season.elements) == 1
+    assert len(season.elements) == 3
     assert season.elements[0].id == "pollen"
+    by_id = {el.id: el for el in season.elements}
+    assert by_id["nectar_red"].diameter == pytest.approx(3.6)
+    assert by_id["nectar_blue"].diameter == pytest.approx(3.6)
     assert len(season.plates) == 2
     assert season.distance_unit is DistanceUnit.IN
 
@@ -87,10 +91,52 @@ def test_decode_season_april_tags():
     assert len(season.localization_tags()) == 2
 
 
-def test_biobuzz_season_empty_april_tags():
+def test_biobuzz_season_hive_tags_not_landmarks():
     season = load_season(ROOT / "config/seasons/2026-biobuzz.json")
-    assert season.april_tags == ()
-    assert season.default_tag_size == pytest.approx(6.5)
+    assert season.default_tag_size == pytest.approx(3.25)
+    assert len(season.april_tags) == 16
+    assert [tag.id for tag in season.april_tags] == list(range(30, 46))
+    assert all(not tag.localization for tag in season.april_tags)
+    assert season.localization_tags() == ()
+    for tag_id in range(30, 46):
+        spec = season.tag_by_id(tag_id)
+        assert spec is not None
+        assert not spec.localization
+
+
+def test_biobuzz_season_raw_json_named_poses_and_extra_keys():
+    raw = json.loads((ROOT / "config/seasons/2026-biobuzz.json").read_text(encoding="utf-8"))
+    assert "fixtures" not in raw
+    tags = raw["apriltags"]["tags"]
+    assert len(tags) == 16
+    for tag in tags:
+        assert tag["localization"] is False
+        assert tag["size"] == pytest.approx(3.25)
+        assert tag["cluster"]
+        assert tag["alliance"] in {"red", "blue"}
+        assert tag["cell"] in {"audience", "opposite_audience"}
+        assert "positionIn" not in tag
+        assert "orientationDeg" not in tag
+    poses = {pose["id"]: pose for pose in raw["namedPoses"]}
+    flower_ids = {
+        "flower_audience",
+        "flower_opposite_audience",
+        "flower_red",
+        "flower_blue",
+    }
+    assert flower_ids <= poses.keys()
+    for flower_id in flower_ids:
+        assert poses[flower_id]["positionIn"]["z"] == pytest.approx(21.5)
+        assert "x" not in poses[flower_id]["positionIn"]
+        assert "y" not in poses[flower_id]["positionIn"]
+        assert "orientationDeg" not in poses[flower_id]
+        assert poses[flower_id]["citation"]
+    hive = poses["hive_structure"]
+    assert hive["positionIn"]["x"] == pytest.approx(0)
+    assert hive["positionIn"]["y"] == pytest.approx(0)
+    assert hive["positionIn"]["z"] == pytest.approx(43.95)
+    nectar_red = next(el for el in raw["elements"] if el["id"] == "nectar_red")
+    assert "hsvWrap" not in nectar_red
 
 
 @pytest.mark.parametrize("season_path", SEASON_FILES, ids=lambda p: p.stem)
