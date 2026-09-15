@@ -272,9 +272,11 @@ Every BIOBUZZ HIVE tag in season JSON has `"localization": false`. That means
 `VidarLocalizationFusion` as fixed field poses. Kinematics from a low CELL
 cluster is a later issue, not this flag.
 
-FLOWER wall poses and the HIVE pivot height live in top-level `namedPoses[]`
-until `fixtures[]` lands. The current loaders ignore `namedPoses`. Do not add
-`fixtures[]` in the BIOBUZZ transcription file.
+FLOWER **field** poses (`x`, `y`, yaw) live in `namedPoses[]`. Shared part
+geometry (opening **z = 21.5 in**, HIPS pipe **1.05 in** OD, **3.45 in**
+square spacing) lives in `flowerGeometry` from the Field CAD STEP. The current
+loaders ignore `namedPoses` and `flowerGeometry`. Do not add `fixtures[]` in
+the BIOBUZZ transcription file.
 
 **Field frame** (matches FTC SDK): origin at field center, +X right, +Y forward, +Z up.
 

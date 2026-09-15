@@ -39,6 +39,11 @@ class ConfigLoaderTest {
         assertEquals(30, season.aprilTags[0].id);
         assertEquals(45, season.aprilTags[15].id);
         assertFalse(json.contains("\"fixtures\""));
+        assertTrue(json.contains("\"flowerGeometry\""));
+        assertTrue(json.contains("\"outerDiameter\": 1.05"));
+        assertTrue(json.contains("\"wallParallelSpacing\": 3.45"));
+        assertTrue(json.contains("\"topOpeningHeight\": 21.5"));
+        assertTrue(json.contains("\"flower_audience\""));
     }
 
     @Test
