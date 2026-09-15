@@ -272,12 +272,15 @@ Every BIOBUZZ HIVE tag in season JSON has `"localization": false`. That means
 `VidarLocalizationFusion` as fixed field poses. Kinematics from a low CELL
 cluster is a later issue, not this flag.
 
-FLOWER **field** poses (`x`, `y`, yaw) live in `namedPoses[]`. Shared part
-geometry (opening **z = 21.5 in**, HIPS pipe **1.05 in** OD, **3.45 in**
-square spacing) lives in `flowerGeometry` from the Field CAD STEP. Loaders
-ignore `namedPoses` and `flowerGeometry`. BIOBUZZ still **omits** `fixtures[]`;
-the cited poses are the holding pen until a wrap PR maps them onto
-`VidarFixtureSpec`.
+FLOWER **field** poses (`x`, `y`, yaw) live in `fixtures[]` as four identical
+`static_field` specs (`flower_audience` / `flower_opposite_audience` /
+`flower_red` / `flower_blue`). Shared part geometry (opening **21.5 in**,
+HIPS pipe **1.05 in** OD, **3.45 in** square spacing) stays in
+`flowerGeometry` until optional `visualLandmarks` ([#101](https://github.com/The-Allsparks/ViDAR/issues/101)).
+Loaders parse the poses and still ignore `flowerGeometry`. Height is **not**
+copied onto fixture `z`. Empty `detectors` / `tagIds`: these FLOWERs must not
+emit pose observations. HIVE tags 30-45 stay `localization: false` and are
+**not** fixtures.
 
 **Field frame** (matches FTC SDK): origin at field center, +X right, +Y forward, +Z up.
 
@@ -342,6 +345,9 @@ strings fail at load.
 
 Java: `VidarFixtureSpec` on `VidarSeasonConfig.fixtures`. Python: `SeasonConfig.fixtures`.
 Do not put BIOBUZZ scoring meaning (owner, nectar) on this spec.
+BIOBUZZ FLOWER fixtures omit `z` (opening height lives on `flowerGeometry`).
+`hasFieldPosition()` stays false until a cited 3D point exists. Older seasons
+omit `fixtures[]` and still load as an empty array.
 
 ## Per-camera ROIs
 
