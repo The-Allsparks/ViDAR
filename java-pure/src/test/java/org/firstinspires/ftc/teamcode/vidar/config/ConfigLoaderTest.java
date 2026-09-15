@@ -165,4 +165,20 @@ class ConfigLoaderTest {
         assertTrue(ex.getMessage().contains("Unknown fixture localization"), ex.getMessage());
         assertTrue(ex.getMessage().contains("nope"), ex.getMessage());
     }
+
+    @Test
+    void blankFixtureIdFails() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> VidarConfigLoader.loadSeason(minimalSeasonJson(
+                        "\"fixtures\":[{\"id\":\"  \",\"localization\":\"static_field\"}]")));
+        assertTrue(ex.getMessage().contains("Fixture id is required"), ex.getMessage());
+    }
+
+    @Test
+    void emptyFixtureLabelDefaultsToId() {
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(minimalSeasonJson(
+                "\"fixtures\":[{\"id\":\"flower_1\",\"label\":\"\",\"localization\":\"static_field\"}]"));
+        assertEquals("flower_1", season.fixtureById("flower_1").label);
+    }
 }

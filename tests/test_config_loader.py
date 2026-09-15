@@ -222,6 +222,18 @@ def test_unknown_fixture_localization_fails_loudly():
         parse_season(_minimal_season(fixtures=[{"id": "bad", "localization": "nope"}]))
 
 
+def test_blank_fixture_id_fails():
+    with pytest.raises(ValueError, match="Fixture id is required"):
+        parse_season(_minimal_season(fixtures=[{"id": "  ", "localization": "static_field"}]))
+
+
+def test_empty_fixture_label_defaults_to_id():
+    season = parse_season(
+        _minimal_season(fixtures=[{"id": "flower_1", "label": "", "localization": "static_field"}])
+    )
+    assert season.fixture_by_id("flower_1").label == "flower_1"
+
+
 @pytest.mark.parametrize("season_path", SEASON_FILES, ids=lambda p: p.stem)
 def test_all_season_json_files_load(season_path: Path):
     season = load_season(season_path)

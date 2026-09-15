@@ -143,6 +143,12 @@ class FixtureSpec:
     detectors: tuple[str, ...] = ()
     tag_ids: tuple[int, ...] = ()
 
+    def __post_init__(self) -> None:
+        if self.id is None or str(self.id).strip() == "":
+            raise ValueError("Fixture id is required")
+        if self.label is None or self.label == "":
+            object.__setattr__(self, "label", self.id)
+
     def has_field_position(self) -> bool:
         return not (math.isnan(self.x) or math.isnan(self.y) or math.isnan(self.z))
 
