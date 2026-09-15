@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,14 @@ BUNDLED_SEASON = ROOT / "teamcode/assets/vidar/default-season.json"
 BUNDLED_ROBOT = ROOT / "teamcode/assets/vidar/default-robot.json"
 
 
+BIOBUZZ_FLOWER_POSES = {
+    "flower_audience": (-23.3926, -68.0416, 90),
+    "flower_opposite_audience": (23.3926, 68.0416, -90),
+    "flower_red": (-68.0416, 23.3926, 0),
+    "flower_blue": (68.0416, -23.3926, 180),
+}
+
+
 def test_load_biobuzz_season():
     season = load_season(ROOT / "config/seasons/2026-biobuzz.json")
     assert season.season_id == "2026-biobuzz"
@@ -25,7 +34,18 @@ def test_load_biobuzz_season():
     assert by_id["nectar_blue"].diameter == pytest.approx(3.6)
     assert len(season.plates) == 2
     assert season.distance_unit is DistanceUnit.IN
-    assert season.fixtures == ()
+    assert len(season.fixtures) == 4
+    for fixture_id, (x, y, yaw) in BIOBUZZ_FLOWER_POSES.items():
+        spec = season.fixture_by_id(fixture_id)
+        assert spec is not None
+        assert spec.localization is FixtureLocalizationMode.STATIC_FIELD
+        assert spec.x == pytest.approx(x)
+        assert spec.y == pytest.approx(y)
+        assert math.isnan(spec.z)
+        assert spec.yaw_deg == pytest.approx(yaw)
+        assert spec.detectors == ()
+        assert spec.tag_ids == ()
+        assert not spec.has_field_position()
 
 
 def test_season_distance_unit_meters():
@@ -107,7 +127,6 @@ def test_biobuzz_season_hive_tags_not_landmarks():
 
 def test_biobuzz_season_raw_json_named_poses_and_extra_keys():
     raw = json.loads((ROOT / "config/seasons/2026-biobuzz.json").read_text(encoding="utf-8"))
-    assert "fixtures" not in raw
     tags = raw["apriltags"]["tags"]
     assert len(tags) == 16
     for tag in tags:
@@ -118,30 +137,22 @@ def test_biobuzz_season_raw_json_named_poses_and_extra_keys():
         assert tag["cell"] in {"audience", "opposite_audience"}
         assert "positionIn" not in tag
         assert "orientationDeg" not in tag
-    poses = {pose["id"]: pose for pose in raw["namedPoses"]}
-    flower_ids = {
-        "flower_audience",
-        "flower_opposite_audience",
-        "flower_red",
-        "flower_blue",
-    }
-    assert flower_ids <= poses.keys()
+    fixtures = {item["id"]: item for item in raw["fixtures"]}
+    assert set(fixtures) == set(BIOBUZZ_FLOWER_POSES)
     geom = raw["flowerGeometry"]
     assert geom["topOpeningHeight"] == pytest.approx(21.5)
-    expected = {
-        "flower_audience": (-23.3926, -68.0416, 90),
-        "flower_opposite_audience": (23.3926, 68.0416, -90),
-        "flower_red": (-68.0416, 23.3926, 0),
-        "flower_blue": (68.0416, -23.3926, 180),
-    }
-    for flower_id, (x, y, yaw) in expected.items():
-        pose = poses[flower_id]
-        assert pose["positionIn"]["x"] == pytest.approx(x)
-        assert pose["positionIn"]["y"] == pytest.approx(y)
-        assert "z" not in pose["positionIn"]
+    for flower_id, (x, y, yaw) in BIOBUZZ_FLOWER_POSES.items():
+        pose = fixtures[flower_id]
+        assert pose["localization"] == "static_field"
+        assert pose["position"]["x"] == pytest.approx(x)
+        assert pose["position"]["y"] == pytest.approx(y)
+        assert "z" not in pose["position"]
         assert pose["orientationDeg"]["yaw"] == yaw
-        assert pose["geometry"] == "flowerGeometry"
+        assert "detectors" not in pose
+        assert "tagIds" not in pose
         assert pose["citation"]
+    poses = {pose["id"]: pose for pose in raw["namedPoses"]}
+    assert set(poses) == {"hive_structure"}
     hive = poses["hive_structure"]
     assert hive["positionIn"]["x"] == pytest.approx(0)
     assert hive["positionIn"]["y"] == pytest.approx(0)
@@ -240,10 +251,19 @@ def test_all_season_json_files_load(season_path: Path):
     assert season.season_id
     assert len(season.elements) >= 1
     assert len(season.plates) >= 1
-    assert season.fixtures == ()
+    if season.season_id == "2026-biobuzz":
+        assert len(season.fixtures) == 4
+    else:
+        assert season.fixtures == ()
     for element in season.elements:
         assert element.diameter > 0
         assert element.detector in ElementDetectorType
+
+
+def test_empty_fixtures_array_loads_empty_tuple():
+    season = parse_season(_minimal_season(fixtures=[]))
+    assert season.fixtures == ()
+    assert season.elements[0].id == "ball"
 
 
 def test_bundled_default_season_matches_legacy_fusion_defaults():

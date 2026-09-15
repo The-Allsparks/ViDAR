@@ -1,5 +1,5 @@
 {
-  "_comment": "BIOBUZZ field transcription for ViDAR#77. Citations: config/seasons/2026-biobuzz.md. Tags are 3.25 in 36h11 CELL clusters, not DECODE 8.125 in goals. localization:false means not a static SDK landmark. flowerGeometry.pipes is shared HIPS-pipe OD/spacing from Field CAD STEP; loaders ignore it until fixtures.",
+  "_comment": "BIOBUZZ field transcription for ViDAR#77. Citations: config/seasons/2026-biobuzz.md. Tags are 3.25 in 36h11 CELL clusters, not DECODE 8.125 in goals. localization:false means not a static SDK landmark. Four static_field FLOWER fixtures share flowerGeometry; pose is x/y/yaw only (height 21.5 in stays on geometry, not pose z). visualLandmarks (#101) not in this wrap. namedPoses keeps hive_structure only. HIVE tags 30-45 are not fixtures and must not enter VidarLocalizationFusion.",
   "seasonId": "2026-biobuzz",
   "seasonName": "BIOBUZZ 2026-27 - yellow POLLEN (2.8 in) and red/blue NECTAR (3.6 in)",
   "field": {
@@ -221,7 +221,7 @@
     ]
   },
   "flowerGeometry": {
-    "_comment": "Shared FLOWER part geometry in a local frame. Four identical FLOWERs. Loaders ignore this object. namedPoses place this frame on the field (x, y, yaw). Height lives here, not on each pose.",
+    "_comment": "Shared FLOWER part geometry in a local frame. Four identical FLOWERs. Loaders ignore this object until visualLandmarks (#101). fixtures[] place this frame on the field (x, y, yaw). Height lives here, not on each pose.",
     "localFrame": "Origin at the top-opening center in XY. +Z up. +Y out the opening into the FIELD. +X right-handed. Units inches.",
     "topOpeningDiameter": 4.0,
     "topOpeningHeight": 21.5,
@@ -246,63 +246,61 @@
       "citation": "Onshape Field CAD Version 1 / FIRST Field CAD STEP BIOBUZZ_Full Field.20260912.step (Playing Field hub, 12 Sep 2026). Solid am-5862: Flower HIPS Pipe: CYLINDRICAL_SURFACE radii 0.013335 m and 0.010795 m (1.05 in OD, 0.85 in ID, 0.10 in wall). Sixteen instances (four FLOWERs x four pipes) form a 3.45 in x 3.45 in square of vertical axes; wall-parallel pair spacing and front-to-back depth are both 3.45 in. COLOUR_RGB 0.372549, 0.654902, 0.239216 (~95,167,61). Assembly Guide 5.4/5.5: two field-side (front) pipes and two wall-side (back) pipes. HSV not field-tuned; do not treat CAD green as a detector spec."
     }
   },
-  "namedPoses": [
+  "fixtures": [
     {
       "id": "flower_audience",
       "label": "FLOWER on the audience-side perimeter wall",
-      "positionIn": {
+      "localization": "static_field",
+      "position": {
         "x": -23.3926,
         "y": -68.0416
       },
       "orientationDeg": {
         "yaw": 90
       },
-      "wall": "audience",
-      "geometry": "flowerGeometry",
-      "citation": "XY and yaw from FIRST Field CAD STEP BIOBUZZ_Full Field.20260912.step, mapped to FTC frame (origin field center, +X right from audience, +Y toward opposite audience, +Z up). STEP Y-up: FTC X=STEP X, FTC Y=STEP Z, FTC Z=STEP Y. Audience is the STEP -Z wall (Red Cell Audience at STEP X<0, Blue Cell Audience at STEP X>0; manual section 9.5 red is left from audience). Pose origin is the 3.45 in pipe-square centroid (top-opening center in plan). Yaw 90 deg = opening faces +Y (into the FIELD). Height is flowerGeometry.topOpeningHeight (21.5 in), not this pose. Setup Guide 10.4 figure is mid-wall with no inches; CAD is 23.3926 in from the wall midpoint toward red. Keep both."
+      "citation": "XY and yaw from FIRST Field CAD STEP BIOBUZZ_Full Field.20260912.step, mapped to FTC frame (origin field center, +X right from audience, +Y toward opposite audience, +Z up). STEP Y-up: FTC X=STEP X, FTC Y=STEP Z, FTC Z=STEP Y. Audience is the STEP -Z wall (Red Cell Audience at STEP X<0, Blue Cell Audience at STEP X>0; manual section 9.5 red is left from audience). Pose origin is the 3.45 in pipe-square centroid (top-opening center in plan). Yaw 90 deg = opening faces +Y (into the FIELD). Height is flowerGeometry.topOpeningHeight (21.5 in), not this pose. Setup Guide 10.4 figure is mid-wall with no inches; CAD is 23.3926 in from the wall midpoint toward red. Keep both. Four identical FLOWERs share flowerGeometry; do not emit pose obs (#104 / #102). CAD green is not a detector."
     },
     {
       "id": "flower_opposite_audience",
       "label": "FLOWER on the perimeter wall opposite the audience (scoring side)",
-      "positionIn": {
+      "localization": "static_field",
+      "position": {
         "x": 23.3926,
         "y": 68.0416
       },
       "orientationDeg": {
         "yaw": -90
       },
-      "wall": "opposite_audience",
-      "geometry": "flowerGeometry",
-      "citation": "Same STEP mapping as flower_audience. Pipe-square centroid. Yaw -90 deg = opening faces -Y (into the FIELD). CAD is 23.3926 in from the wall midpoint toward blue."
+      "citation": "Same STEP mapping as flower_audience. Pipe-square centroid. Yaw -90 deg = opening faces -Y (into the FIELD). CAD is 23.3926 in from the wall midpoint toward blue. Height is flowerGeometry.topOpeningHeight (21.5 in), not this pose."
     },
     {
       "id": "flower_red",
       "label": "FLOWER on the red (left-from-audience) perimeter wall",
-      "positionIn": {
+      "localization": "static_field",
+      "position": {
         "x": -68.0416,
         "y": 23.3926
       },
       "orientationDeg": {
         "yaw": 0
       },
-      "wall": "red",
-      "geometry": "flowerGeometry",
-      "citation": "Same STEP mapping as flower_audience. Red wall is FTC -X (left from audience, section 9.5). Pipe-square centroid. Yaw 0 deg = opening faces +X (into the FIELD). CAD is 23.3926 in from the wall midpoint toward opposite audience."
+      "citation": "Same STEP mapping as flower_audience. Red wall is FTC -X (left from audience, section 9.5). Pipe-square centroid. Yaw 0 deg = opening faces +X (into the FIELD). CAD is 23.3926 in from the wall midpoint toward opposite audience. Height is flowerGeometry.topOpeningHeight (21.5 in), not this pose."
     },
     {
       "id": "flower_blue",
       "label": "FLOWER on the blue (right-from-audience) perimeter wall",
-      "positionIn": {
+      "localization": "static_field",
+      "position": {
         "x": 68.0416,
         "y": -23.3926
       },
       "orientationDeg": {
         "yaw": 180
       },
-      "wall": "blue",
-      "geometry": "flowerGeometry",
-      "citation": "Same STEP mapping as flower_audience. Blue wall is FTC +X (right from audience). Pipe-square centroid. Yaw 180 deg = opening faces -X (into the FIELD). CAD is 23.3926 in from the wall midpoint toward audience."
-    },
+      "citation": "Same STEP mapping as flower_audience. Blue wall is FTC +X (right from audience). Pipe-square centroid. Yaw 180 deg = opening faces -X (into the FIELD). CAD is 23.3926 in from the wall midpoint toward audience. Height is flowerGeometry.topOpeningHeight (21.5 in), not this pose."
+    }
+  ],
+  "namedPoses": [
     {
       "id": "hive_structure",
       "label": "HIVE Structure frame at field center (pivot axis height)",
