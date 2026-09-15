@@ -51,7 +51,7 @@ No numeric disagreement was recorded because Onshape transforms were not read. I
 
 ## NECTAR
 
-§9.8: approximately **3.6 in** (9.1 cm) Gopher ResisDent balls, red `am-5852_red` and blue `am-5852_blue`. HSV in JSON starts from this file’s alliance plate hues and is **not** field-tuned.
+§9.8: approximately **3.6 in** (9.1 cm) Gopher ResisDent balls, red `am-5852_red` and blue `am-5852_blue`. HSV in JSON starts from this file’s alliance plate **primary** hues and is **not** field-tuned. Element specs do not load `hsvWrap` (plates only), so red NECTAR does not include the plate wrap band 168–179.
 
 ## Not in this file
 

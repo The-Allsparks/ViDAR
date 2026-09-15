@@ -135,6 +135,8 @@ def test_biobuzz_season_raw_json_named_poses_and_extra_keys():
     assert hive["positionIn"]["x"] == pytest.approx(0)
     assert hive["positionIn"]["y"] == pytest.approx(0)
     assert hive["positionIn"]["z"] == pytest.approx(43.95)
+    nectar_red = next(el for el in raw["elements"] if el["id"] == "nectar_red")
+    assert "hsvWrap" not in nectar_red
 
 
 @pytest.mark.parametrize("season_path", SEASON_FILES, ids=lambda p: p.stem)

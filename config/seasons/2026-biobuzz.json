@@ -367,15 +367,7 @@
         "minInterior": 0.12,
         "minAreaPx": 14
       },
-      "hsvWrap": {
-        "hMin": 168,
-        "hMax": 179,
-        "sMin": 80,
-        "sMax": 255,
-        "vMin": 60,
-        "vMax": 255
-      },
-      "_comment": "HSV is a starting point copied from alliance plate hues in this file; tune on field. Diameter 3.6 in from BIOBUZZ Competition Manual V1 section 9.8 (am-5852_red / am-5852_blue). Detector/filters copied from POLLEN as a starting point (no new detector in #77)."
+      "_comment": "HSV is a starting point from this file's red plate primary range (h 0-12). Element specs do not load hsvWrap (plates only), so the plate wrap band 168-179 is omitted rather than dead config. Tune on field. Diameter 3.6 in from BIOBUZZ Competition Manual V1 section 9.8 (am-5852_red). Detector/filters copied from POLLEN as a starting point (no new detector in #77)."
     },
     {
       "id": "nectar_blue",
@@ -423,7 +415,7 @@
         "minInterior": 0.12,
         "minAreaPx": 14
       },
-      "_comment": "HSV is a starting point copied from alliance plate hues in this file; tune on field. Diameter 3.6 in from BIOBUZZ Competition Manual V1 section 9.8 (am-5852_red / am-5852_blue). Detector/filters copied from POLLEN as a starting point (no new detector in #77)."
+      "_comment": "HSV is a starting point from this file's blue plate hues; tune on field. Diameter 3.6 in from BIOBUZZ Competition Manual V1 section 9.8 (am-5852_blue). Detector/filters copied from POLLEN as a starting point (no new detector in #77)."
     }
   ],
   "plates": [
