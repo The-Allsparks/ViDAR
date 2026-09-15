@@ -38,13 +38,26 @@ class ConfigLoaderTest {
         }
         assertEquals(30, season.aprilTags[0].id);
         assertEquals(45, season.aprilTags[15].id);
-        assertEquals(0, season.fixtures.length);
-        assertFalse(json.contains("\"fixtures\""));
+        assertEquals(4, season.fixtures.length);
+        assertBiobuzzFlowerFixture(season, "flower_audience", -23.3926, -68.0416, 90.0);
+        assertBiobuzzFlowerFixture(season, "flower_opposite_audience", 23.3926, 68.0416, -90.0);
+        assertBiobuzzFlowerFixture(season, "flower_red", -68.0416, 23.3926, 0.0);
+        assertBiobuzzFlowerFixture(season, "flower_blue", 68.0416, -23.3926, 180.0);
         assertTrue(json.contains("\"flowerGeometry\""));
         assertTrue(json.contains("\"outerDiameter\": 1.05"));
         assertTrue(json.contains("\"wallParallelSpacing\": 3.45"));
         assertTrue(json.contains("\"topOpeningHeight\": 21.5"));
         assertTrue(json.contains("\"flower_audience\""));
+        assertFalse(json.contains("\"geometry\": \"flowerGeometry\""));
+    }
+
+    @Test
+    void loadDecodeSeasonOmitsFixtures() throws IOException {
+        String json = Files.readString(repoRoot().resolve("config/seasons/2025-decode.json"));
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(json);
+        assertEquals("2025-decode", season.seasonId);
+        assertEquals(0, season.fixtures.length);
+        assertFalse(json.contains("\"fixtures\""));
     }
 
     @Test
@@ -180,5 +193,25 @@ class ConfigLoaderTest {
         VidarSeasonConfig season = VidarConfigLoader.loadSeason(minimalSeasonJson(
                 "\"fixtures\":[{\"id\":\"flower_1\",\"label\":\"\",\"localization\":\"static_field\"}]"));
         assertEquals("flower_1", season.fixtureById("flower_1").label);
+    }
+
+    @Test
+    void emptyFixturesArrayLoadsEmpty() {
+        VidarSeasonConfig season = VidarConfigLoader.loadSeason(minimalSeasonJson("\"fixtures\":[]"));
+        assertEquals(0, season.fixtures.length);
+    }
+
+    private static void assertBiobuzzFlowerFixture(
+            VidarSeasonConfig season, String id, double x, double y, double yawDeg) {
+        VidarFixtureSpec spec = season.fixtureById(id);
+        assertNotNull(spec, id);
+        assertEquals(VidarFixtureLocalizationMode.STATIC_FIELD, spec.localization);
+        assertEquals(x, spec.xIn, 1e-9);
+        assertEquals(y, spec.yIn, 1e-9);
+        assertTrue(Double.isNaN(spec.zIn), "FLOWER height stays on flowerGeometry, not pose z: " + id);
+        assertEquals(yawDeg, spec.yawDeg, 1e-9);
+        assertEquals(0, spec.detectors.length);
+        assertEquals(0, spec.tagIds.length);
+        assertFalse(spec.hasFieldPosition(), "omitted z is not a 3D field point: " + id);
     }
 }

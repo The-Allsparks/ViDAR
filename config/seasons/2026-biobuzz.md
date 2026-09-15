@@ -32,9 +32,9 @@ Manual prose (section 9.9) lists the same four ranges. Size **3.25 in**, family 
 
 **Omitted:** per-tag `positionIn` / `orientationDeg`. Tags move when a HIVE tips. Figure 9-17 does not publish inch coordinates. MATCH-start tilt is described (section 10.3.1 / Setup Guide section 11.1) but is not a static field pose. That work is #91.
 
-## FLOWERs (`namedPoses` + `flowerGeometry`)
+## FLOWERs (`fixtures[]` + `flowerGeometry`)
 
-Shared part geometry (opening height, pipes) is `flowerGeometry`. Each named pose is the **field placement** of that geometry: `positionIn.x/y` and `orientationDeg.yaw`. Height is **not** on the pose.
+Shared part geometry (opening height, pipes) is `flowerGeometry`. Four identical `static_field` fixtures place that geometry on the field: `position.x/y` and `orientationDeg.yaw`. Height is **not** on the pose (not copied as `z`). `visualLandmarks` (#101) is not in this wrap, so pipe points stay on `flowerGeometry` until that lands. Do not grow `namedPoses` as a second FLOWER API.
 
 Local frame: origin at the top-opening center in XY; +Z up; +Y out the opening into the FIELD; +X right-handed. Yaw 0 faces +X.
 
@@ -46,11 +46,12 @@ STEP is Y-up. FTC mapping: X=STEP X, Y=STEP Z, Z=STEP Y. Audience is the STEP -Z
 | `flower_opposite_audience` | 23.3926 | 68.0416 | -90 | opposite audience (+Y) |
 | `flower_red` | -68.0416 | 23.3926 | 0 | red (-X, left from audience) |
 | `flower_blue` | 68.0416 | -23.3926 | 180 | blue (+X) |
-| `hive_structure` | 0 | 0 | (omitted) | z = **43.95 in** pivot (section 9.6.1) |
+
+`hive_structure` stays in `namedPoses` (x=0, y=0, z=**43.95 in** pivot, section 9.6.1). It is not a `static_field` FLOWER fixture.
 
 Pose origin is the 3.45 in HIPS-pipe square centroid. Setup Guide 10.4 / Figure 9-17 look mid-wall and publish **no inches**. CAD is **23.3926 in** from each wall midpoint. Keep both.
 
-Figure 9-12 opening / backstop / retrieval numbers and STEP pipes stay in `flowerGeometry`.
+Figure 9-12 opening / backstop / retrieval numbers and STEP pipes stay in `flowerGeometry`. Four FLOWERs must not emit pose obs (#104 / #102). CAD green RGB (95, 167, 61) is not a detector.
 
 ### HIPS pipes (ranging)
 
@@ -66,7 +67,7 @@ Competition Manual section 9.7 only says four HIPS pipes. STEP `am-5862: Flower 
 | Front-to-back depth | **3.45 in** | Same square, toward field center |
 | Color | CAD green RGB **(95, 167, 61)** | STEP `COLOUR_RGB`; Assembly renders match. Not HSV. |
 
-Assembly Guide 5.4 / 5.5: two **front** (field-side) pipes and two **back** (wall-side) pipes. Apparent front-pair gap and pipe width give range; front vs back pair as a trapezoid gives yaw. Loaders ignore `flowerGeometry`.
+Assembly Guide 5.4 / 5.5: two **front** (field-side) pipes and two **back** (wall-side) pipes. Apparent front-pair gap and pipe width give range; front vs back pair as a trapezoid gives yaw. Loaders parse FLOWER **poses** from `fixtures[]` and still ignore `flowerGeometry` until #101.
 
 ## CAD vs manual
 
@@ -78,4 +79,4 @@ Section 9.8: approximately **3.6 in** (9.1 cm) Gopher ResisDent balls, red `am-5
 
 ## Not in this file
 
-`fixtures[]` is loaded when present; this season file still omits it (`namedPoses` + `flowerGeometry` is the holding pen). `robot.json` camera mounts unchanged. `VidarLocalizationFusion` is not taught that HIVE tags are static landmarks.
+`namedPoses` keeps `hive_structure` only (HIVE `april_tag` + `tagIds` fixture can wait). `robot.json` camera mounts unchanged. `VidarLocalizationFusion` is not taught that HIVE tags are static landmarks.
