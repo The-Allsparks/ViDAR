@@ -13,7 +13,7 @@ This file is the work-order after the 2026-09-14 GitHub audit. GitHub issues rem
 
 ## Audit verdict
 
-None of the 44 open issues is already implemented in `main`. There is no `vidar.fixture` package, season JSON still has an empty AprilTag list and no `fixtures[]`, and `TagDecodeBudget` is still a 1-second metronome (`DECODE_INTERVAL_MS = 1000`). The backlog is two new product epics plus leftover quality/release work from August.
+As of the 2026-09-14 snapshot (`9cc69a4`): none of the 44 open issues was implemented, there was no `vidar.fixture` package, `apriltags.tags` was `[]`, there was no `fixtures[]`, and `TagDecodeBudget` was a 1-second metronome (`DECODE_INTERVAL_MS = 1000`). **Superseded 2026-09-15:** [#77](https://github.com/The-Allsparks/ViDAR/issues/77) filled HIVE IDs 30-45 and FLOWER geometry ([#114](https://github.com/The-Allsparks/ViDAR/pull/114), [#115](https://github.com/The-Allsparks/ViDAR/pull/115)). Still no `vidar.fixture` and still no `fixtures[]` on season JSON. The backlog remains two product epics plus leftover quality/release work from August.
 
 The problem is not missing tickets. It is **stale metadata**, **overlapping children**, and **design reviews that have not been accepted**. Until those gates land, 34 of 44 issues correctly stay blocked.
 
@@ -39,7 +39,7 @@ The problem is not missing tickets. It is **stale metadata**, **overlapping chil
 - `VidarObservationWorker` still `sleepQuiet(1)` and fusion still runs under the runtime lock.
 - `VidarContourProcessor` is still ~1038 lines; `processElementPass` is still the element/plate god method. Split this **before** fixture OpenCV lands (#39).
 - `docs/validation-log.md` Hub table is still empty. Desktop 2026-08-22 bench is recorded. Do not invent Hub FPS.
-- `config/seasons/2026-biobuzz.json` `apriltags.tags` is `[]`. Kickoff V1 exists in FORGE (`BIOBUZZ_Competition_Manual_V1.htm`); transcription is #77, not invention.
+- **Superseded 2026-09-15:** `config/seasons/2026-biobuzz.json` `apriltags.tags` is HIVE IDs **30-45** (`localization: false`), not `[]`. Snapshot on `9cc69a4` was empty; #77 transcribed from Competition Manual V1 Figure 9-17 ([#114](https://github.com/The-Allsparks/ViDAR/pull/114) / [#115](https://github.com/The-Allsparks/ViDAR/pull/115)). Still no `fixtures[]`.
 - Dependabot **does** exist (`.github/dependabot.yml`). #28's "no dependabot" evidence was stale. SECURITY.md, CODE_OF_CONDUCT, and issue/PR templates are still missing.
 
 ### Issues not closed (and why)
