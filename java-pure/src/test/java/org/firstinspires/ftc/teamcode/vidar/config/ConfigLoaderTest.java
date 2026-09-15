@@ -21,10 +21,24 @@ class ConfigLoaderTest {
         String json = Files.readString(repoRoot().resolve("config/seasons/2026-biobuzz.json"));
         VidarSeasonConfig season = VidarConfigLoader.loadSeason(json);
         assertEquals("2026-biobuzz", season.seasonId);
-        assertEquals(1, season.elements.length);
+        assertEquals(3, season.elements.length);
         assertEquals("pollen", season.elements[0].id);
+        assertEquals("nectar_red", season.elements[1].id);
+        assertEquals("nectar_blue", season.elements[2].id);
+        assertEquals(3.6, season.elements[1].diameter, 1e-9);
+        assertEquals(3.6, season.elements[2].diameter, 1e-9);
         assertEquals(2, season.plates.length);
         assertEquals(VidarDistanceUnit.IN, season.distanceUnit);
+        assertEquals(3.25, season.defaultTagSize, 1e-9);
+        assertEquals(16, season.aprilTags.length);
+        for (VidarAprilTagSpec tag : season.aprilTags) {
+            assertFalse(tag.localization, "HIVE tags are not static landmarks: " + tag.id);
+            assertEquals(3.25, tag.size, 1e-9);
+            assertFalse(season.useTagForLocalization(tag.id));
+        }
+        assertEquals(30, season.aprilTags[0].id);
+        assertEquals(45, season.aprilTags[15].id);
+        assertFalse(json.contains("\"fixtures\""));
     }
 
     @Test

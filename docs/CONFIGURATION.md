@@ -13,7 +13,7 @@ Templates live in the repo:
 
 | File | Season | Game pieces |
 |------|--------|-------------|
-| `config/seasons/2026-biobuzz.json` | BIOBUZZ 2026-27 | Yellow POLLEN (2.8 in) |
+| `config/seasons/2026-biobuzz.json` | BIOBUZZ 2026-27 | Yellow POLLEN (2.8 in) + red/blue NECTAR (3.6 in); HIVE tags 3.25 in |
 | `config/seasons/2025-decode.json` | DECODE 2025-26 | Purple + green ARTIFACTS (4.9 in) |
 | `config/seasons/2024-intothedeep.json` | INTO THE DEEP 2024-25 | Yellow / red / blue SAMPLES (3.5 × 1.5 × 1.5 in prism) |
 | `config/seasons/2023-centerstage.json` | CENTERSTAGE 2023-24 | White / purple / yellow / green PIXELS (hex 3 in) |
@@ -256,14 +256,25 @@ Tune HSV on field, then update `season.json` (browser sim: `sim/vidar-tuning.jso
 Season JSON defines where AprilTags live on the field so ViDAR can build an FTC
 `AprilTagLibrary`, compute field-relative robot pose, and gate decode sampling.
 
-### BIOBUZZ tags are clusters
+### BIOBUZZ tags are clusters (not DECODE goals)
 
-BIOBUZZ HIVE openings are **AprilTag clusters** (four 3.25 in 36h11 tags), not one
-tag with an `id`. FTC SDK 12.0 returns them as `AprilTagClusterDetection`.
-The cluster origin is the CELL opening. Crop decode prefers a cluster hit when
-aiming at a CELL; single-tag `id` is still identity for a lone tag. See
-https://ftc-docs.firstinspires.org/apriltag-clusters. Do not invent tag IDs here
-(that is issue #77). `ftcPose` is camera-relative — not field pose.
+BIOBUZZ HIVE openings are **AprilTag clusters** (four **3.25 in** 36h11 tags on
+each CELL bottom), not DECODE's **8.125 in** goal tags and not one tag with an
+`id`. Citations: [`config/seasons/2026-biobuzz.md`](../config/seasons/2026-biobuzz.md)
+(Competition Manual V1 §9.9 / Figure 9-17). FTC SDK 12.0 returns them as
+`AprilTagClusterDetection`. The cluster origin is the CELL opening. Crop decode
+prefers a cluster hit when aiming at a CELL; single-tag `id` is still identity
+for a lone tag. See https://ftc-docs.firstinspires.org/apriltag-clusters.
+`ftcPose` is camera-relative — not field pose.
+
+Every BIOBUZZ HIVE tag in season JSON has `"localization": false`. That means
+**not a static SDK landmark**. Do not feed these IDs into
+`VidarLocalizationFusion` as fixed field poses. Kinematics from a low CELL
+cluster is a later issue, not this flag.
+
+FLOWER wall poses and the HIVE pivot height live in top-level `namedPoses[]`
+until `fixtures[]` lands. The current loaders ignore `namedPoses`. Do not add
+`fixtures[]` in the BIOBUZZ transcription file.
 
 **Field frame** (matches FTC SDK): origin at field center, +X right, +Y forward, +Z up.
 

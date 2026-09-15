@@ -1,14 +1,273 @@
 {
+  "_comment": "BIOBUZZ field transcription for ViDAR#77. Citations: config/seasons/2026-biobuzz.md. Tags are 3.25 in 36h11 CELL clusters, not DECODE 8.125 in goals. localization:false means not a static SDK landmark.",
   "seasonId": "2026-biobuzz",
-  "seasonName": "BIOBUZZ 2026-27 — yellow POLLEN (pickleball-style, 2.8 in ± 0.1 in)",
+  "seasonName": "BIOBUZZ 2026-27 \u2014 yellow POLLEN (2.8 in) and red/blue NECTAR (3.6 in)",
   "field": {
     "length": 691.2,
     "width": 317.0
   },
   "apriltags": {
-    "defaultSize": 6.5,
-    "tags": []
+    "defaultSize": 3.25,
+    "defaultSizeCitation": "BIOBUZZ Competition Manual V1 section 9.9: AprilTags are 3.25 in (8.25 cm) square 36h11.",
+    "tags": [
+      {
+        "id": 30,
+        "name": "hive_red_opposite_audience_30",
+        "cluster": "red_opposite_audience",
+        "alliance": "red",
+        "cell": "opposite_audience",
+        "stickerOrder": 3,
+        "figureLabel": "Red Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 31,
+        "name": "hive_red_opposite_audience_31",
+        "cluster": "red_opposite_audience",
+        "alliance": "red",
+        "cell": "opposite_audience",
+        "stickerOrder": 2,
+        "figureLabel": "Red Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 32,
+        "name": "hive_red_opposite_audience_32",
+        "cluster": "red_opposite_audience",
+        "alliance": "red",
+        "cell": "opposite_audience",
+        "stickerOrder": 1,
+        "figureLabel": "Red Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 33,
+        "name": "hive_red_opposite_audience_33",
+        "cluster": "red_opposite_audience",
+        "alliance": "red",
+        "cell": "opposite_audience",
+        "stickerOrder": 0,
+        "figureLabel": "Red Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 34,
+        "name": "hive_red_audience_34",
+        "cluster": "red_audience",
+        "alliance": "red",
+        "cell": "audience",
+        "stickerOrder": 0,
+        "figureLabel": "Red Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 35,
+        "name": "hive_red_audience_35",
+        "cluster": "red_audience",
+        "alliance": "red",
+        "cell": "audience",
+        "stickerOrder": 1,
+        "figureLabel": "Red Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 36,
+        "name": "hive_red_audience_36",
+        "cluster": "red_audience",
+        "alliance": "red",
+        "cell": "audience",
+        "stickerOrder": 2,
+        "figureLabel": "Red Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 37,
+        "name": "hive_red_audience_37",
+        "cluster": "red_audience",
+        "alliance": "red",
+        "cell": "audience",
+        "stickerOrder": 3,
+        "figureLabel": "Red Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 38,
+        "name": "hive_blue_audience_38",
+        "cluster": "blue_audience",
+        "alliance": "blue",
+        "cell": "audience",
+        "stickerOrder": 0,
+        "figureLabel": "Blue Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 39,
+        "name": "hive_blue_audience_39",
+        "cluster": "blue_audience",
+        "alliance": "blue",
+        "cell": "audience",
+        "stickerOrder": 1,
+        "figureLabel": "Blue Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 40,
+        "name": "hive_blue_audience_40",
+        "cluster": "blue_audience",
+        "alliance": "blue",
+        "cell": "audience",
+        "stickerOrder": 2,
+        "figureLabel": "Blue Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 41,
+        "name": "hive_blue_audience_41",
+        "cluster": "blue_audience",
+        "alliance": "blue",
+        "cell": "audience",
+        "stickerOrder": 3,
+        "figureLabel": "Blue Audience Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 42,
+        "name": "hive_blue_opposite_audience_42",
+        "cluster": "blue_opposite_audience",
+        "alliance": "blue",
+        "cell": "opposite_audience",
+        "stickerOrder": 3,
+        "figureLabel": "Blue Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 43,
+        "name": "hive_blue_opposite_audience_43",
+        "cluster": "blue_opposite_audience",
+        "alliance": "blue",
+        "cell": "opposite_audience",
+        "stickerOrder": 2,
+        "figureLabel": "Blue Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 44,
+        "name": "hive_blue_opposite_audience_44",
+        "cluster": "blue_opposite_audience",
+        "alliance": "blue",
+        "cell": "opposite_audience",
+        "stickerOrder": 1,
+        "figureLabel": "Blue Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      },
+      {
+        "id": 45,
+        "name": "hive_blue_opposite_audience_45",
+        "cluster": "blue_opposite_audience",
+        "alliance": "blue",
+        "cell": "opposite_audience",
+        "stickerOrder": 0,
+        "figureLabel": "Blue Scoring Tags",
+        "family": "36h11",
+        "size": 3.25,
+        "localization": false,
+        "citation": "Figure 9-17 and section 9.9, BIOBUZZ Competition Manual V1 (12 Sep 2026). Size 3.25 in 36h11. See config/seasons/2026-biobuzz.md. localization:false = not a static SDK landmark; XYZ omitted (tags move; #91)."
+      }
+    ]
   },
+  "namedPoses": [
+    {
+      "id": "flower_audience",
+      "label": "FLOWER on the audience-side perimeter wall",
+      "positionIn": {
+        "z": 21.5
+      },
+      "wall": "audience",
+      "citation": "Opening z=21.5 in above TILES: BIOBUZZ Competition Manual V1 section 9.7 and Figure 9-12. Wall: Figure 9-17 and Event Field Setup Guide V1.0 section 10.4 / page 20 Flower Locations (mid-wall, audience side). xy and yaw omitted: neither Figure 9-17 nor the setup guide states inch coordinates; Onshape Field CAD Version 1 (2026-09-12) anonymous assembly export returned 401."
+    },
+    {
+      "id": "flower_opposite_audience",
+      "label": "FLOWER on the perimeter wall opposite the audience (scoring side)",
+      "positionIn": {
+        "z": 21.5
+      },
+      "wall": "opposite_audience",
+      "citation": "Opening z=21.5 in above TILES: BIOBUZZ Competition Manual V1 section 9.7 and Figure 9-12. Wall: Figure 9-17 and Event Field Setup Guide V1.0 section 10.4. xy and yaw omitted (see flower_audience)."
+    },
+    {
+      "id": "flower_red",
+      "label": "FLOWER on the red (left-from-audience) perimeter wall",
+      "positionIn": {
+        "z": 21.5
+      },
+      "wall": "red",
+      "citation": "Opening z=21.5 in above TILES: BIOBUZZ Competition Manual V1 section 9.7 and Figure 9-12. Red ALLIANCE AREA is left from the audience (section 9.5). Wall: Figure 9-17 and Event Field Setup Guide V1.0 section 10.4. xy and yaw omitted (see flower_audience)."
+    },
+    {
+      "id": "flower_blue",
+      "label": "FLOWER on the blue (right-from-audience) perimeter wall",
+      "positionIn": {
+        "z": 21.5
+      },
+      "wall": "blue",
+      "citation": "Opening z=21.5 in above TILES: BIOBUZZ Competition Manual V1 section 9.7 and Figure 9-12. Wall: Figure 9-17 and Event Field Setup Guide V1.0 section 10.4. xy and yaw omitted (see flower_audience)."
+    },
+    {
+      "id": "hive_structure",
+      "label": "HIVE Structure frame at field center (pivot axis height)",
+      "positionIn": {
+        "x": 0,
+        "y": 0,
+        "z": 43.95
+      },
+      "citation": "Located in the center of the FIELD: BIOBUZZ Competition Manual V1 section 9.6. Pivot axis 43.95 in (111.65 cm) above the TILES: section 9.6.1. Frame 49.46 in wide x 38.95 in deep at base (same section). CELLs approximately 18.8 in apart: section 9.6.2. Yaw omitted (not a stated heading in the manual). If Onshape Field CAD V1 disagrees with x=0,y=0 as the frame origin, record both; CAD was not measured here."
+    }
+  ],
   "fusion": {
     "minElementConfidence": 0.35,
     "minPlateConfidence": 0.35,
@@ -36,9 +295,9 @@
         "minHeightPx": 5,
         "maxHeightPx": 48,
         "maxAspectRatio": 2.0,
-        "minCircularity": 0.50,
-        "minFillRatio": 0.50,
-        "minInteriorScore": 0.10
+        "minCircularity": 0.5,
+        "minFillRatio": 0.5,
+        "minInteriorScore": 0.1
       },
       "interior": {
         "brightMin": 90,
@@ -61,6 +320,110 @@
         "minInterior": 0.12,
         "minAreaPx": 14
       }
+    },
+    {
+      "id": "nectar_red",
+      "label": "Red nectar",
+      "diameter": 3.6,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 0,
+        "hMax": 12,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 14,
+        "maxAreaPx": 4000,
+        "minWidthPx": 5,
+        "maxWidthPx": 48,
+        "minHeightPx": 5,
+        "maxHeightPx": 48,
+        "maxAspectRatio": 2.0,
+        "minCircularity": 0.5,
+        "minFillRatio": 0.5,
+        "minInteriorScore": 0.1
+      },
+      "interior": {
+        "brightMin": 90,
+        "spreadMax": 65,
+        "holeDarkMax": 50
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 16,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 5,
+        "maxRadius": 22,
+        "minInterior": 0.12,
+        "minAreaPx": 14
+      },
+      "hsvWrap": {
+        "hMin": 168,
+        "hMax": 179,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "_comment": "HSV is a starting point copied from alliance plate hues in this file; tune on field. Diameter 3.6 in from BIOBUZZ Competition Manual V1 section 9.8 (am-5852_red / am-5852_blue). Detector/filters copied from POLLEN as a starting point (no new detector in #77)."
+    },
+    {
+      "id": "nectar_blue",
+      "label": "Blue nectar",
+      "diameter": 3.6,
+      "detector": "color_blob_with_local_hough",
+      "hsv": {
+        "hMin": 95,
+        "hMax": 135,
+        "sMin": 80,
+        "sMax": 255,
+        "vMin": 60,
+        "vMax": 255
+      },
+      "filters": {
+        "minAreaPx": 14,
+        "maxAreaPx": 4000,
+        "minWidthPx": 5,
+        "maxWidthPx": 48,
+        "minHeightPx": 5,
+        "maxHeightPx": 48,
+        "maxAspectRatio": 2.0,
+        "minCircularity": 0.5,
+        "minFillRatio": 0.5,
+        "minInteriorScore": 0.1
+      },
+      "interior": {
+        "brightMin": 90,
+        "spreadMax": 65,
+        "holeDarkMax": 50
+      },
+      "morphology": {
+        "erodePasses": 0,
+        "dilatePasses": 0,
+        "openPasses": 1,
+        "closePasses": 2
+      },
+      "hough": {
+        "dp": 1.2,
+        "minDist": 16,
+        "param1": 80,
+        "param2": 11,
+        "minRadius": 5,
+        "maxRadius": 22,
+        "minInterior": 0.12,
+        "minAreaPx": 14
+      },
+      "_comment": "HSV is a starting point copied from alliance plate hues in this file; tune on field. Diameter 3.6 in from BIOBUZZ Competition Manual V1 section 9.8 (am-5852_red / am-5852_blue). Detector/filters copied from POLLEN as a starting point (no new detector in #77)."
     }
   ],
   "plates": [
