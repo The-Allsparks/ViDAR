@@ -21,6 +21,11 @@ public final class VidarMetricsLogger {
     private double peakFrameAgeMs;
     private double peakTagDecodeMs;
     private long failedHealthSamples;
+    private VidarMetricsSink sink = VidarMetricsSink.NOOP;
+
+    public void setSink(VidarMetricsSink sink) {
+        this.sink = sink == null ? VidarMetricsSink.NOOP : sink;
+    }
 
     public void recordCycle(VidarMetrics[] metrics) {
         cycleCount++;
@@ -42,6 +47,9 @@ public final class VidarMetricsLogger {
             peakTagDecodeMs = Math.max(peakTagDecodeMs, m.lastTagDecodeMs());
             if (m.health() == VidarMetrics.CameraHealth.FAILED) {
                 failedHealthSamples++;
+            }
+            if (sink != VidarMetricsSink.NOOP) {
+                sink.onMetrics(m);
             }
         }
     }
