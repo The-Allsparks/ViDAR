@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.vidar.runtime;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -12,7 +14,11 @@ public final class TraceVidarAdapter implements VidarMetricsSink {
         void record(String name, double value);
     }
 
+    private static final String FUSION_PROCESSED = "ViDAR/Fusion/ProcessedElementFrames";
+
     private final Emitter emitter;
+    /** Camera name -> TRACE channels. Filled once per camera, then reused. */
+    private final Map<String, String[]> channelsByCamera = new HashMap<>();
 
     public TraceVidarAdapter(Emitter emitter) {
         this.emitter = Objects.requireNonNull(emitter, "emitter");
@@ -23,16 +29,37 @@ public final class TraceVidarAdapter implements VidarMetricsSink {
         if (metrics == null) {
             return;
         }
-        String camera = sanitize(metrics.cameraName());
+        String[] channels = channelsFor(metrics.cameraName());
+        emitter.record(channels[0], metrics.lastFrameAgeMs());
+        emitter.record(channels[1], metrics.lastLoopCpuMs());
+        emitter.record(channels[2], metrics.droppedFrames());
+        emitter.record(channels[3], metrics.staleFrames());
+        emitter.record(channels[4], metrics.skippedSlots());
+        emitter.record(channels[5], metrics.portalFps());
+        emitter.record(channels[6], metrics.health() == VidarMetrics.CameraHealth.HEALTHY ? 1.0 : 0.0);
+        emitter.record(channels[7], metrics.processedElementFrames());
+    }
+
+    private String[] channelsFor(String rawName) {
+        String key = rawName == null ? "" : rawName;
+        String[] cached = channelsByCamera.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        String camera = sanitize(rawName);
         String prefix = "ViDAR/Camera/" + camera;
-        emitter.record(prefix + "/FrameAge", metrics.lastFrameAgeMs());
-        emitter.record(prefix + "/LoopCpuMs", metrics.lastLoopCpuMs());
-        emitter.record(prefix + "/DroppedFrames", metrics.droppedFrames());
-        emitter.record(prefix + "/StaleFrames", metrics.staleFrames());
-        emitter.record(prefix + "/SkippedSlots", metrics.skippedSlots());
-        emitter.record(prefix + "/Fps", metrics.portalFps());
-        emitter.record(prefix + "/Healthy", metrics.health() == VidarMetrics.CameraHealth.HEALTHY ? 1.0 : 0.0);
-        emitter.record("ViDAR/Fusion/ProcessedElementFrames", metrics.processedElementFrames());
+        cached = new String[] {
+            prefix + "/FrameAge",
+            prefix + "/LoopCpuMs",
+            prefix + "/DroppedFrames",
+            prefix + "/StaleFrames",
+            prefix + "/SkippedSlots",
+            prefix + "/Fps",
+            prefix + "/Healthy",
+            FUSION_PROCESSED
+        };
+        channelsByCamera.put(key, cached);
+        return cached;
     }
 
     static String sanitize(String raw) {
