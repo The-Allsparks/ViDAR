@@ -71,6 +71,9 @@ sourceSets {
             exclude 'runtime/RuntimeBootstrap.java'
             exclude 'runtime/VidarMetrics.java'
             exclude 'runtime/VidarMetricsLogger.java'
+            // TRACE adapter types take VidarMetrics, which java-pure excludes.
+            exclude 'runtime/VidarMetricsSink.java'
+            exclude 'runtime/TraceVidarAdapter.java'
             exclude 'runtime/VidarAllianceSelector.java'
             exclude 'model/VidarElementDensityMap.java'
             exclude 'model/VidarElementRejectionStats.java'
