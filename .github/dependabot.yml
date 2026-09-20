@@ -13,6 +13,6 @@ updates:
     schedule:
       interval: monthly
     ignore:
-      # JUnit 6 needs Java 17; Hub libraries still compile tests for Java 8 bytecode.
+      # JUnit 6 needs Java 17; java-pure compiles tests for Java 11.
       - dependency-name: "org.junit:junit-bom"
         update-types: ["version-update:semver-major"]
