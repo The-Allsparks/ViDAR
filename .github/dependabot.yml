@@ -12,3 +12,7 @@ updates:
     directory: /java-pure
     schedule:
       interval: monthly
+    ignore:
+      # JUnit 6 needs Java 17; java-pure compiles tests for Java 11.
+      - dependency-name: "org.junit:junit-bom"
+        update-types: ["version-update:semver-major"]
